@@ -80,12 +80,10 @@ pub struct Sim;
 impl Sim {
     pub fn run(parser: &Parser, config: &SimConfig) -> String {
         let mut world = World::default();
-        // TODO: This effectively means you've "equipped" ALL items, which is obviously not right, change it
         let item_mods = parser.calculate_item_mods(&config.items, &config.item_mods);
         // Copy to use in the report later, since we move the original into legion as a resource
         // TODO: Probably some way to avoid a copy here, but meh
         let report_item_mods = item_mods.clone();
-        // TODO: Handle equipped items as well (not item_mods, but base items)
         world.push((
             Player,
             PlayerAbilities {

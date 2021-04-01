@@ -90,7 +90,6 @@ impl Parser {
     }
 
     // TODO: Clean up unwraps in this series of functions
-    // TODO: Create a way to pass in specific item mods (what's equipped), instead of always calculating all of them
     pub fn calculate_item_mods(
         &self,
         equipped_items: &Vec<String>,

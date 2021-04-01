@@ -31,7 +31,7 @@ TODO
     -Pretty sure base items are calculated separately, like faerie armor?
 -Read config from a file
 -Accept config file path as argument
-Set up heroku hosting
+-Set up heroku hosting
 Add in item mods
     Parse each item mod type, and either be able to handle it or explicitly ignore it (if it's something we don't care about yet, like evasion)
         IconID parsing
@@ -39,6 +39,9 @@ Add in item mods
     Apply parsed mods to abilities when I prep them for use in Sim (check my spreadsheet for the math on how to add damage mods up properly)
         Handle mods in sims, not beforehand, to handle proc chance (less performant, but who cares)
         There's a todo to handle remaining mod types, make sure to do that
+There's some places where the app will fully crash if the config is wrong, fix that
+    Write test with intentionally bad configs (bad skill names, etc.)
+Review all TODOs
 Write up a few real simulations (maybe my current rabbit/unarmed build) as examples (include on in web client)
 Move "TODO Phase 2" items to GitHub Issues
 Clean up these comments, anything else
