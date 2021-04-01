@@ -1,0 +1,23 @@
+{
+    "abilities": [
+        "SwordSlash7",
+        "Decapitate6",
+        "FlashingStrike7",
+        "HackingBlade5",
+        "FinishingBlow5",
+        "ThrustingBlade5",
+        "FastTalk4",
+        "Soothe6",
+        "StrikeANerve6",
+        "Psychoanalyze6",
+        "YouWereAdopted6",
+        "ButILoveYou3"
+    ],
+    "items": [
+        "item_44207"
+    ],
+    "itemMods": [
+        ["power_1203", "id_16"]
+    ],
+    "simLength": 30
+}
