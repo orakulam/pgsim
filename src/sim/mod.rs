@@ -78,10 +78,10 @@ pub struct SimConfig {
 pub struct Sim;
 
 impl Sim {
-    pub fn run(parser: Parser, config: SimConfig) {
+    pub fn run(parser: &Parser, config: &SimConfig) -> String {
         let mut world = World::default();
         // TODO: This effectively means you've "equipped" ALL items, which is obviously not right, change it
-        let item_mods = parser.calculate_item_mods(config.items, config.item_mods);
+        let item_mods = parser.calculate_item_mods(&config.items, &config.item_mods);
         // Copy to use in the report later, since we move the original into legion as a resource
         // TODO: Probably some way to avoid a copy here, but meh
         let report_item_mods = item_mods.clone();
@@ -117,10 +117,11 @@ impl Sim {
         // Report
         // entries return `None` if the entity does not exist
         if let Some(entry) = world.entry(enemy) {
+            let mut report_text = vec![];
             let report = entry
                 .get_component::<Report>()
                 .expect("failed to get report for enemy");
-            println!("------ SIM -------");
+            report_text.push(format!("------ SIM -------"));
             let mut total_damage = 0;
             let mut damage_by_source = HashMap::new();
             let mut damage_by_type = HashMap::new();
@@ -132,34 +133,37 @@ impl Sim {
                 // Accumulate damage by type
                 (*damage_by_type.entry(&activity.damage_type).or_insert(0)) += activity.damage;
                 // Print this sim step
-                println!(
+                report_text.push(format!(
                     "{:?}: {} for {}",
                     activity.source, activity.ability_name, activity.damage
-                );
+                ));
             }
-            println!("---- END SIM -----");
-            println!("----- NOTES ------");
+            report_text.push(format!("---- END SIM -----"));
+            report_text.push(format!("----- NOTES ------"));
             for warning in report_item_mods
                 .warnings
                 .iter()
                 .chain(report_item_mods.ignored.iter())
                 .chain(report_item_mods.not_implemented.iter())
             {
-                println!("{}", warning);
+                report_text.push(format!("{}", warning));
             }
-            println!("--- END NOTES ----");
-            println!("----- REPORT -----");
-            println!("Sim length in seconds: {}", config.sim_length);
-            println!("DPS by Source:");
+            report_text.push(format!("--- END NOTES ----"));
+            report_text.push(format!("----- REPORT -----"));
+            report_text.push(format!("Sim length in seconds: {}", config.sim_length));
+            report_text.push(format!("DPS by Source:"));
             for (source, damage) in damage_by_source {
-                println!("  {:?}: {}", source, damage / number_of_ticks);
+                report_text.push(format!("  {:?}: {}", source, damage / number_of_ticks));
             }
-            println!("DPS by Type:");
+            report_text.push(format!("DPS by Type:"));
             for (damage_type, damage) in damage_by_type {
-                println!("  {:?}: {}", damage_type, damage / number_of_ticks);
+                report_text.push(format!("  {:?}: {}", damage_type, damage / number_of_ticks));
             }
-            println!("Total DPS: {}", total_damage / number_of_ticks);
-            println!("--- END REPORT ---");
+            report_text.push(format!("Total DPS: {}", total_damage / number_of_ticks));
+            report_text.push(format!("--- END REPORT ---"));
+            report_text.join("\n")
+        } else {
+            "Failed".to_string()
         }
     }
 

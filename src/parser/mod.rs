@@ -93,8 +93,8 @@ impl Parser {
     // TODO: Create a way to pass in specific item mods (what's equipped), instead of always calculating all of them
     pub fn calculate_item_mods(
         &self,
-        equipped_items: Vec<String>,
-        equipped_mods: Vec<(String, String)>,
+        equipped_items: &Vec<String>,
+        equipped_mods: &Vec<(String, String)>,
     ) -> ItemMods {
         let mut item_mods = ItemMods {
             icon_id_effects: HashMap::new(),
@@ -108,7 +108,7 @@ impl Parser {
             if let Some(effect_descs) = &self
                 .data
                 .items
-                .get(&item_id)
+                .get(item_id)
                 .expect("Tried to use invalid item ID")
                 .effect_descs
             {
@@ -136,10 +136,10 @@ impl Parser {
             let item_mod_effect = self
                 .data
                 .item_mods
-                .get(&item_mod_id)
+                .get(item_mod_id)
                 .expect("Tried to use invalid item mod ID")
                 .tiers
-                .get(&tier_id)
+                .get(tier_id)
                 .expect("Tried to use invalid item mod tier ID");
             for effect_desc in &item_mod_effect.effect_descs {
                 // Explicitly ignored mods
@@ -363,7 +363,7 @@ mod tests {
                 equipped_mods.push((item_mod_id.clone(), tier_id.clone()));
             }
         }
-        let mut item_mods = parser.calculate_item_mods(vec![], equipped_mods);
+        let mut item_mods = parser.calculate_item_mods(vec![], &equipped_mods);
         if item_mods.not_implemented.len() > 0 {
             item_mods.not_implemented.sort();
             println!("Not implemented: {:#?}", item_mods.not_implemented.first());

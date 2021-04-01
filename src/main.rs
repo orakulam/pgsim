@@ -1,4 +1,5 @@
 use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder};
+use std::sync::Mutex;
 use std::env;
 use std::fs;
 
@@ -58,14 +59,21 @@ Validate correctness of a built (item slots, number of mods, etc.)
 Sim pets
 */
 
-#[post("/api/sim")]
-async fn echo(req_body: String) -> impl Responder {
-    HttpResponse::Ok().body(req_body)
+struct ActixState {
+    parser: Mutex<Parser>,
+}
+
+#[post("/api/v1/sim")]
+async fn echo(config: web::Json<SimConfig>, data: web::Data<ActixState>) -> impl Responder {
+    let parser = data.parser.lock().expect("Failed to lock parser mutex");
+    let report = Sim::run(&*parser, &*config);
+    HttpResponse::Ok().body(report)
 }
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     if let Some(arg) = env::args().nth(1) {
+        let parser = Parser::new();
         // Serve a web service
         if arg == "--serve" {
             // Get the port number to listen on
@@ -74,10 +82,15 @@ async fn main() -> std::io::Result<()> {
                 .parse::<u16>()
                 .expect("PORT must be a number");
 
-            HttpServer::new(|| {
+            let data = web::Data::new(ActixState {
+                parser: Mutex::new(parser),
+            });
+
+            HttpServer::new(move || {
                 App::new()
+                    .app_data(data.clone())
                     .service(echo)
-                    .service(actix_files::Files::new("/", "./static").index_file("index.html"))
+                    .service(actix_files::Files::new("/", "./web/public").index_file("index.html"))
             })
             .bind(("0.0.0.0", port))?
             .run()
@@ -88,7 +101,8 @@ async fn main() -> std::io::Result<()> {
             let config: SimConfig =
                 serde_json::from_str(&fs::read_to_string(arg).expect("Unable to read config file"))
                     .unwrap();
-            Sim::run(parser, config);
+            let report = Sim::run(&parser, &config);
+            println!("{}", report);
             Ok(())
         }
     } else {
