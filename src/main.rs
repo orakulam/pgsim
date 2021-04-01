@@ -1,3 +1,4 @@
+use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder};
 use std::env;
 use std::fs;
 
@@ -57,15 +58,41 @@ Validate correctness of a built (item slots, number of mods, etc.)
 Sim pets
 */
 
-fn main() {
-    if let Some(config_path) = env::args().nth(1) {
-        let parser = Parser::new();
-        let config: SimConfig = serde_json::from_str(
-            &fs::read_to_string(config_path).expect("Unable to read config file"),
-        )
-        .unwrap();
-        Sim::run(parser, config);
+#[post("/api/sim")]
+async fn echo(req_body: String) -> impl Responder {
+    HttpResponse::Ok().body(req_body)
+}
+
+#[actix_web::main]
+async fn main() -> std::io::Result<()> {
+    if let Some(arg) = env::args().nth(1) {
+        // Serve a web service
+        if arg == "--serve" {
+            // Get the port number to listen on
+            let port = env::var("PORT")
+                .unwrap_or_else(|_| "3000".to_string())
+                .parse::<u16>()
+                .expect("PORT must be a number");
+
+            HttpServer::new(|| {
+                App::new()
+                    .service(echo)
+                    .service(actix_files::Files::new("/", "./static").index_file("index.html"))
+            })
+            .bind(("0.0.0.0", port))?
+            .run()
+            .await
+        // Run in CLI mode from a config file
+        } else {
+            let parser = Parser::new();
+            let config: SimConfig =
+                serde_json::from_str(&fs::read_to_string(arg).expect("Unable to read config file"))
+                    .unwrap();
+            Sim::run(parser, config);
+            Ok(())
+        }
     } else {
         println!("Pass config file path as the first argument");
+        Ok(())
     }
 }
