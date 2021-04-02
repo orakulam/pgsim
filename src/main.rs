@@ -32,6 +32,8 @@ TODO
 -Read config from a file
 -Accept config file path as argument
 -Set up heroku hosting
+-There's some places where the app will fully crash if the config is wrong, fix that
+    -Write test with intentionally bad configs (bad skill names, etc.)
 Add in item mods
     Parse each item mod type, and either be able to handle it or explicitly ignore it (if it's something we don't care about yet, like evasion)
         IconID parsing
@@ -39,8 +41,6 @@ Add in item mods
     Apply parsed mods to abilities when I prep them for use in Sim (check my spreadsheet for the math on how to add damage mods up properly)
         Handle mods in sims, not beforehand, to handle proc chance (less performant, but who cares)
         There's a todo to handle remaining mod types, make sure to do that
-There's some places where the app will fully crash if the config is wrong, fix that
-    Write test with intentionally bad configs (bad skill names, etc.)
 Review all TODOs
 Write up a few real simulations (maybe my current rabbit/unarmed build) as examples (include on in web client)
 Move "TODO Phase 2" items to GitHub Issues
@@ -68,8 +68,11 @@ struct ActixState {
 }
 
 #[post("/api/v1/sim")]
-async fn echo(config: web::Json<SimConfig>, data: web::Data<ActixState>) -> impl Responder {
+async fn echo(mut config: web::Json<SimConfig>, data: web::Data<ActixState>) -> impl Responder {
     let parser = data.parser.lock().expect("Failed to lock parser mutex");
+    if config.sim_length > 600 {
+        config.sim_length = 600;
+    }
     let report = Sim::run(&*parser, &*config);
     HttpResponse::Ok().body(report)
 }
@@ -112,5 +115,98 @@ async fn main() -> std::io::Result<()> {
     } else {
         println!("Pass config file path as the first argument");
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn basic_config() {
+        let parser = Parser::new();
+        let config = SimConfig {
+            abilities: vec![
+                "SwordSlash7".to_string(),
+                "Decapitate6".to_string(),
+                "FlashingStrike7".to_string(),
+                "HackingBlade5".to_string(),
+                "FinishingBlow5".to_string(),
+                "ThrustingBlade5".to_string(),
+                "FastTalk4".to_string(),
+                "Soothe6".to_string(),
+                "StrikeANerve6".to_string(),
+                "Psychoanalyze6".to_string(),
+                "YouWereAdopted6".to_string(),
+                "ButILoveYou3".to_string(),
+            ],
+            items: vec![
+                "item_44207".to_string(),
+            ],
+            item_mods: vec![("power_1203".to_string(), "id_16".to_string())],
+            sim_length: 30
+        };
+        let report = Sim::run(&parser, &config);
+        assert!(report.len() > 0);
+    }
+
+    #[test]
+    fn invalid_ability_in_config() {
+        let parser = Parser::new();
+        let config = SimConfig {
+            abilities: vec![
+                "ThisAbilityDoesNotExist".to_string(),
+            ],
+            items: vec![],
+            item_mods: vec![],
+            sim_length: 30
+        };
+        let report = Sim::run(&parser, &config);
+        assert!(report.contains("Failed to find ability by internal name: ThisAbilityDoesNotExist"));
+    }
+
+    #[test]
+    fn invalid_item_in_config() {
+        let parser = Parser::new();
+        let config = SimConfig {
+            abilities: vec![
+                "SwordSlash7".to_string(),
+            ],
+            items: vec!["InvalidItemId".to_string()],
+            item_mods: vec![],
+            sim_length: 30
+        };
+        let report = Sim::run(&parser, &config);
+        assert!(report.contains("Tried to use invalid item ID: InvalidItemId"));
+    }
+
+    #[test]
+    fn invalid_item_mod_in_config() {
+        let parser = Parser::new();
+        let config = SimConfig {
+            abilities: vec![
+                "SwordSlash7".to_string(),
+            ],
+            items: vec![],
+            item_mods: vec![("InvalidItemModId".to_string(), "id_16".to_string())],
+            sim_length: 30
+        };
+        let report = Sim::run(&parser, &config);
+        assert!(report.contains("Tried to use invalid item mod ID: InvalidItemModId"));
+    }
+
+    #[test]
+    fn invalid_item_mod_tier_in_config() {
+        let parser = Parser::new();
+        let config = SimConfig {
+            abilities: vec![
+                "SwordSlash7".to_string(),
+            ],
+            items: vec![],
+            item_mods: vec![("power_1203".to_string(), "InvalidItemModTierId".to_string())],
+            sim_length: 30
+        };
+        let report = Sim::run(&parser, &config);
+        assert!(report.contains("Tried to use invalid item mod tier ID: power_1203, InvalidItemModTierId"));
     }
 }

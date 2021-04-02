@@ -81,16 +81,18 @@ impl Sim {
     pub fn run(parser: &Parser, config: &SimConfig) -> String {
         let mut world = World::default();
         let item_mods = parser.calculate_item_mods(&config.items, &config.item_mods);
-        // Copy to use in the report later, since we move the original into legion as a resource
+        // Copy all the warnings to use in the report later
         // TODO: Probably some way to avoid a copy here, but meh
-        let report_item_mods = item_mods.clone();
+        let mut report_warnings = item_mods.warnings.clone();
+        report_warnings.append(&mut item_mods.ignored.clone());
+        report_warnings.append(&mut item_mods.not_implemented.clone());
         world.push((
             Player,
             PlayerAbilities {
                 abilities: config
                     .abilities
                     .iter()
-                    .map(|x| Sim::get_player_ability(&parser, &item_mods, x))
+                    .filter_map(|x| Sim::get_player_ability(&parser, &item_mods, &mut report_warnings, x))
                     .collect(),
             },
         ));
@@ -138,16 +140,11 @@ impl Sim {
             }
             report_text.push(format!("---- END SIM -----"));
             report_text.push(format!("----- NOTES ------"));
-            for warning in report_item_mods
-                .warnings
-                .iter()
-                .chain(report_item_mods.ignored.iter())
-                .chain(report_item_mods.not_implemented.iter())
-            {
+            for warning in report_warnings {
                 report_text.push(format!("{}", warning));
             }
             report_text.push(format!("--- END NOTES ----"));
-            report_text.push(format!("----- REPORT -----"));
+            report_text.push(format!("---- SUMMARY -----"));
             report_text.push(format!("Sim length in seconds: {}", config.sim_length));
             report_text.push(format!("DPS by Source:"));
             for (source, damage) in damage_by_source {
@@ -158,7 +155,7 @@ impl Sim {
                 report_text.push(format!("  {:?}: {}", damage_type, damage / number_of_ticks));
             }
             report_text.push(format!("Total DPS: {}", total_damage / number_of_ticks));
-            report_text.push(format!("--- END REPORT ---"));
+            report_text.push(format!("-- END SUMMARY ---"));
             report_text.join("\n")
         } else {
             "Failed".to_string()
@@ -168,74 +165,82 @@ impl Sim {
     fn get_player_ability(
         parser: &Parser,
         item_mods: &ItemMods,
+        warnings: &mut Vec<String>,
         ability_name: &str,
-    ) -> PlayerAbility {
+    ) -> Option<PlayerAbility> {
         // TODO: Better error messages, mention skill and ability names
-        let ability_key = parser
-            .internal_name_ability_key_map
-            .get(ability_name)
-            .expect("Failed to find ability by internal name");
-        let ability = parser
-            .data
-            .abilities
-            .get(ability_key)
-            .expect("Failed to find ability by ability key");
-        let damage = match ability.pve.damage {
-            Some(damage) => damage,
-            None => 0,
-        };
-        let mut dots = vec![];
-        if let Some(ability_dots) = &ability.pve.dots {
-            for dot in ability_dots {
-                dots.push(Dot {
-                    damage_per_tick: dot.damage_per_tick,
-                    damage_type: dot
-                        .damage_type
-                        .expect("Tried to sim ability with no damage type"),
-                    tick_per: dot.duration / dot.num_ticks,
-                    next_tick_in: dot.duration / dot.num_ticks,
-                    ticks_remaining: dot.num_ticks,
-                });
-            }
+        match parser.internal_name_ability_key_map.get(ability_name) {
+            Some(ability_key) => {
+                match parser.data.abilities.get(ability_key) {
+                    Some(ability) => {
+                        let damage = match ability.pve.damage {
+                            Some(damage) => damage,
+                            None => 0,
+                        };
+                        let mut dots = vec![];
+                        if let Some(ability_dots) = &ability.pve.dots {
+                            for dot in ability_dots {
+                                dots.push(Dot {
+                                    damage_per_tick: dot.damage_per_tick,
+                                    damage_type: dot
+                                        .damage_type
+                                        .expect("Tried to sim ability with no damage type"),
+                                    tick_per: dot.duration / dot.num_ticks,
+                                    next_tick_in: dot.duration / dot.num_ticks,
+                                    ticks_remaining: dot.num_ticks,
+                                });
+                            }
+                        }
+                        // Collect base damage mods
+                        let base_damage_attributes = match &ability.pve.attributes_that_mod_base_damage {
+                            Some(attributes) => attributes.clone(),
+                            None => vec![],
+                        };
+                        // Collect damage mods (combine mod and delta, because we adjust for it when parsing rather than here)
+                        let mut damage_attributes = match &ability.pve.attributes_that_mod_damage {
+                            Some(attributes) => attributes.clone(),
+                            None => vec![],
+                        };
+                        damage_attributes.extend(match &ability.pve.attributes_that_delta_damage {
+                            Some(attributes) => attributes.clone(),
+                            None => vec![],
+                        });
+                        // TODO: Also calculate healing, power restore potential in potential_power
+                        // TODO: I don't love the overall flow here (creating a PlayerAbility first, then modifying it, feels open to bugs later)
+                        let mut player_ability = PlayerAbility {
+                            name: ability.name.clone(),
+                            damage,
+                            damage_type: ability
+                                .damage_type
+                                .expect("Tried to sim ability with no damage type"),
+                            reset_time: ability.reset_time,
+                            dots,
+                            potential_power: 0,
+                            cooldown: 0.0,
+                            icon_id: ability.icon_id,
+                            base_damage_attributes,
+                            damage_attributes,
+                        };
+                        let (calculated_damage, _, calculated_dots) =
+                            Sim::calculate_damage(&player_ability, item_mods);
+                        let mut calculated_total_dot_damage = 0;
+                        for dot in calculated_dots {
+                            calculated_total_dot_damage += dot.damage_per_tick * dot.ticks_remaining;
+                        }
+                        player_ability.potential_power = calculated_damage + calculated_total_dot_damage;
+                        Some(player_ability)
+                    },
+                    None => {
+                        warnings.push(format!("Failed to find ability by ability key: {}, {}", ability_name, ability_key));
+                        None
+                    },
+                }
+            },
+            None => {
+                warnings.push(format!("Failed to find ability by internal name: {}", ability_name));
+                None
+            },
         }
-        // Collect base damage mods
-        let base_damage_attributes = match &ability.pve.attributes_that_mod_base_damage {
-            Some(attributes) => attributes.clone(),
-            None => vec![],
-        };
-        // Collect damage mods (combine mod and delta, because we adjust for it when parsing rather than here)
-        let mut damage_attributes = match &ability.pve.attributes_that_mod_damage {
-            Some(attributes) => attributes.clone(),
-            None => vec![],
-        };
-        damage_attributes.extend(match &ability.pve.attributes_that_delta_damage {
-            Some(attributes) => attributes.clone(),
-            None => vec![],
-        });
-        // TODO: Also calculate healing, power restore potential in potential_power
-        // TODO: I don't love the overall flow here (creating a PlayerAbility first, then modifying it, feels open to bugs later)
-        let mut player_ability = PlayerAbility {
-            name: ability.name.clone(),
-            damage,
-            damage_type: ability
-                .damage_type
-                .expect("Tried to sim ability with no damage type"),
-            reset_time: ability.reset_time,
-            dots,
-            potential_power: 0,
-            cooldown: 0.0,
-            icon_id: ability.icon_id,
-            base_damage_attributes,
-            damage_attributes,
-        };
-        let (calculated_damage, _, calculated_dots) =
-            Sim::calculate_damage(&player_ability, item_mods);
-        let mut calculated_total_dot_damage = 0;
-        for dot in calculated_dots {
-            calculated_total_dot_damage += dot.damage_per_tick * dot.ticks_remaining;
-        }
-        player_ability.potential_power = calculated_damage + calculated_total_dot_damage;
-        player_ability
     }
 
     fn calculate_damage(
@@ -299,13 +304,13 @@ mod tests {
     fn basic_sim_works() {
         let parser = super::super::parser::Parser::new();
         let mut world = World::default();
-        let item_mods = parser.calculate_item_mods(vec![], vec![]);
+        let item_mods = parser.calculate_item_mods(&vec![], &vec![]);
         world.push((
             Player,
             PlayerAbilities {
                 abilities: vec![
-                    Sim::get_player_ability(&parser, &item_mods, "SwordSlash7"),
-                    Sim::get_player_ability(&parser, &item_mods, "HackingBlade5"),
+                    Sim::get_player_ability(&parser, &item_mods, &mut vec![], "SwordSlash7").unwrap(),
+                    Sim::get_player_ability(&parser, &item_mods, &mut vec![], "HackingBlade5").unwrap(),
                 ],
             },
         ));

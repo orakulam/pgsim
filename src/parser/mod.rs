@@ -104,60 +104,62 @@ impl Parser {
         };
 
         for item_id in equipped_items {
-            if let Some(effect_descs) = &self
-                .data
-                .items
-                .get(item_id)
-                .expect("Tried to use invalid item ID")
-                .effect_descs
-            {
-                for effect_desc in effect_descs {
-                    // Explicitly ignored mods
-                    if self.is_explicitly_ignored(effect_desc) {
-                        item_mods
-                            .ignored
-                            .push(format!("Ignored base item mod: {}", effect_desc));
-                        continue;
+            match self.data.items.get(item_id) {
+                Some(item) => {
+                    if let Some(effect_descs) = &item.effect_descs {
+                        for effect_desc in effect_descs {
+                            // Explicitly ignored mods
+                            if self.is_explicitly_ignored(effect_desc) {
+                                item_mods
+                                    .ignored
+                                    .push(format!("Ignored base item mod: {}", effect_desc));
+                                continue;
+                            }
+                            if self.regex.attribute_effects.is_match(effect_desc) {
+                                self.calculate_attribute_effect_desc(&mut item_mods, effect_desc);
+                            } else {
+                                item_mods.not_implemented.push(format!(
+                                    "Unknown type of effect desc on base item: {}",
+                                    effect_desc
+                                ));
+                            }
+                        }
+
                     }
-                    if self.regex.attribute_effects.is_match(effect_desc) {
-                        self.calculate_attribute_effect_desc(&mut item_mods, effect_desc);
-                    } else {
-                        item_mods.not_implemented.push(format!(
-                            "Unknown type of effect desc on base item: {}",
-                            effect_desc
-                        ));
-                    }
-                }
-            }
+                },
+                None => item_mods.warnings.push(format!("Tried to use invalid item ID: {}", item_id)),
+            };
         }
 
         for (item_mod_id, tier_id) in equipped_mods {
-            let item_mod_effect = self
-                .data
-                .item_mods
-                .get(item_mod_id)
-                .expect("Tried to use invalid item mod ID")
-                .tiers
-                .get(tier_id)
-                .expect("Tried to use invalid item mod tier ID");
-            for effect_desc in &item_mod_effect.effect_descs {
-                // Explicitly ignored mods
-                if self.is_explicitly_ignored(effect_desc) {
-                    item_mods
-                        .ignored
-                        .push(format!("Ignored mod: {}", effect_desc));
-                    continue;
-                }
-                if self.regex.icon_ids.is_match(effect_desc) {
-                    self.calculate_icon_id_effect_desc(&mut item_mods, effect_desc);
-                } else if self.regex.attribute_effects.is_match(effect_desc) {
-                    self.calculate_attribute_effect_desc(&mut item_mods, effect_desc);
-                } else {
-                    item_mods
-                        .not_implemented
-                        .push(format!("Unknown type of effect desc: {}", effect_desc));
-                }
-            }
+            match self.data.item_mods.get(item_mod_id) {
+                Some(item_mod) => {
+                    match item_mod.tiers.get(tier_id) {
+                        Some(item_mod_effect) => {
+                            for effect_desc in &item_mod_effect.effect_descs {
+                                // Explicitly ignored mods
+                                if self.is_explicitly_ignored(effect_desc) {
+                                    item_mods
+                                        .ignored
+                                        .push(format!("Ignored mod: {}", effect_desc));
+                                    continue;
+                                }
+                                if self.regex.icon_ids.is_match(effect_desc) {
+                                    self.calculate_icon_id_effect_desc(&mut item_mods, effect_desc);
+                                } else if self.regex.attribute_effects.is_match(effect_desc) {
+                                    self.calculate_attribute_effect_desc(&mut item_mods, effect_desc);
+                                } else {
+                                    item_mods
+                                        .not_implemented
+                                        .push(format!("Unknown type of effect desc: {}", effect_desc));
+                                }
+                            }
+                        },
+                        None => item_mods.warnings.push(format!("Tried to use invalid item mod tier ID: {}, {}", item_mod_id, tier_id)),
+                    };
+                },
+                None => item_mods.warnings.push(format!("Tried to use invalid item mod ID: {}", item_mod_id)),
+            };
         }
 
         item_mods
@@ -362,7 +364,7 @@ mod tests {
                 equipped_mods.push((item_mod_id.clone(), tier_id.clone()));
             }
         }
-        let mut item_mods = parser.calculate_item_mods(vec![], &equipped_mods);
+        let mut item_mods = parser.calculate_item_mods(&vec![], &equipped_mods);
         if item_mods.not_implemented.len() > 0 {
             item_mods.not_implemented.sort();
             println!("Not implemented: {:#?}", item_mods.not_implemented.first());
