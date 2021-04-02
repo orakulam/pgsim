@@ -41,6 +41,9 @@ Add in item mods
     Apply parsed mods to abilities when I prep them for use in Sim (check my spreadsheet for the math on how to add damage mods up properly)
         Handle mods in sims, not beforehand, to handle proc chance (less performant, but who cares)
         There's a todo to handle remaining mod types, make sure to do that
+    More tests for "cacualate damage" to make sure it adds up right
+    Things I may not be covering right
+        "{BOOST_ABILITY_GUT}{110}" is a flat damage thing, not a mod
 Review all TODOs
 Write up a few real simulations (maybe my current rabbit/unarmed build) as examples (include on in web client)
 Move "TODO Phase 2" items to GitHub Issues
