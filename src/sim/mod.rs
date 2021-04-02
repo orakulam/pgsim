@@ -92,7 +92,9 @@ impl Sim {
                 abilities: config
                     .abilities
                     .iter()
-                    .filter_map(|x| Sim::get_player_ability(&parser, &item_mods, &mut report_warnings, x))
+                    .filter_map(|x| {
+                        Sim::get_player_ability(&parser, &item_mods, &mut report_warnings, x)
+                    })
                     .collect(),
             },
         ));
@@ -192,10 +194,11 @@ impl Sim {
                             }
                         }
                         // Collect base damage mods
-                        let base_damage_attributes = match &ability.pve.attributes_that_mod_base_damage {
-                            Some(attributes) => attributes.clone(),
-                            None => vec![],
-                        };
+                        let base_damage_attributes =
+                            match &ability.pve.attributes_that_mod_base_damage {
+                                Some(attributes) => attributes.clone(),
+                                None => vec![],
+                            };
                         // Collect damage mods (combine mod and delta, because we adjust for it when parsing rather than here)
                         let mut damage_attributes = match &ability.pve.attributes_that_mod_damage {
                             Some(attributes) => attributes.clone(),
@@ -225,21 +228,29 @@ impl Sim {
                             Sim::calculate_damage(&player_ability, item_mods);
                         let mut calculated_total_dot_damage = 0;
                         for dot in calculated_dots {
-                            calculated_total_dot_damage += dot.damage_per_tick * dot.ticks_remaining;
+                            calculated_total_dot_damage +=
+                                dot.damage_per_tick * dot.ticks_remaining;
                         }
-                        player_ability.potential_power = calculated_damage + calculated_total_dot_damage;
+                        player_ability.potential_power =
+                            calculated_damage + calculated_total_dot_damage;
                         Some(player_ability)
-                    },
+                    }
                     None => {
-                        warnings.push(format!("Failed to find ability by ability key: {}, {}", ability_name, ability_key));
+                        warnings.push(format!(
+                            "Failed to find ability by ability key: {}, {}",
+                            ability_name, ability_key
+                        ));
                         None
-                    },
+                    }
                 }
-            },
+            }
             None => {
-                warnings.push(format!("Failed to find ability by internal name: {}", ability_name));
+                warnings.push(format!(
+                    "Failed to find ability by internal name: {}",
+                    ability_name
+                ));
                 None
-            },
+            }
         }
     }
 
@@ -309,8 +320,10 @@ mod tests {
             Player,
             PlayerAbilities {
                 abilities: vec![
-                    Sim::get_player_ability(&parser, &item_mods, &mut vec![], "SwordSlash7").unwrap(),
-                    Sim::get_player_ability(&parser, &item_mods, &mut vec![], "HackingBlade5").unwrap(),
+                    Sim::get_player_ability(&parser, &item_mods, &mut vec![], "SwordSlash7")
+                        .unwrap(),
+                    Sim::get_player_ability(&parser, &item_mods, &mut vec![], "HackingBlade5")
+                        .unwrap(),
                 ],
             },
         ));

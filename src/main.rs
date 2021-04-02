@@ -1,7 +1,7 @@
 use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder};
-use std::sync::Mutex;
 use std::env;
 use std::fs;
+use std::sync::Mutex;
 
 mod parser;
 use parser::Parser;
@@ -41,6 +41,10 @@ Add in item mods
     Apply parsed mods to abilities when I prep them for use in Sim (check my spreadsheet for the math on how to add damage mods up properly)
         Handle mods in sims, not beforehand, to handle proc chance (less performant, but who cares)
         There's a todo to handle remaining mod types, make sure to do that
+    Refactor Dots on enemy to be generic debuffs (some of which are dots, are vulnerability, etc.)
+        Ticks down round by round
+    Add generic buffs to player entity
+        Ability damage buffs, etc.
     More tests for "cacualate damage" to make sure it adds up right
     Things I may not be covering right
         "{BOOST_ABILITY_GUT}{110}" is a flat damage thing, not a mod
@@ -143,11 +147,9 @@ mod tests {
                 "YouWereAdopted6".to_string(),
                 "ButILoveYou3".to_string(),
             ],
-            items: vec![
-                "item_44207".to_string(),
-            ],
+            items: vec!["item_44207".to_string()],
             item_mods: vec![("power_1203".to_string(), "id_16".to_string())],
-            sim_length: 30
+            sim_length: 30,
         };
         let report = Sim::run(&parser, &config);
         assert!(report.len() > 0);
@@ -157,12 +159,10 @@ mod tests {
     fn invalid_ability_in_config() {
         let parser = Parser::new();
         let config = SimConfig {
-            abilities: vec![
-                "ThisAbilityDoesNotExist".to_string(),
-            ],
+            abilities: vec!["ThisAbilityDoesNotExist".to_string()],
             items: vec![],
             item_mods: vec![],
-            sim_length: 30
+            sim_length: 30,
         };
         let report = Sim::run(&parser, &config);
         assert!(report.contains("Failed to find ability by internal name: ThisAbilityDoesNotExist"));
@@ -172,12 +172,10 @@ mod tests {
     fn invalid_item_in_config() {
         let parser = Parser::new();
         let config = SimConfig {
-            abilities: vec![
-                "SwordSlash7".to_string(),
-            ],
+            abilities: vec!["SwordSlash7".to_string()],
             items: vec!["InvalidItemId".to_string()],
             item_mods: vec![],
-            sim_length: 30
+            sim_length: 30,
         };
         let report = Sim::run(&parser, &config);
         assert!(report.contains("Tried to use invalid item ID: InvalidItemId"));
@@ -187,12 +185,10 @@ mod tests {
     fn invalid_item_mod_in_config() {
         let parser = Parser::new();
         let config = SimConfig {
-            abilities: vec![
-                "SwordSlash7".to_string(),
-            ],
+            abilities: vec!["SwordSlash7".to_string()],
             items: vec![],
             item_mods: vec![("InvalidItemModId".to_string(), "id_16".to_string())],
-            sim_length: 30
+            sim_length: 30,
         };
         let report = Sim::run(&parser, &config);
         assert!(report.contains("Tried to use invalid item mod ID: InvalidItemModId"));
@@ -202,14 +198,13 @@ mod tests {
     fn invalid_item_mod_tier_in_config() {
         let parser = Parser::new();
         let config = SimConfig {
-            abilities: vec![
-                "SwordSlash7".to_string(),
-            ],
+            abilities: vec!["SwordSlash7".to_string()],
             items: vec![],
             item_mods: vec![("power_1203".to_string(), "InvalidItemModTierId".to_string())],
-            sim_length: 30
+            sim_length: 30,
         };
         let report = Sim::run(&parser, &config);
-        assert!(report.contains("Tried to use invalid item mod tier ID: power_1203, InvalidItemModTierId"));
+        assert!(report
+            .contains("Tried to use invalid item mod tier ID: power_1203, InvalidItemModTierId"));
     }
 }
