@@ -1,4 +1,4 @@
-use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder};
+use actix_web::{post, web, middleware, App, HttpResponse, HttpServer, Responder};
 use std::env;
 use std::fs;
 use std::sync::Mutex;
@@ -10,6 +10,12 @@ use sim::{Sim, SimConfig};
 
 /*
 TODO
+
+Big remaining things
+    Workable frontend (JSON direct is just too time consuming to try it out with)
+        Save state in URL, with history so the back button acts as an undo if possible
+    Finish parsing of item mods, and corresponding tests
+    Finish damage calculation, dots, buffs, debuffs, etc., and corresponding tests
 
 -Test run with a set of 12 abilities (may not all be damaging)
 -Simulate (with legion probably) an entity that has these abilities, a GCD ticking down (probably just each sim tick is a GCD), cooldowns for each ability, etc.
@@ -48,10 +54,14 @@ Add in item mods
     More tests for "cacualate damage" to make sure it adds up right
     Things I may not be covering right
         "{BOOST_ABILITY_GUT}{110}" is a flat damage thing, not a mod
+    Brambleskin is broken
 Review all TODOs
-Write up a few real simulations (maybe my current rabbit/unarmed build) as examples (include on in web client)
+Write up the README
+    Include client and server notes, mention buildWebData.js
+    Mention --serve and CLI mode
 Move "TODO Phase 2" items to GitHub Issues
 Clean up these comments, anything else
+Clean up console logs and anything else in the web client
 
 
 TODO Phase 2
@@ -102,6 +112,7 @@ async fn main() -> std::io::Result<()> {
 
             HttpServer::new(move || {
                 App::new()
+                    .wrap(middleware::Compress::default())
                     .app_data(data.clone())
                     .service(echo)
                     .service(actix_files::Files::new("/", "./web/public").index_file("index.html"))

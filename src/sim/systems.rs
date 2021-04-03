@@ -21,7 +21,7 @@ fn tick_dots(report: &mut Report, dots: &mut Dots) {
             // Progress dot timer
             dot.next_tick_in -= TICK_LENGTH_IN_SECONDS;
             if dot.next_tick_in < 0 {
-                panic!("next_tick_in is less than 0, which means we're missing time, likely need to adjust TICK_LENGTH_IN_SECONDS");
+                panic!(format!("next_tick_in is less than 0, which means we're missing time, likely need to adjust TICK_LENGTH_IN_SECONDS: ability_name = {}, dot = {:#?}", ability_name, dot));
             } else if dot.next_tick_in == 0 {
                 // Dot should tick now, add to report
                 report.activity.push(Activity {
