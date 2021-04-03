@@ -9,7 +9,7 @@
 		skill2: '',
 		skill2Abilities: [],
 		slots: [],
-		itemMods: {},
+		itemMods: [],
 		simLength: 30,
 	}
 
@@ -34,6 +34,7 @@
 			try {
 				let stateFromHash = JSON.parse(atob(hash));
 				state = stateFromHash;
+				console.log('Set state from hash', state);
 			} catch (e) {
 				console.log('Invalid state from hash', hash);
 			}
@@ -48,16 +49,7 @@
 	}
 
 	function skillChanged() {
-		state.itemMods = {};
-	}
-
-	function itemModChange(e, mod) {
-		const checked = e.target.checked;
-		if (checked) {
-			state.itemMods[mod.id] = mod.tierId;
-		} else {
-			delete state.itemMods[mod.id];
-		}
+		state.itemMods = [];
 	}
 
 	async function run() {
@@ -74,8 +66,11 @@
 			}
 		}
 		// Get equipped item mods
+		// We combine modId and tierId in a key like this: "slot|modId|tierId"
+		// Split that back into the tuple we need on the backend
 		let itemMods = [];
-		for (const [modId, tierId] of Object.entries(state.itemMods)) {
+		for (const key of state.itemMods) {
+			let [slot, modId, tierId] = key.split('|');
 			itemMods.push([modId, tierId]);
 		}
 		let configJson = {
@@ -159,7 +154,7 @@
 					{#if mod.skill === state.skill1 || mod.skill === state.skill2}
 						{#if mod.slots.includes(slot.name)}
 							<label>
-								<input type=checkbox on:change={e => { itemModChange(e, mod); updateHash() }} value={mod.id}>
+								<input type=checkbox bind:group={state.itemMods} value={slot.name + '|' + mod.id + '|' + mod.tierId} on:change={updateHash}>
 								{mod.effect}
 							</label>
 						{/if}

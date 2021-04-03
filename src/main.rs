@@ -12,9 +12,6 @@ use sim::{Sim, SimConfig};
 TODO
 
 Big remaining things
-    Workable frontend (JSON direct is just too time consuming to try it out with)
-        Save state in URL, with history so the back button acts as an undo if possible
-            itemMods don't load from hash
     Finish parsing of item mods, and corresponding tests
     Finish damage calculation, dots, buffs, debuffs, etc., and corresponding tests
 
