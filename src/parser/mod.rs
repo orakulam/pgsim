@@ -371,16 +371,15 @@ impl Parser {
             .captures(effect_desc)
             .expect("Failed to get attribute mods after already checking is_match() is true");
         let attribute = caps.name("attribute").unwrap().as_str();
-        let mut modifier = caps.name("mod").unwrap().as_str().parse::<f32>().unwrap();
         let extra = caps.name("extra").unwrap().as_str();
         if !extra.is_empty() {
             item_mods.warnings.push(format!("pgsim doesn't handle extra attribute modifiers and assumes they are all active: {}", effect_desc));
         }
+        let effect;
         if attribute.starts_with("BOOST") {
-            // BOOST attributes are percentages
-            modifier /= 100.0;
+            effect = ItemEffect::FlatDamage(caps.name("mod").unwrap().as_str().parse::<i32>().unwrap());
         } else if attribute.starts_with("MOD") {
-            // No change needed, just cleaner to leave this as an empty if statement
+            effect = ItemEffect::DamageMod(caps.name("mod").unwrap().as_str().parse::<f32>().unwrap());
         } else {
             item_mods
                 .not_implemented
@@ -394,7 +393,7 @@ impl Parser {
             .entry(attribute.to_string())
             .or_insert(vec![]);
         // Add our damage mod effect
-        effects.push(ItemEffect::DamageMod(modifier));
+        effects.push(effect);
     }
 
     fn is_explicitly_ignored(&self, effect_desc: &str) -> bool {
@@ -508,7 +507,7 @@ mod tests {
         assert_eq!(item_mods.attribute_effects["BOOST_SKILL_SWORD"].len(), 1);
         assert_eq!(
             item_mods.attribute_effects["BOOST_SKILL_SWORD"][0],
-            ItemEffect::DamageMod(0.05)
+            ItemEffect::FlatDamage(5)
         );
         parser.calculate_attribute_effect_desc(&mut item_mods, "{MOD_SKILL_SWORD}{0.1}");
         assert_eq!(item_mods.attribute_effects["MOD_SKILL_SWORD"].len(), 1);

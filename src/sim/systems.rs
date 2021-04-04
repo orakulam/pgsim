@@ -114,20 +114,23 @@ fn calculate_ability(
     // Add item mods to damage calc
     let mut calculated_damage_type = player_ability.damage_type;
     let mut calculated_debuffs = player_ability.debuffs.clone();
+    let mut dot_flat_damage = 0;
     let mut flat_damage = 0;
     let mut damage_mod = 0.0;
     let mut base_damage_mod = 0.0;
     // Main calc: ((ability_base_damage+flat_damage)*(1+damage_mod)*(1+target_weakness))+(ability_base_damage*base_damage_multiplier)
-    // TODO: Lots to finish here, and handle dot mods, other types like cooldown reduction, etc.
+    // Icon ID mods
     if let Some(effects) = item_mods.icon_id_effects.get(&player_ability.icon_id) {
         for effect in effects {
             match effect {
                 ItemEffect::FlatDamage(value) => flat_damage += value,
                 ItemEffect::DamageMod(value) => damage_mod += value,
+                ItemEffect::DotDamage(value) => dot_flat_damage += value,
                 _ => (), // TODO: Handle these
             }
         }
     }
+    // Base damage mods
     for attribute in &player_ability.base_damage_attributes {
         if let Some(effects) = item_mods.attribute_effects.get(attribute) {
             for effect in effects {
@@ -138,15 +141,52 @@ fn calculate_ability(
             }
         }
     }
+    // Damage mods
     for attribute in &player_ability.damage_attributes {
         if let Some(effects) = item_mods.attribute_effects.get(attribute) {
             for effect in effects {
                 match effect {
+                    ItemEffect::FlatDamage(value) => flat_damage += value,
                     ItemEffect::DamageMod(value) => damage_mod += value,
-                    _ => panic!("Found non-DamageMod effect in damage_attributes, this shouldn't happen"),
+                    _ => panic!("Found non-FlatDamage or DamageMod effect in damage_attributes, this shouldn't happen"),
                 }
             }
         }
+    }
+    // Damage type mods
+    if let Some(effects) = item_mods.attribute_effects.get(&format!("BOOST_{:?}", player_ability.damage_type).to_uppercase()) {
+        for effect in effects {
+            match effect {
+                ItemEffect::FlatDamage(value) => flat_damage += value,
+                _ => panic!("Found non-FlatDamage effect in damage type boost, this shouldn't happen"),
+            }
+        }
+    }
+    if let Some(effects) = item_mods.attribute_effects.get(&format!("MOD_{:?}", player_ability.damage_type).to_uppercase()) {
+        for effect in effects {
+            match effect {
+                ItemEffect::DamageMod(value) => damage_mod += value,
+                _ => panic!("Found non-DamageMod effect in damage type mod, this shouldn't happen"),
+            }
+        }
+    }
+    // Dots
+    for debuff in &mut calculated_debuffs {
+        match debuff.effect {
+            DebuffEffect::Dot { ref mut damage_per_tick, damage_type, tick_per: _ } => {
+                // Find dot damage modifiers based on the damage type of the dot
+                let mut dot_damage_mod = 0.0;
+                if let Some(effects) = item_mods.attribute_effects.get(&format!("MOD_{:?}_INDIRECT", damage_type).to_uppercase()) {
+                    for effect in effects {
+                        match effect {
+                            ItemEffect::DamageMod(value) => dot_damage_mod += value,
+                            _ => panic!("Found non-DamageMod effect in indirect damage type mod, this shouldn't happen"),
+                        }
+                    }
+                }
+                *damage_per_tick = ((*damage_per_tick + dot_flat_damage) as f32 * (1.0 + dot_damage_mod)) as i32;
+            }
+        };
     }
     // TODO: Get real weakness value
     let target_weakness = 0.0;
@@ -157,4 +197,56 @@ fn calculate_ability(
         .round() as i32;
 
     (calculated_damage, calculated_damage_type, calculated_debuffs)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use super::super::Sim;
+    use crate::parser::Parser;
+
+    #[test]
+    fn calculate_ability_matches_ingame() {
+        let parser = Parser::new();
+        let player_ability = Sim::get_player_ability(&parser, &mut vec![], "Slice6").unwrap();
+
+        let item_mods = parser.calculate_item_mods(&vec![], &vec![]);
+        let (calculated_damage, _, calculated_debuffs) = calculate_ability(&player_ability, &item_mods);
+        assert_eq!(calculated_damage, 189);
+        match calculated_debuffs[0].effect {
+            DebuffEffect::Dot { damage_per_tick, damage_type, tick_per } => {
+                assert_eq!(damage_per_tick, 0);
+                assert_eq!(damage_type, DamageType::Poison);
+                assert_eq!(tick_per, 2);
+            }
+        };
+
+        let item_mods = parser.calculate_item_mods(
+            &vec![
+                // Elven Dirk
+                "item_45712".to_string(),
+            ],
+            &vec![
+                // Knife Base Damage +30%
+                ("power_16001".to_string(), "id_6".to_string()),
+                // Slice deals 85 Poison damage over 10 seconds
+                ("power_16061".to_string(), "id_9".to_string()),
+                // Knife Base Damage +25%
+                ("power_16001".to_string(), "id_5".to_string()),
+                // Indirect Poison/Trauma Damage +36%
+                ("power_16003".to_string(), "id_12".to_string()),
+                // Slice Damage +24%
+                ("power_16101".to_string(), "id_10".to_string()),
+            ],
+        );
+        let (calculated_damage, _, calculated_debuffs) = calculate_ability(&player_ability, &item_mods);
+        assert_eq!(calculated_damage, 362);
+        match calculated_debuffs[0].effect {
+            DebuffEffect::Dot { damage_per_tick, damage_type, tick_per } => {
+                assert_eq!(damage_per_tick, 115);
+                assert_eq!(damage_type, DamageType::Poison);
+                assert_eq!(tick_per, 2);
+            }
+        };
+    }
 }

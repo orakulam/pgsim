@@ -22,9 +22,6 @@ Add in item mods
     There's a todo to handle remaining mod types in the sim system, make sure to do that
         Debuffs, buffs, etc.
         in calculate_ability()
-    More tests for "caculate damage" to make sure it adds up right
-    Things I may not be covering right
-        "{BOOST_ABILITY_GUT}{110}" is a flat damage thing, not a mod
 Lots of sim tests
     -Cooldown for abilities
     Cooldown for buffs
@@ -43,8 +40,6 @@ Clean up console logs and anything else in the web client
 
 TODO Phase 2
 
-Base item mods could use more tests
-Better sim tests
 Smarter application of dots
     Check if the dot is present and try to only re-apply when needed
     Some abilities may mostly be about up front damage even when having a dot though, weigh desire to use the ability based on both upfront and dot damage (re-applying in this case may be better)

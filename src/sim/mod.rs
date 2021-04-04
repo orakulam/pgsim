@@ -295,10 +295,11 @@ impl Sim {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::parser::Parser;
 
     #[test]
     fn basic_sim_works() {
-        let parser = super::super::parser::Parser::new();
+        let parser = Parser::new();
         let mut world = World::default();
         let item_mods = parser.calculate_item_mods(&vec![], &vec![]);
         world.push((
@@ -360,7 +361,7 @@ mod tests {
     #[test]
     fn every_ability_works_in_sim() {
         // This doesn't test that the ability is right, it just tests that it works in a general sense (doesn't crash the sim)
-        let parser = super::super::parser::Parser::new();
+        let parser = Parser::new();
         for (_, ability) in &parser.data.abilities {
             if ability.skill == "Unknown" {
                 continue;
@@ -396,7 +397,7 @@ mod tests {
 
     #[test]
     fn ability_cooldowns() {
-        let parser = super::super::parser::Parser::new();
+        let parser = Parser::new();
         let mut world = World::default();
         let item_mods = parser.calculate_item_mods(&vec![], &vec![]);
         let test_ability = PlayerAbility {
@@ -458,7 +459,7 @@ mod tests {
 
     #[test]
     fn debuff_duration() {
-        let parser = super::super::parser::Parser::new();
+        let parser = Parser::new();
         let mut world = World::default();
         let item_mods = parser.calculate_item_mods(&vec![], &vec![]);
         let test_ability = PlayerAbility {
@@ -516,7 +517,7 @@ mod tests {
 
     #[test]
     fn debuff_duration_resets() {
-        let parser = super::super::parser::Parser::new();
+        let parser = Parser::new();
         let mut world = World::default();
         let item_mods = parser.calculate_item_mods(&vec![], &vec![]);
         let test_ability = PlayerAbility {
