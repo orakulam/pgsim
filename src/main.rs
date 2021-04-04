@@ -1,4 +1,4 @@
-use actix_web::{post, web, middleware, App, HttpResponse, HttpServer, Responder};
+use actix_web::{middleware, post, web, App, HttpResponse, HttpServer, Responder};
 use std::env;
 use std::fs;
 use std::sync::Mutex;

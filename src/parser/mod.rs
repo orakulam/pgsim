@@ -9,14 +9,25 @@ use data::Data;
 #[derive(Debug, PartialEq, PartialOrd, Clone)]
 pub enum ItemEffect {
     FlatDamage(i32),
-    ProcFlatDamage(i32, f32), // (value, chance)
+    ProcFlatDamage {
+        damage: i32,
+        chance: f32,
+    },
     DamageMod(f32),
-    ProcDamageMod(f32, f32), // (value, chance)
+    ProcDamageMod {
+        damage_mod: f32,
+        chance: f32,
+    },
     DotDamage(i32),
     RestoreHealth(i32),
     RestoreArmor(i32),
     RestorePower(i32),
     DamageType(DamageType),
+    DamageTypeBuff {
+        damage_type: DamageType,
+        damage_mod: f32,
+        duration: i32,
+    },
 }
 
 #[derive(Debug, Clone)]
@@ -41,6 +52,7 @@ struct ParserRegex {
     restore_power: Regex,
     damage_type: Regex,
     racials: Regex,
+    damage_type_buff: Regex,
 }
 
 pub struct Parser {
@@ -68,6 +80,7 @@ impl Parser {
 
     fn get_parser_regex() -> ParserRegex {
         // Regexes (it's important to declare these once for performance, so we do it when the parser is loaded)
+        //Slashing damage +2% for 20 seconds
         ParserRegex {
             icon_ids: Regex::new(r"<icon=([0-9]+)>").unwrap(),
             attribute_effects: Regex::new(
@@ -90,6 +103,7 @@ impl Parser {
                 Regex::new(r"(?:restore|restores) \+?(?P<restore>[0-9]+) [pP]ower").unwrap(),
             damage_type: Regex::new(r"Damage becomes (?P<damage_type>[a-zA-Z]*) instead of").unwrap(),
             racials: Regex::new(r"(?:Humans|Orcs|Elves|Dwarves|Rakshasa) gain \+?(?:[0-9]+) Max (?:Health|Hydration|Metabolism|Power|Armor|Bodyheat)").unwrap(),
+            damage_type_buff: Regex::new(r"(?P<damage_type>Slashing) damage \+(?P<damage_mod>[0-9]+)% for (?P<duration>[0-9]+) seconds").unwrap(),
         }
     }
 
@@ -250,38 +264,64 @@ impl Parser {
             ));
         }
         if let Some(caps) = self.regex.proc_flat_damage.captures(effect_desc) {
-            new_effects.push(ItemEffect::ProcFlatDamage(
-                caps.name("damage")
+            new_effects.push(ItemEffect::ProcFlatDamage {
+                damage: caps
+                    .name("damage")
                     .unwrap()
                     .as_str()
                     .parse::<i32>()
                     .unwrap(),
-                caps.name("chance")
+                chance: caps
+                    .name("chance")
                     .unwrap()
                     .as_str()
                     .parse::<f32>()
-                    .unwrap() / 100.0,
-            ));
+                    .unwrap()
+                    / 100.0,
+            });
         }
         if let Some(caps) = self.regex.proc_damage_mod.captures(effect_desc) {
-            new_effects.push(ItemEffect::ProcDamageMod(
-                caps.name("damage")
+            new_effects.push(ItemEffect::ProcDamageMod {
+                damage_mod: caps
+                    .name("damage")
                     .unwrap()
                     .as_str()
                     .parse::<f32>()
-                    .unwrap() / 100.0,
-                caps.name("chance")
+                    .unwrap()
+                    / 100.0,
+                chance: caps
+                    .name("chance")
                     .unwrap()
                     .as_str()
                     .parse::<f32>()
-                    .unwrap() / 100.0,
-            ));
+                    .unwrap()
+                    / 100.0,
+            });
         }
         if let Some(caps) = self.regex.damage_type.captures(effect_desc) {
             new_effects.push(ItemEffect::DamageType(
                 DamageType::from_str(caps.name("damage_type").unwrap().as_str())
                     .expect("Failed to parse damage type string as enum"),
             ));
+        }
+        if let Some(caps) = self.regex.damage_type_buff.captures(effect_desc) {
+            new_effects.push(ItemEffect::DamageTypeBuff {
+                damage_type: DamageType::from_str(caps.name("damage_type").unwrap().as_str())
+                    .expect("Failed to parse damage type string as enum"),
+                damage_mod: caps
+                    .name("damage_mod")
+                    .unwrap()
+                    .as_str()
+                    .parse::<f32>()
+                    .unwrap()
+                    / 100.0,
+                duration: caps
+                    .name("duration")
+                    .unwrap()
+                    .as_str()
+                    .parse::<i32>()
+                    .unwrap(),
+            });
         }
 
         // This is an Icon ID style effect desc
@@ -330,7 +370,8 @@ impl Parser {
     fn is_explicitly_ignored(&self, effect_desc: &str) -> bool {
         self.regex.racials.is_match(effect_desc)
             || effect_desc.contains("taunt as if they did")
-            || effect_desc.contains("If you use Premeditated Doom while standing near your Web Trap")
+            || effect_desc
+                .contains("If you use Premeditated Doom while standing near your Web Trap")
             || effect_desc.contains("chance to avoid being hit by burst attacks")
             || effect_desc.contains("Combo: ")
             || effect_desc.contains("For 12 seconds after using Infinite Legs")
@@ -468,7 +509,11 @@ mod tests {
             ignored: vec![],
             not_implemented: vec![],
         };
-        assert!(icon_ids.len() > 0, "no icon IDs: effect_desc = {}", effect_desc);
+        assert!(
+            icon_ids.len() > 0,
+            "no icon IDs: effect_desc = {}",
+            effect_desc
+        );
         // Explicitly ignored mods, so we can test ignore length later
         if parser.is_explicitly_ignored(effect_desc) {
             item_mods
@@ -597,7 +642,10 @@ mod tests {
             &parser,
             "<icon=3541>Sonic Burst has a 60% chance to deal +10% damage to all targets",
             vec![3541],
-            vec![ItemEffect::ProcDamageMod(0.1, 0.6)],
+            vec![ItemEffect::ProcDamageMod {
+                damage_mod: 0.1,
+                chance: 0.6,
+            }],
             0,
             0,
         );
@@ -629,16 +677,23 @@ mod tests {
         test_icon_id_effect(
             &parser,
             "<icon=3204>Psi Adrenaline Wave increases all targets' Slashing damage +2% for 20 seconds",
-            vec![],
-            vec![ItemEffect::FlatDamage(50_000)],
+            vec![3204],
+            vec![ItemEffect::DamageTypeBuff {
+                damage_type: DamageType::Slashing,
+                damage_mod: 0.02,
+                duration: 20,
+            }],
             0,
             0,
         );
         test_icon_id_effect(
             &parser,
             "<icon=3783>Fairy Fire's damage type becomes Fire, and it deals an additional 15 Fire damage over 10 seconds",
-            vec![],
-            vec![ItemEffect::FlatDamage(50_000)],
+            vec![3783],
+            vec![
+                ItemEffect::DamageType(DamageType::Fire),
+                ItemEffect::DotDamage(15),
+            ],
             0,
             0,
         );
