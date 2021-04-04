@@ -15,29 +15,7 @@ Big remaining things
     Finish parsing of item mods, and corresponding tests
     Finish damage calculation, dots, buffs, debuffs, etc., and corresponding tests
 
--Test run with a set of 12 abilities (may not all be damaging)
--Simulate (with legion probably) an entity that has these abilities, a GCD ticking down (probably just each sim tick is a GCD), cooldowns for each ability, etc.
--Gather ongoing damage from abilities (basic)
-    -First direct damage only, no mitigation
--Very basic report of damage done in X time (5 minutes)
--Gather ongoing damage from abilities (advanced)
-    -Add DoTs
-        -Handle DoTs overlapping (HashMap instead of vec)
-    -Also gather DPS by damage type (for combating resistance/immunity)
--Clean up code structure, move to separate files, etc.
-    -Separate out parsed structs from any used in the actualy sim
-        -Parsed structs -> Item mod damage math -> Saved in "real" Ability structs to use in the sim, in my own format
--Add basic tests
-    -Parser tests
-    -Sim tests
--Config system to control what gets simulated (abilities and items effectively)
--Add in base item mods
-    -Pretty sure base items are calculated separately, like faerie armor?
--Read config from a file
--Accept config file path as argument
--Set up heroku hosting
--There's some places where the app will fully crash if the config is wrong, fix that
-    -Write test with intentionally bad configs (bad skill names, etc.)
+Remove potential_power and do that calculation on the fly in the sim (more accurate, cleaner code)
 Add in item mods
     Parse each item mod type, and either be able to handle it or explicitly ignore it (if it's something we don't care about yet, like evasion)
         IconID parsing
@@ -52,7 +30,11 @@ Add in item mods
     More tests for "cacualate damage" to make sure it adds up right
     Things I may not be covering right
         "{BOOST_ABILITY_GUT}{110}" is a flat damage thing, not a mod
-    Brambleskin is broken
+Lots of sim tests
+    Cooldowns for buffs, debuffs
+    Buff effectiveness (does it really boost damage, for example)
+    Debuff effectiveness (does it really cause weakness)
+    Debuff as a dot (does it deal damage)
 Review all TODOs
 Write up the README
     Include client and server notes, mention buildWebData.js

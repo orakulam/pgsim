@@ -175,6 +175,13 @@ impl Sim {
             Some(ability_key) => {
                 match parser.data.abilities.get(ability_key) {
                     Some(ability) => {
+                        if ability.skill == "Unknown" {
+                            warnings.push(format!(
+                                "Ignored ability from Unknown skill: {}",
+                                ability_name
+                            ));
+                            return None;
+                        }
                         let damage = match ability.pve.damage {
                             Some(damage) => damage,
                             None => 0,
@@ -182,14 +189,41 @@ impl Sim {
                         let mut dots = vec![];
                         if let Some(ability_dots) = &ability.pve.dots {
                             for dot in ability_dots {
+                                let mut duration = dot.duration;
+                                let mut num_ticks = dot.num_ticks;
+                                if duration == 0 {
+                                    // Override duration for thorns style abilities, since the data doesn't quite give us everything we need
+                                    // Basically, we turn thorns abilities into dots that last their duration and tick once per second
+                                    // This is pretty rudimentary, but works okay in our single target sim
+                                    if ability_name.contains("Brambleskin") {
+                                        duration = 30;
+                                        num_ticks = 30;
+                                    } else if ability_name.contains("FireShield") {
+                                        duration = 20;
+                                        num_ticks = 20;
+                                    } else if ability_name.contains("PhoenixStrike") {
+                                        duration = 15;
+                                        num_ticks = 15;
+                                    } else if ability_name.contains("MoltenVeins") {
+                                        duration = 10;
+                                        num_ticks = 10;
+                                    } else if ability_name.contains("PrivacyField") {
+                                        duration = 30;
+                                        num_ticks = 30;
+                                    } else if ability_name.contains("DrinkBlood") {
+                                        duration = 1;
+                                    } else {
+                                        unimplemented!("Unhandled dot with duration = 0");
+                                    }
+                                }
                                 dots.push(Dot {
                                     damage_per_tick: dot.damage_per_tick,
                                     damage_type: dot
                                         .damage_type
                                         .expect("Tried to sim ability with no damage type"),
-                                    tick_per: dot.duration / dot.num_ticks,
-                                    next_tick_in: dot.duration / dot.num_ticks,
-                                    ticks_remaining: dot.num_ticks,
+                                    tick_per: duration / num_ticks,
+                                    next_tick_in: duration / num_ticks,
+                                    ticks_remaining: num_ticks,
                                 });
                             }
                         }
@@ -372,5 +406,44 @@ mod tests {
         assert_eq!(report.activity[3].damage_type, DamageType::Slashing);
         assert_eq!(report.activity[4].damage, 30);
         assert_eq!(report.activity[4].damage_type, DamageType::Trauma);
+    }
+
+    #[test]
+    fn every_ability_works_in_sim() {
+        // This doesn't test that the ability is right, it just tests that it works in a general sense (doesn't crash the sim)
+        let parser = super::super::parser::Parser::new();
+        for (_, ability) in &parser.data.abilities {
+            if ability.skill == "Unknown" {
+                continue;
+            }
+            let mut world = World::default();
+            let item_mods = parser.calculate_item_mods(&vec![], &vec![]);
+            world.push((
+                Player,
+                PlayerAbilities {
+                    abilities: vec![
+                        Sim::get_player_ability(&parser, &item_mods, &mut vec![], &ability.internal_name)
+                            .unwrap(),
+                    ],
+                },
+            ));
+            world.push((
+                Enemy,
+                Report { activity: vec![] },
+                Dots {
+                    dots_by_ability_name: HashMap::new(),
+                },
+            ));
+
+            let mut resources = Resources::default();
+            resources.insert(item_mods);
+
+            let mut schedule = systems::build_schedule();
+
+            let number_of_ticks = 5;
+            for _ in 0..number_of_ticks {
+                schedule.execute(&mut world, &mut resources);
+            }
+        }
     }
 }

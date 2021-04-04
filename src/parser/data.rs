@@ -30,7 +30,7 @@ struct Skill {
 #[derive(Clone, Serialize, Deserialize, Debug)]
 #[serde(rename_all = "PascalCase")]
 pub struct Ability {
-    skill: SkillName,
+    pub skill: SkillName,
     pub name: AbilityName,
     pub internal_name: InternalAbilityName,
     prerequisite: Option<InternalAbilityName>,
@@ -122,7 +122,7 @@ impl Data {
             &fs::read_to_string("./data/skills.json").expect("Unable to read skills.json"),
         )
         .unwrap();
-        let abilities: HashMap<String, Ability> = serde_json::from_str(
+        let mut abilities: HashMap<String, Ability> = serde_json::from_str(
             &fs::read_to_string("./data/abilities.json").expect("Unable to read abilities.json"),
         )
         .unwrap();
