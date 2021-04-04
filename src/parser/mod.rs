@@ -89,7 +89,7 @@ impl Parser {
             .unwrap(),
             flat_damage: Regex::new(r"(?:deal|deals|[dD]amage) \+?(?P<damage>[0-9]+) ?(?:$|\.|damage|armor damage)").unwrap(),
             proc_flat_damage:  Regex::new(r"(?P<chance>[0-9]+)% chance to deal \+(?P<damage>[0-9]+) damage").unwrap(),
-            damage_mod: Regex::new(r"(?:deals|damage) (?P<damage>[0-9]+)% (?:damage|and)").unwrap(),
+            damage_mod: Regex::new(r"(?:deals|[dD]amage) \+?(?P<damage>[0-9]+)% ?(?:$|damage|and)").unwrap(),
             proc_damage_mod:  Regex::new(r"(?P<chance>[0-9]+)% chance to deal \+(?P<damage>[0-9]+)% damage").unwrap(),
             dot_damage:
                 Regex::new(r"(?:deal|deals|deals an additional) \+?(?P<damage>[0-9]+).*damage over")
@@ -101,7 +101,7 @@ impl Parser {
                 Regex::new(r"(?:restore|restores) \+?(?P<restore>[0-9]+) [aA]rmor").unwrap(),
             restore_power:
                 Regex::new(r"(?:restore|restores) \+?(?P<restore>[0-9]+) [pP]ower").unwrap(),
-            damage_type: Regex::new(r"Damage becomes (?P<damage_type>[a-zA-Z]*) instead of").unwrap(),
+            damage_type: Regex::new(r"[dD]amage(?:| type) becomes (?P<damage_type>[a-zA-Z]*)").unwrap(),
             racials: Regex::new(r"(?:Humans|Orcs|Elves|Dwarves|Rakshasa) gain \+?(?:[0-9]+) Max (?:Health|Hydration|Metabolism|Power|Armor|Bodyheat)").unwrap(),
             damage_type_buff: Regex::new(r"(?P<damage_type>Slashing) damage \+(?P<damage_mod>[0-9]+)% for (?P<duration>[0-9]+) seconds").unwrap(),
         }
@@ -199,6 +199,7 @@ impl Parser {
             || effect_desc.contains("terrifies the target")
             || effect_desc.contains("to non-Elite targets")
             || effect_desc.contains("reset timer")
+            || effect_desc.contains("Rage")
         {
             item_mods
                 .warnings
@@ -224,7 +225,7 @@ impl Parser {
                     .unwrap()
                     .as_str()
                     .parse::<f32>()
-                    .unwrap(),
+                    .unwrap() / 100.0,
             ));
         }
         if let Some(caps) = self.regex.dot_damage.captures(effect_desc) {
@@ -386,6 +387,8 @@ impl Parser {
             || effect_desc.contains("Coordinated Assault grants all allies")
             || effect_desc.contains("Blocking Stance boosts your Direct Cold Damage")
             || effect_desc.contains("Squeal uniformly diminishes all targets' entire aggro lists")
+            || effect_desc.contains("Infuriating Bash generates no Rage and lowers Rage by")
+            || effect_desc.contains("Your Extra Heart mutation causes the target to regain")
             || effect_desc.starts_with("Fairies gain")
             || effect_desc.contains("_COST_MOD}")
             || effect_desc.starts_with("{MAX_HEALTH}")
@@ -519,6 +522,7 @@ mod tests {
             item_mods
                 .ignored
                 .push(format!("Ignored mod: {}", effect_desc));
+            return;
         }
         parser.calculate_icon_id_effect_desc(&mut item_mods, effect_desc);
         for icon_id in &icon_ids {
@@ -700,42 +704,42 @@ mod tests {
         test_icon_id_effect(
             &parser,
             "<icon=3698>Hare Dash restores 8 Armor to you",
-            vec![],
-            vec![ItemEffect::FlatDamage(50_000)],
+            vec![3698],
+            vec![ItemEffect::RestoreArmor(8)],
             0,
             0,
         );
         test_icon_id_effect(
             &parser,
             "<icon=3024><icon=3443>Flashing Strike and Hacking Blade Damage +6%",
-            vec![],
-            vec![ItemEffect::FlatDamage(50_000)],
+            vec![3024, 3443],
+            vec![ItemEffect::DamageMod(0.06)],
             0,
             0,
         );
         test_icon_id_effect(
             &parser,
             "<icon=3525>Blizzard deals 14 armor damage and generates -10 Rage",
-            vec![],
-            vec![ItemEffect::FlatDamage(50_000)],
-            0,
+            vec![3525],
+            vec![ItemEffect::FlatDamage(14)],
+            2,
             0,
         );
         test_icon_id_effect(
             &parser,
             "<icon=3448>Infuriating Bash generates no Rage and lowers Rage by 100",
+            vec![3448],
             vec![],
-            vec![ItemEffect::FlatDamage(50_000)],
             0,
-            0,
+            1,
         );
         test_icon_id_effect(
             &parser,
             "<icon=2182>Your Extra Heart mutation causes the target to regain +5 Power every 20 seconds",
+            vec![2182],
             vec![],
-            vec![ItemEffect::FlatDamage(50_000)],
             0,
-            0,
+            1,
         );
         test_icon_id_effect(
             &parser,
