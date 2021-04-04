@@ -393,4 +393,185 @@ mod tests {
             }
         }
     }
+
+    #[test]
+    fn ability_cooldowns() {
+        let parser = super::super::parser::Parser::new();
+        let mut world = World::default();
+        let item_mods = parser.calculate_item_mods(&vec![], &vec![]);
+        let test_ability = PlayerAbility {
+            name: "Test".to_string(),
+            damage: 294,
+            damage_type: DamageType::Slashing,
+            reset_time: 10.0,
+            buffs: vec![],
+            debuffs: vec![
+                Debuff {
+                    remaining_duration: 12,
+                    effect: DebuffEffect::Dot {
+                        damage_per_tick: 30,
+                        damage_type: DamageType::Trauma,
+                        tick_per: 2,
+                    },
+                },
+            ],
+            cooldown: 0.0,
+            icon_id: 3024,
+            base_damage_attributes: vec![],
+            damage_attributes: vec![],
+        };
+        let player: Entity = world.push((
+            Player,
+            PlayerAbilities {
+                abilities: vec![test_ability],
+            },
+        ));
+        world.push((
+            Enemy,
+            Report { activity: vec![] },
+            Debuffs(HashMap::new()),
+        ));
+
+        let mut resources = Resources::default();
+        resources.insert(item_mods);
+
+        let mut schedule = systems::build_schedule();
+
+        for _ in 0..9 {
+            schedule.execute(&mut world, &mut resources);
+        }
+
+        let entry = world.entry(player).unwrap();
+        let player_abilities = entry.get_component::<PlayerAbilities>().unwrap();
+        assert_eq!(player_abilities.abilities[0].cooldown, 1.0);
+
+        schedule.execute(&mut world, &mut resources);
+        let entry = world.entry(player).unwrap();
+        let player_abilities = entry.get_component::<PlayerAbilities>().unwrap();
+        assert_eq!(player_abilities.abilities[0].cooldown, 0.0);
+
+        schedule.execute(&mut world, &mut resources);
+        let entry = world.entry(player).unwrap();
+        let player_abilities = entry.get_component::<PlayerAbilities>().unwrap();
+        assert_eq!(player_abilities.abilities[0].cooldown, 9.0);
+    }
+
+    #[test]
+    fn debuff_duration() {
+        let parser = super::super::parser::Parser::new();
+        let mut world = World::default();
+        let item_mods = parser.calculate_item_mods(&vec![], &vec![]);
+        let test_ability = PlayerAbility {
+            name: "Test".to_string(),
+            damage: 294,
+            damage_type: DamageType::Slashing,
+            reset_time: 60.0,
+            buffs: vec![],
+            debuffs: vec![
+                Debuff {
+                    remaining_duration: 12,
+                    effect: DebuffEffect::Dot {
+                        damage_per_tick: 30,
+                        damage_type: DamageType::Trauma,
+                        tick_per: 2,
+                    },
+                },
+            ],
+            cooldown: 0.0,
+            icon_id: 3024,
+            base_damage_attributes: vec![],
+            damage_attributes: vec![],
+        };
+        world.push((
+            Player,
+            PlayerAbilities {
+                abilities: vec![test_ability],
+            },
+        ));
+        let enemy: Entity = world.push((
+            Enemy,
+            Report { activity: vec![] },
+            Debuffs(HashMap::new()),
+        ));
+
+        let mut resources = Resources::default();
+        resources.insert(item_mods);
+
+        let mut schedule = systems::build_schedule();
+
+        for _ in 0..12 {
+            schedule.execute(&mut world, &mut resources);
+        }
+
+        let entry = world.entry(enemy).unwrap();
+        let debuffs = entry.get_component::<Debuffs>().unwrap();
+        assert_eq!(debuffs.0.len(), 1);
+        assert_eq!(debuffs.0["Test"][0].remaining_duration, 1);
+
+        schedule.execute(&mut world, &mut resources);
+        let entry = world.entry(enemy).unwrap();
+        let debuffs = entry.get_component::<Debuffs>().unwrap();
+        assert_eq!(debuffs.0.len(), 0);
+    }
+
+    #[test]
+    fn debuff_duration_resets() {
+        let parser = super::super::parser::Parser::new();
+        let mut world = World::default();
+        let item_mods = parser.calculate_item_mods(&vec![], &vec![]);
+        let test_ability = PlayerAbility {
+            name: "Test".to_string(),
+            damage: 294,
+            damage_type: DamageType::Slashing,
+            reset_time: 3.0,
+            buffs: vec![],
+            debuffs: vec![
+                Debuff {
+                    remaining_duration: 12,
+                    effect: DebuffEffect::Dot {
+                        damage_per_tick: 30,
+                        damage_type: DamageType::Trauma,
+                        tick_per: 2,
+                    },
+                },
+            ],
+            cooldown: 0.0,
+            icon_id: 3024,
+            base_damage_attributes: vec![],
+            damage_attributes: vec![],
+        };
+        world.push((
+            Player,
+            PlayerAbilities {
+                abilities: vec![test_ability],
+            },
+        ));
+        let enemy: Entity = world.push((
+            Enemy,
+            Report { activity: vec![] },
+            Debuffs(HashMap::new()),
+        ));
+
+        let mut resources = Resources::default();
+        resources.insert(item_mods);
+
+        let mut schedule = systems::build_schedule();
+
+        schedule.execute(&mut world, &mut resources);
+        let entry = world.entry(enemy).unwrap();
+        let debuffs = entry.get_component::<Debuffs>().unwrap();
+        assert_eq!(debuffs.0["Test"][0].remaining_duration, 12);
+        schedule.execute(&mut world, &mut resources);
+        let entry = world.entry(enemy).unwrap();
+        let debuffs = entry.get_component::<Debuffs>().unwrap();
+        assert_eq!(debuffs.0["Test"][0].remaining_duration, 11);
+        schedule.execute(&mut world, &mut resources);
+        let entry = world.entry(enemy).unwrap();
+        let debuffs = entry.get_component::<Debuffs>().unwrap();
+        assert_eq!(debuffs.0["Test"][0].remaining_duration, 10);
+        schedule.execute(&mut world, &mut resources);
+        let entry = world.entry(enemy).unwrap();
+        let debuffs = entry.get_component::<Debuffs>().unwrap();
+        assert_eq!(debuffs.0["Test"][0].remaining_duration, 12);
+    }
 }

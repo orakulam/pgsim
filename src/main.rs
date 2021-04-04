@@ -26,10 +26,12 @@ Add in item mods
     Things I may not be covering right
         "{BOOST_ABILITY_GUT}{110}" is a flat damage thing, not a mod
 Lots of sim tests
-    Cooldowns for buffs, debuffs
+    -Cooldown for abilities
+    Cooldown for buffs
+    -Cooldown for debuffs
     Buff effectiveness (does it really boost damage, for example)
     Debuff effectiveness (does it really cause weakness)
-    Debuff as a dot (does it deal damage)
+    -Debuff as a dot (does it deal damage)
 Review all TODOs
 Write up the README
     Include client and server notes, mention buildWebData.js
