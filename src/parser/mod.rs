@@ -28,6 +28,11 @@ pub enum ItemEffect {
         damage_mod: f32,
         duration: i32,
     },
+    VulnerabilityDebuff {
+        damage_type: DamageType,
+        damage_mod: f32,
+        duration: i32,
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -53,6 +58,7 @@ struct ParserRegex {
     damage_type: Regex,
     racials: Regex,
     damage_type_buff: Regex,
+    vulnerability_debuff: Regex,
 }
 
 pub struct Parser {
@@ -104,6 +110,7 @@ impl Parser {
             damage_type: Regex::new(r"[dD]amage(?:| type) becomes (?P<damage_type>[a-zA-Z]*)").unwrap(),
             racials: Regex::new(r"(?:Humans|Orcs|Elves|Dwarves|Rakshasa) gain \+?(?:[0-9]+) Max (?:Health|Hydration|Metabolism|Power|Armor|Bodyheat)").unwrap(),
             damage_type_buff: Regex::new(r"(?P<damage_type>Slashing) damage \+(?P<damage_mod>[0-9]+)% for (?P<duration>[0-9]+) seconds").unwrap(),
+            vulnerability_debuff: Regex::new(r"(?P<damage_mod>[0-9]+)% more vulnerable to (?P<damage_type>Electricity) damage for (?P<duration>[0-9]+) seconds").unwrap(),
         }
     }
 
@@ -200,6 +207,9 @@ impl Parser {
             || effect_desc.contains("to non-Elite targets")
             || effect_desc.contains("reset timer")
             || effect_desc.contains("Rage")
+            || effect_desc.contains("total damage against Demons")
+            || effect_desc.contains("hits all enemies within 5 meters")
+            || effect_desc.contains("deal -1 damage for")
         {
             item_mods
                 .warnings
@@ -324,6 +334,25 @@ impl Parser {
                     .unwrap(),
             });
         }
+        if let Some(caps) = self.regex.vulnerability_debuff.captures(effect_desc) {
+            new_effects.push(ItemEffect::VulnerabilityDebuff {
+                damage_type: DamageType::from_str(caps.name("damage_type").unwrap().as_str())
+                    .expect("Failed to parse damage type string as enum"),
+                damage_mod: caps
+                    .name("damage_mod")
+                    .unwrap()
+                    .as_str()
+                    .parse::<f32>()
+                    .unwrap()
+                    / 100.0,
+                duration: caps
+                    .name("duration")
+                    .unwrap()
+                    .as_str()
+                    .parse::<i32>()
+                    .unwrap(),
+            });
+        }
 
         // This is an Icon ID style effect desc
         for caps in self.regex.icon_ids.captures_iter(effect_desc) {
@@ -388,7 +417,9 @@ impl Parser {
             || effect_desc.contains("Blocking Stance boosts your Direct Cold Damage")
             || effect_desc.contains("Squeal uniformly diminishes all targets' entire aggro lists")
             || effect_desc.contains("Infuriating Bash generates no Rage and lowers Rage by")
-            || effect_desc.contains("Your Extra Heart mutation causes the target to regain")
+            || effect_desc.contains("Power every 20 seconds")
+            || effect_desc.contains("Power every 5 seconds")
+            || effect_desc.contains("Health every 5 seconds")
             || effect_desc.starts_with("Fairies gain")
             || effect_desc.contains("_COST_MOD}")
             || effect_desc.starts_with("{MAX_HEALTH}")
@@ -744,65 +775,75 @@ mod tests {
         test_icon_id_effect(
             &parser,
             "<icon=3430>Spark of Death deals +1 damage and renders target 10% more vulnerable to Electricity damage for 30 seconds",
-            vec![],
-            vec![ItemEffect::FlatDamage(50_000)],
+            vec![3430],
+            vec![
+                ItemEffect::FlatDamage(1),
+                ItemEffect::VulnerabilityDebuff {
+                    damage_type: DamageType::Electricity,
+                    damage_mod: 0.1,
+                    duration: 30,
+                }
+            ],
             0,
             0,
         );
         test_icon_id_effect(
             &parser,
             "<icon=3784>Pixie Flare deals +7 damage, and deals +33% total damage against Demons",
-            vec![],
-            vec![ItemEffect::FlatDamage(50_000)],
-            0,
+            vec![3784],
+            vec![ItemEffect::FlatDamage(7)],
+            1,
             0,
         );
         test_icon_id_effect(
             &parser,
             "<icon=3785>Fae Conduit also heals 10 Health every 5 seconds",
+            vec![3785],
             vec![],
-            vec![ItemEffect::FlatDamage(50_000)],
             0,
-            0,
+            1,
         );
         test_icon_id_effect(
             &parser,
             "<icon=3546><icon=3553>Combo: Rip+Any Melee+Any Giant Bat Attack+Tear: final step hits all targets within 5 meters and deals +5 damage.",
+            vec![3546, 3553],
             vec![],
-            vec![ItemEffect::FlatDamage(50_000)],
             0,
-            0,
+            1,
         );
         test_icon_id_effect(
             &parser,
             "<icon=3402>Gripjaw has a 70% chance to deal +20% damage",
-            vec![],
-            vec![ItemEffect::FlatDamage(50_000)],
+            vec![3402],
+            vec![ItemEffect::ProcDamageMod {
+                damage_mod: 0.2,
+                chance: 0.7,
+            }],
             0,
             0,
         );
         test_icon_id_effect(
             &parser,
             "<icon=2198>Life Steal restores 4 Health",
-            vec![],
-            vec![ItemEffect::FlatDamage(50_000)],
+            vec![2198],
+            vec![ItemEffect::RestoreHealth(4)],
             0,
             0,
         );
         test_icon_id_effect(
             &parser,
             "<icon=2113>Many Cuts hits all enemies within 5 meters",
+            vec![2113],
             vec![],
-            vec![ItemEffect::FlatDamage(50_000)],
-            0,
+            1,
             0,
         );
         test_icon_id_effect(
             &parser,
             "<icon=3301>Poison Arrow makes target's attacks deal -1 damage for 10 seconds",
+            vec![3301],
             vec![],
-            vec![ItemEffect::FlatDamage(50_000)],
-            0,
+            1,
             0,
         );
         test_icon_id_effect(

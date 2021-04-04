@@ -2,7 +2,7 @@ use legion::*;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-use crate::parser::{data::DamageType, ItemEffect, ItemMods, Parser};
+use crate::parser::{data::DamageType, Parser};
 
 mod systems;
 
@@ -22,8 +22,8 @@ struct PlayerAbility {
     damage: i32,
     damage_type: DamageType,
     reset_time: f32,
-    dots: Vec<Dot>,
-    potential_power: i32,
+    buffs: Vec<Buff>,
+    debuffs: Vec<Debuff>,
     cooldown: f32,
     icon_id: i32,
     base_damage_attributes: Vec<String>,
@@ -39,17 +39,33 @@ struct Report {
 }
 
 #[derive(Debug)]
-struct Dots {
-    dots_by_ability_name: HashMap<String, Vec<Dot>>,
+struct Buffs(HashMap<String, Vec<Buff>>);
+
+#[derive(Debug)]
+struct Buff {
+    remaining_duration: i32,
+    effect: BuffEffect,
+}
+
+#[derive(Debug)]
+enum BuffEffect {}
+
+#[derive(Debug)]
+struct Debuffs(HashMap<String, Vec<Debuff>>);
+
+#[derive(Debug, Clone)]
+struct Debuff {
+    remaining_duration: i32,
+    effect: DebuffEffect,
 }
 
 #[derive(Debug, Clone)]
-struct Dot {
-    damage_per_tick: i32,
-    damage_type: DamageType,
-    tick_per: i32,
-    next_tick_in: i32,
-    ticks_remaining: i32,
+enum DebuffEffect {
+    Dot {
+        damage_per_tick: i32,
+        damage_type: DamageType,
+        tick_per: i32,
+    },
 }
 
 #[derive(Debug)]
@@ -93,7 +109,7 @@ impl Sim {
                     .abilities
                     .iter()
                     .filter_map(|x| {
-                        Sim::get_player_ability(&parser, &item_mods, &mut report_warnings, x)
+                        Sim::get_player_ability(&parser, &mut report_warnings, x)
                     })
                     .collect(),
             },
@@ -101,9 +117,7 @@ impl Sim {
         let enemy: Entity = world.push((
             Enemy,
             Report { activity: vec![] },
-            Dots {
-                dots_by_ability_name: HashMap::new(),
-            },
+            Debuffs(HashMap::new()),
         ));
 
         let mut resources = Resources::default();
@@ -166,7 +180,6 @@ impl Sim {
 
     fn get_player_ability(
         parser: &Parser,
-        item_mods: &ItemMods,
         warnings: &mut Vec<String>,
         ability_name: &str,
     ) -> Option<PlayerAbility> {
@@ -186,7 +199,7 @@ impl Sim {
                             Some(damage) => damage,
                             None => 0,
                         };
-                        let mut dots = vec![];
+                        let mut debuffs = vec![];
                         if let Some(ability_dots) = &ability.pve.dots {
                             for dot in ability_dots {
                                 let mut duration = dot.duration;
@@ -216,14 +229,15 @@ impl Sim {
                                         unimplemented!("Unhandled dot with duration = 0");
                                     }
                                 }
-                                dots.push(Dot {
-                                    damage_per_tick: dot.damage_per_tick,
-                                    damage_type: dot
-                                        .damage_type
-                                        .expect("Tried to sim ability with no damage type"),
-                                    tick_per: duration / num_ticks,
-                                    next_tick_in: duration / num_ticks,
-                                    ticks_remaining: num_ticks,
+                                debuffs.push(Debuff {
+                                    remaining_duration: duration,
+                                    effect: DebuffEffect::Dot {
+                                        damage_per_tick: dot.damage_per_tick,
+                                        damage_type: dot
+                                            .damage_type
+                                            .expect("Tried to sim ability with no damage type"),
+                                        tick_per: duration / num_ticks,
+                                    },
                                 });
                             }
                         }
@@ -242,32 +256,21 @@ impl Sim {
                             Some(attributes) => attributes.clone(),
                             None => vec![],
                         });
-                        // TODO: Also calculate healing, power restore potential in potential_power
-                        // TODO: I don't love the overall flow here (creating a PlayerAbility first, then modifying it, feels open to bugs later)
-                        let mut player_ability = PlayerAbility {
+                        Some(PlayerAbility {
                             name: ability.name.clone(),
                             damage,
                             damage_type: ability
                                 .damage_type
                                 .expect("Tried to sim ability with no damage type"),
                             reset_time: ability.reset_time,
-                            dots,
-                            potential_power: 0,
+                            // TODO: Add base ability buffs for this
+                            buffs: vec![],
+                            debuffs,
                             cooldown: 0.0,
                             icon_id: ability.icon_id,
                             base_damage_attributes,
                             damage_attributes,
-                        };
-                        let (calculated_damage, _, calculated_dots) =
-                            Sim::calculate_damage(&player_ability, item_mods);
-                        let mut calculated_total_dot_damage = 0;
-                        for dot in calculated_dots {
-                            calculated_total_dot_damage +=
-                                dot.damage_per_tick * dot.ticks_remaining;
-                        }
-                        player_ability.potential_power =
-                            calculated_damage + calculated_total_dot_damage;
-                        Some(player_ability)
+                        })
                     }
                     None => {
                         warnings.push(format!(
@@ -287,58 +290,6 @@ impl Sim {
             }
         }
     }
-
-    fn calculate_damage(
-        player_ability: &PlayerAbility,
-        item_mods: &ItemMods,
-    ) -> (i32, DamageType, Vec<Dot>) {
-        // Add item mods to damage calc
-        let mut calculated_damage_type = player_ability.damage_type;
-        let mut calculated_dots = player_ability.dots.clone();
-        let mut flat_damage = 0;
-        let mut damage_mod = 0.0;
-        let mut base_damage_mod = 0.0;
-        // Main calc: ((ability_base_damage+flat_damage)*(1+damage_mod)*(1+target_weakness))+(ability_base_damage*base_damage_multiplier)
-        // TODO: Lots to finish here, and handle dot mods, other types like cooldown reduction, etc.
-        if let Some(effects) = item_mods.icon_id_effects.get(&player_ability.icon_id) {
-            for effect in effects {
-                match effect {
-                    ItemEffect::FlatDamage(value) => flat_damage += value,
-                    ItemEffect::DamageMod(value) => damage_mod += value,
-                    _ => (), // TODO: Handle these
-                }
-            }
-        }
-        for attribute in &player_ability.base_damage_attributes {
-            if let Some(effects) = item_mods.attribute_effects.get(attribute) {
-                for effect in effects {
-                    match effect {
-                        ItemEffect::DamageMod(value) => base_damage_mod += value,
-                        _ => panic!("Found non-DamageMod effect in base_damage_attributes, this shouldn't happen"),
-                    }
-                }
-            }
-        }
-        for attribute in &player_ability.damage_attributes {
-            if let Some(effects) = item_mods.attribute_effects.get(attribute) {
-                for effect in effects {
-                    match effect {
-                        ItemEffect::DamageMod(value) => damage_mod += value,
-                        _ => panic!("Found non-DamageMod effect in damage_attributes, this shouldn't happen"),
-                    }
-                }
-            }
-        }
-        // TODO: Get real weakness value
-        let target_weakness = 0.0;
-        let calculated_damage = (((player_ability.damage + flat_damage) as f32
-            * (1.0 + damage_mod)
-            * (1.0 + target_weakness))
-            + (player_ability.damage as f32 * base_damage_mod))
-            .round() as i32;
-
-        (calculated_damage, calculated_damage_type, calculated_dots)
-    }
 }
 
 #[cfg(test)]
@@ -354,9 +305,9 @@ mod tests {
             Player,
             PlayerAbilities {
                 abilities: vec![
-                    Sim::get_player_ability(&parser, &item_mods, &mut vec![], "SwordSlash7")
+                    Sim::get_player_ability(&parser, &mut vec![], "SwordSlash7")
                         .unwrap(),
-                    Sim::get_player_ability(&parser, &item_mods, &mut vec![], "HackingBlade5")
+                    Sim::get_player_ability(&parser, &mut vec![], "HackingBlade5")
                         .unwrap(),
                 ],
             },
@@ -364,9 +315,7 @@ mod tests {
         let enemy: Entity = world.push((
             Enemy,
             Report { activity: vec![] },
-            Dots {
-                dots_by_ability_name: HashMap::new(),
-            },
+            Debuffs(HashMap::new()),
         ));
 
         let mut resources = Resources::default();
@@ -422,7 +371,7 @@ mod tests {
                 Player,
                 PlayerAbilities {
                     abilities: vec![
-                        Sim::get_player_ability(&parser, &item_mods, &mut vec![], &ability.internal_name)
+                        Sim::get_player_ability(&parser, &mut vec![], &ability.internal_name)
                             .unwrap(),
                     ],
                 },
@@ -430,9 +379,7 @@ mod tests {
             world.push((
                 Enemy,
                 Report { activity: vec![] },
-                Dots {
-                    dots_by_ability_name: HashMap::new(),
-                },
+                Debuffs(HashMap::new()),
             ));
 
             let mut resources = Resources::default();

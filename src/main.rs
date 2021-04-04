@@ -15,19 +15,14 @@ Big remaining things
     Finish parsing of item mods, and corresponding tests
     Finish damage calculation, dots, buffs, debuffs, etc., and corresponding tests
 
-Remove potential_power and do that calculation on the fly in the sim (more accurate, cleaner code)
 Add in item mods
     Parse each item mod type, and either be able to handle it or explicitly ignore it (if it's something we don't care about yet, like evasion)
         IconID parsing
         Mod parsing
-    Apply parsed mods to abilities when I prep them for use in Sim (check my spreadsheet for the math on how to add damage mods up properly)
-        Handle mods in sims, not beforehand, to handle proc chance (less performant, but who cares)
-        There's a todo to handle remaining mod types, make sure to do that
-    Refactor Dots on enemy to be generic debuffs (some of which are dots, are vulnerability, etc.)
-        Ticks down round by round
-    Add generic buffs to player entity
-        Ability damage buffs, etc.
-    More tests for "cacualate damage" to make sure it adds up right
+    There's a todo to handle remaining mod types in the sim system, make sure to do that
+        Debuffs, buffs, etc.
+        in calculate_ability()
+    More tests for "caculate damage" to make sure it adds up right
     Things I may not be covering right
         "{BOOST_ABILITY_GUT}{110}" is a flat damage thing, not a mod
 Lots of sim tests
