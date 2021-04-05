@@ -669,4 +669,47 @@ mod tests {
         let debuffs = entry.get_component::<Debuffs>().unwrap();
         assert_eq!(debuffs.0["Test"][0].remaining_duration, 12);
     }
+
+    #[test]
+    fn debuff_vulnerability_mod() {
+        let parser = Parser::new();
+        let mut world = World::default();
+        let item_mods = parser.calculate_item_mods(&vec![], &vec![
+            ("power_8003".to_string(), "id_1".to_string()),
+        ]);
+        world.push((
+            Player,
+            PlayerAbilities {
+                abilities: vec![
+                    Sim::get_player_ability(&parser, &mut vec![], "SparkOfDeath7").unwrap(),
+                ],
+            },
+            Buffs(HashMap::new()),
+        ));
+        let enemy: Entity = world.push((
+            Enemy,
+            Report { activity: vec![] },
+            Debuffs(HashMap::new()),
+        ));
+
+        let mut resources = Resources::default();
+        resources.insert(item_mods);
+
+        let mut schedule = systems::build_schedule();
+
+        for _ in 0..9 {
+            schedule.execute(&mut world, &mut resources);
+        }
+        let entry = world.entry(enemy).unwrap();
+        let report = entry.get_component::<Report>().unwrap();
+        println!("test {:#?}", report);
+
+        // First SparkOfDeath7 does normal base damage
+        assert_eq!(report.activity[0].damage, 246);
+        assert_eq!(report.activity[0].damage_type, DamageType::Electricity);
+        // Second SparkOfDeath7 does buffed damage from the vulnerability applied by SparkOfDeath7
+        // TODO: This should be different than 246
+        assert_eq!(report.activity[5].damage, 50_000);
+        assert_eq!(report.activity[5].damage_type, DamageType::Electricity);
+    }
 }

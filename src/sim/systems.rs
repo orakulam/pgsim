@@ -263,7 +263,7 @@ fn calculate_ability(
             }
         }
     }
-    // Dots
+    // Apply damage mods to dots
     for debuff in &mut calculated_debuffs {
         match debuff.effect {
             DebuffEffect::Dot { ref mut damage_per_tick, damage_type, tick_per: _ } => {
@@ -279,7 +279,8 @@ fn calculate_ability(
                 }
                 *damage_per_tick = ((*damage_per_tick + dot_flat_damage) as f32 * (1.0 + dot_damage_mod)) as i32;
             },
-            _ => panic!("Found non-Dot debuff in player ability"),
+            // We only care about damaging dot debuffs
+            _ => (),
         };
     }
     // TODO: Get real weakness value
