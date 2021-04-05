@@ -24,6 +24,7 @@ struct PlayerAbility {
     reset_time: f32,
     buffs: Vec<Buff>,
     debuffs: Vec<Debuff>,
+    keywords: Vec<String>,
     cooldown: f32,
     icon_id: i32,
     base_damage_attributes: Vec<String>,
@@ -52,6 +53,10 @@ enum BuffEffect {
     DamageTypeBuff {
         damage_type: DamageType,
         damage_mod: f32,
+    },
+    KeywordFlatDamageBuff {
+        keyword: String,
+        damage: i32,
     },
 }
 
@@ -261,6 +266,12 @@ impl Sim {
                             Some(attributes) => attributes.clone(),
                             None => vec![],
                         });
+                        let keywords;
+                        if let Some(ability_keywords) = &ability.keywords {
+                            keywords = ability_keywords.clone();
+                        } else {
+                            keywords = vec![];
+                        }
                         Some(PlayerAbility {
                             name: ability.name.clone(),
                             damage,
@@ -268,9 +279,9 @@ impl Sim {
                                 .damage_type
                                 .expect("Tried to sim ability with no damage type"),
                             reset_time: ability.reset_time,
-                            // TODO: Add base ability buffs for this
                             buffs: vec![],
                             debuffs,
+                            keywords,
                             cooldown: 0.0,
                             icon_id: ability.icon_id,
                             base_damage_attributes,
@@ -414,6 +425,7 @@ mod tests {
                     tick_per: 2,
                 },
             }],
+            keywords: vec![],
             cooldown: 0.0,
             icon_id: 3024,
             base_damage_attributes: vec![],
@@ -545,6 +557,7 @@ mod tests {
                     tick_per: 2,
                 },
             }],
+            keywords: vec![],
             cooldown: 0.0,
             icon_id: 3024,
             base_damage_attributes: vec![],
@@ -599,6 +612,7 @@ mod tests {
                     tick_per: 2,
                 },
             }],
+            keywords: vec![],
             cooldown: 0.0,
             icon_id: 3024,
             base_damage_attributes: vec![],

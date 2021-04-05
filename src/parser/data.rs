@@ -36,6 +36,7 @@ pub struct Ability {
     prerequisite: Option<InternalAbilityName>,
     #[serde(rename = "IconID")]
     pub icon_id: i32,
+    pub keywords: Option<Vec<String>>,
     level: i32,
     #[serde(deserialize_with = "empty_string_as_none")]
     pub damage_type: Option<DamageType>,

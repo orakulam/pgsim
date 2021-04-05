@@ -14,6 +14,8 @@ pub fn build_schedule() -> Schedule {
         .add_system(tick_debuffs_system())
         .add_system(use_ability_system())
         .add_system(cooldown_system())
+        .add_system(expire_buffs_system())
+        .add_system(expire_debuffs_system())
         .build()
 }
 
@@ -25,12 +27,6 @@ fn tick_buffs(buffs: &mut Buffs) {
             buff.remaining_duration -= TICK_LENGTH_IN_SECONDS;
         }
     }
-    // Remove expired buffs
-    buffs.0.retain(|_, buffs| {
-        // Remove any buffs with no remaining duration
-        buffs.retain(|buff| buff.remaining_duration != 0);
-        buffs.len() != 0
-    });
 }
 
 #[system(for_each)]
@@ -60,12 +56,6 @@ fn tick_debuffs(report: &mut Report, debuffs: &mut Debuffs) {
             };
         }
     }
-    // Remove expired debuffs
-    debuffs.0.retain(|_, debuffs| {
-        // Remove any debuffs with no remaining duration
-        debuffs.retain(|debuff| debuff.remaining_duration != 0);
-        debuffs.len() != 0
-    });
 }
 
 #[system(for_each)]
@@ -87,14 +77,18 @@ fn use_ability(
         .expect("failed to get target");
     // Calculate current buff (on the player) and debuff (on the enemy) damage mods
     let mut current_damage_type_buffs_to_damage_mod: HashMap<DamageType, f32> = HashMap::new();
+    let mut current_keyword_buffs_to_damage: HashMap<String, i32> = HashMap::new();
     for (_, buffs) in &buffs.0 {
         for buff in buffs {
-            match buff.effect {
+            match &buff.effect {
                 BuffEffect::DamageTypeBuff {
                     damage_mod,
                     damage_type,
                 } => {
-                    current_damage_type_buffs_to_damage_mod.insert(damage_type, damage_mod);
+                    current_damage_type_buffs_to_damage_mod.insert(*damage_type, *damage_mod);
+                }
+                BuffEffect::KeywordFlatDamageBuff { keyword, damage } => {
+                    current_keyword_buffs_to_damage.insert(keyword.clone(), *damage);
                 }
             }
         }
@@ -127,10 +121,16 @@ fn use_ability(
         if player_ability.cooldown == 0.0 {
             // Get damage mods from current buffs
             let mut current_buff_damage_mod = 0.0;
+            let mut current_buff_damage = 0;
             if let Some(damage_mod) =
                 current_damage_type_buffs_to_damage_mod.get(&player_ability.damage_type)
             {
                 current_buff_damage_mod += damage_mod;
+            }
+            for keyword in &player_ability.keywords {
+                if let Some(damage) = current_keyword_buffs_to_damage.get(keyword) {
+                    current_buff_damage += damage;
+                }
             }
             // Get damage mods from enemy debuffs
             let mut current_vulnerability_damage_mod = 0.0;
@@ -145,15 +145,17 @@ fn use_ability(
                     player_ability,
                     item_mods,
                     current_buff_damage_mod,
+                    current_buff_damage,
                     current_vulnerability_damage_mod,
                 );
-            let buff_power = calculated_buffs.iter().fold(0, |acc, debuff| {
-                acc + match debuff.effect {
+            let buff_power = calculated_buffs.iter().fold(0, |acc, buff| {
+                acc + match buff.effect {
                     // Very basic attempt at calculating the power of these kind of buffs
                     BuffEffect::DamageTypeBuff {
                         damage_mod,
                         damage_type: _,
                     } => (damage_mod * 100.0) as i32,
+                    BuffEffect::KeywordFlatDamageBuff { keyword: _, damage } => damage,
                 }
             });
             let debuff_power = calculated_debuffs.iter().fold(0, |acc, debuff| {
@@ -219,10 +221,31 @@ fn cooldown(player_abilities: &mut PlayerAbilities) {
     }
 }
 
+#[system(for_each)]
+fn expire_buffs(buffs: &mut Buffs) {
+    // Remove expired buffs
+    buffs.0.retain(|_, buffs| {
+        // Remove any buffs with no remaining duration
+        buffs.retain(|buff| buff.remaining_duration != 0);
+        buffs.len() != 0
+    });
+}
+
+#[system(for_each)]
+fn expire_debuffs(debuffs: &mut Debuffs) {
+    // Remove expired debuffs
+    debuffs.0.retain(|_, debuffs| {
+        // Remove any debuffs with no remaining duration
+        debuffs.retain(|debuff| debuff.remaining_duration != 0);
+        debuffs.len() != 0
+    });
+}
+
 fn calculate_ability(
     player_ability: &PlayerAbility,
     item_mods: &ItemMods,
     current_buff_damage_mod: f32,
+    current_buff_damage: i32,
     current_vulnerability_damage_mod: f32,
 ) -> (i32, DamageType, Vec<Buff>, Vec<Debuff>) {
     // Add item mods to damage calc
@@ -278,6 +301,20 @@ fn calculate_ability(
                         effect: BuffEffect::DamageTypeBuff {
                             damage_type: *damage_type,
                             damage_mod: *damage_mod,
+                        },
+                    });
+                }
+                ItemEffect::KeywordFlatDamageBuff {
+                    keyword,
+                    damage,
+                    duration,
+                } => {
+                    // TODO
+                    calculated_buffs.push(Buff {
+                        remaining_duration: *duration,
+                        effect: BuffEffect::KeywordFlatDamageBuff {
+                            keyword: keyword.clone(),
+                            damage: *damage,
                         },
                     });
                 }
@@ -374,7 +411,7 @@ fn calculate_ability(
         };
     }
     // Calculate damage
-    let calculated_damage = (((player_ability.damage + flat_damage) as f32
+    let calculated_damage = (((player_ability.damage + current_buff_damage + flat_damage) as f32
         * (1.0 + current_buff_damage_mod + damage_mod)
         * (1.0 + current_vulnerability_damage_mod))
         + (player_ability.damage as f32 * base_damage_mod))
@@ -401,7 +438,7 @@ mod tests {
 
         let item_mods = parser.calculate_item_mods(&vec![], &vec![]);
         let (calculated_damage, _, _, calculated_debuffs) =
-            calculate_ability(&player_ability, &item_mods, 0.0, 0.0);
+            calculate_ability(&player_ability, &item_mods, 0.0, 0, 0.0);
         assert_eq!(calculated_damage, 189);
         match calculated_debuffs[0].effect {
             DebuffEffect::Dot {
@@ -435,7 +472,7 @@ mod tests {
             ],
         );
         let (calculated_damage, _, _, calculated_debuffs) =
-            calculate_ability(&player_ability, &item_mods, 0.0, 0.0);
+            calculate_ability(&player_ability, &item_mods, 0.0, 0, 0.0);
         assert_eq!(calculated_damage, 362);
         match calculated_debuffs[0].effect {
             DebuffEffect::Dot {

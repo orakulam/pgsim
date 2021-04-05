@@ -32,6 +32,16 @@ pub enum ItemEffect {
         damage_mod: f32,
         duration: i32,
     },
+    KeywordFlatDamageBuff {
+        keyword: String,
+        damage: i32,
+        duration: i32,
+    },
+    // KeywordDamageModBuff {
+    //     keyword: String,
+    //     damage_mod: f32,
+    //     duration: i32,
+    // },
     VulnerabilityDebuff {
         damage_type: DamageType,
         damage_mod: f32,
@@ -63,6 +73,7 @@ struct ParserRegex {
     damage_type: Regex,
     racials: Regex,
     damage_type_buff: Regex,
+    keyword_flat_damage_buff: Regex,
     vulnerability_debuff: Regex,
 }
 
@@ -116,6 +127,7 @@ impl Parser {
             damage_type: Regex::new(r"[dD]amage(?:| type) becomes (?P<damage_type>[a-zA-Z]*)").unwrap(),
             racials: Regex::new(r"(?:Humans|Orcs|Elves|Dwarves|Rakshasa) gain \+?(?:[0-9]+) Max (?:Health|Hydration|Metabolism|Power|Armor|Bodyheat)").unwrap(),
             damage_type_buff: Regex::new(r"(?P<damage_type>Slashing) damage \+(?P<damage_mod>[0-9]+)% for (?P<duration>[0-9]+) seconds").unwrap(),
+            keyword_flat_damage_buff: Regex::new(r"next attack to deal \+?(?P<damage>[0-9]+) damage if it is a (?P<keyword>Werewolf) ability").unwrap(),
             vulnerability_debuff: Regex::new(r"(?P<damage_mod>[0-9]+)% more vulnerable to (?P<damage_type>Electricity) damage for (?P<duration>[0-9]+) seconds").unwrap(),
         }
     }
@@ -228,13 +240,16 @@ impl Parser {
         // Collect all item effects
         let mut new_effects = vec![];
         if let Some(caps) = self.regex.flat_damage.captures(effect_desc) {
-            new_effects.push(ItemEffect::FlatDamage(
-                caps.name("damage")
-                    .unwrap()
-                    .as_str()
-                    .parse::<i32>()
-                    .unwrap(),
-            ));
+            // Specifically block this from applying to "next attack" buffs as well
+            if !effect_desc.contains("your next attack to") {
+                new_effects.push(ItemEffect::FlatDamage(
+                    caps.name("damage")
+                        .unwrap()
+                        .as_str()
+                        .parse::<i32>()
+                        .unwrap(),
+                ));
+            }
         }
         if let Some(caps) = self.regex.damage_mod.captures(effect_desc) {
             new_effects.push(ItemEffect::DamageMod(
@@ -356,6 +371,18 @@ impl Parser {
                     .as_str()
                     .parse::<i32>()
                     .unwrap(),
+            });
+        }
+        if let Some(caps) = self.regex.keyword_flat_damage_buff.captures(effect_desc) {
+            new_effects.push(ItemEffect::KeywordFlatDamageBuff {
+                keyword: caps.name("keyword").unwrap().as_str().to_string(),
+                damage: caps
+                    .name("damage")
+                    .unwrap()
+                    .as_str()
+                    .parse::<i32>()
+                    .unwrap(),
+                duration: 1,
             });
         }
         if let Some(caps) = self.regex.vulnerability_debuff.captures(effect_desc) {
@@ -895,8 +922,12 @@ mod tests {
         test_icon_id_effect(
             &parser,
             "<icon=2256>Shadow Feint causes your next attack to deal +12 damage if it is a Werewolf ability",
-            vec![],
-            vec![ItemEffect::FlatDamage(50_000)],
+            vec![2256],
+            vec![ItemEffect::KeywordFlatDamageBuff {
+                keyword: "Werewolf".to_string(),
+                damage: 12,
+                duration: 1,
+            }],
             0,
             0,
         );
