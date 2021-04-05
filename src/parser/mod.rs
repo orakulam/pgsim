@@ -98,7 +98,7 @@ impl Parser {
                 r"\{(?P<attribute>[_A-Z]*)\}\{(?P<mod>[+-]?[0-9]*[.]?[0-9]+)\}(?P<extra>$|\{[a-zA-Z]*\})",
             )
             .unwrap(),
-            flat_damage: Regex::new(r"(?:deal|deals|[dD]amage) \+?(?P<damage>[0-9]+) ?(?:$|\.|damage|armor damage)").unwrap(),
+            flat_damage: Regex::new(r"(?:deal|deals|[dD]amage) \+?(?P<damage>[0-9]+) ?(?:$|\.|damage|armor damage|direct damage)").unwrap(),
             proc_flat_damage:  Regex::new(r"(?P<chance>[0-9]+)% chance to deal \+(?P<damage>[0-9]+) damage").unwrap(),
             range_flat_damage: Regex::new(r"between \+?(?P<min_damage>[0-9]+) and \+?(?P<max_damage>[0-9]+) extra damage").unwrap(),
             damage_mod: Regex::new(r"(?:deals|[dD]amage) \+?(?P<damage>[0-9]+)% ?(?:$|damage|and)").unwrap(),
@@ -216,6 +216,7 @@ impl Parser {
             || effect_desc.contains("total damage against Demons")
             || effect_desc.contains("hits all enemies within 5 meters")
             || effect_desc.contains("deal -1 damage for")
+            || effect_desc.contains("damage after an")
         {
             item_mods
                 .warnings
@@ -888,7 +889,7 @@ mod tests {
             vec![
                 ItemEffect::FlatDamage(5),
             ],
-            0,
+            1,
             0,
         );
         test_icon_id_effect(

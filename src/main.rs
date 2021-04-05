@@ -32,6 +32,8 @@ Clean up console logs and anything else in the web client
 
 TODO Phase 2
 
+Mods that affect DPS that aren't handled
+    Delayed damage
 Smarter application of dots
     Check if the dot is present and try to only re-apply when needed
     Some abilities may mostly be about up front damage even when having a dot though, weigh desire to use the ability based on both upfront and dot damage (re-applying in this case may be better)
