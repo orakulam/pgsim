@@ -12,24 +12,22 @@ use sim::{Sim, SimConfig};
 TODO
 
 Big remaining things
-    Finish parsing of item mods, and corresponding tests
     Finish damage calculation, dots, buffs, debuffs, etc., and corresponding tests
+    Finish parsing of item mods, and corresponding tests
 
-Add in item mods
-    Parse each item mod type, and either be able to handle it or explicitly ignore it (if it's something we don't care about yet, like evasion)
-        IconID parsing
-        Mod parsing
-    There's a todo to handle remaining mod types in the sim system, make sure to do that
-        Debuffs, buffs, etc.
-        in calculate_ability()
 Lots of sim tests
     -Cooldown for abilities
-    Cooldown for buffs
+    -Cooldown for buffs
     -Cooldown for debuffs
     Buff effectiveness (does it really boost damage, for example)
     Debuff effectiveness (does it really cause weakness)
     -Debuff as a dot (does it deal damage)
+Add in item mods
+    Parse each item mod type, and either be able to handle it or explicitly ignore it (if it's something we don't care about yet, like evasion)
+        IconID parsing
+        Mod parsing
 Review all TODOs
+Review unused
 Write up the README
     Include client and server notes, mention buildWebData.js
     Mention --serve and CLI mode

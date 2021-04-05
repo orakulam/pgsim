@@ -48,7 +48,12 @@ struct Buff {
 }
 
 #[derive(Debug)]
-enum BuffEffect {}
+enum BuffEffect {
+    DamageTypeBuff {
+        damage_type: DamageType,
+        damage_mod: f32,
+    },
+}
 
 #[derive(Debug)]
 struct Debuffs(HashMap<String, Vec<Debuff>>);
@@ -66,6 +71,10 @@ enum DebuffEffect {
         damage_type: DamageType,
         tick_per: i32,
     },
+    VulnerabilityDebuff {
+        damage_type: DamageType,
+        damage_mod: f32,
+    }
 }
 
 #[derive(Debug)]
@@ -113,6 +122,7 @@ impl Sim {
                     })
                     .collect(),
             },
+            Buffs(HashMap::new()),
         ));
         let enemy: Entity = world.push((
             Enemy,
@@ -312,6 +322,7 @@ mod tests {
                         .unwrap(),
                 ],
             },
+            Buffs(HashMap::new()),
         ));
         let enemy: Entity = world.push((
             Enemy,
@@ -376,6 +387,7 @@ mod tests {
                             .unwrap(),
                     ],
                 },
+                Buffs(HashMap::new()),
             ));
             world.push((
                 Enemy,
@@ -426,6 +438,7 @@ mod tests {
             PlayerAbilities {
                 abilities: vec![test_ability],
             },
+            Buffs(HashMap::new()),
         ));
         world.push((
             Enemy,
@@ -455,6 +468,43 @@ mod tests {
         let entry = world.entry(player).unwrap();
         let player_abilities = entry.get_component::<PlayerAbilities>().unwrap();
         assert_eq!(player_abilities.abilities[0].cooldown, 9.0);
+    }
+
+    #[test]
+    fn buff_duration_test() {
+        let parser = Parser::new();
+        let mut world = World::default();
+        let item_mods = parser.calculate_item_mods(&vec![], &vec![
+            ("power_9602".to_string(), "id_1".to_string()),
+        ]);
+        let player: Entity = world.push((
+            Player,
+            PlayerAbilities {
+                abilities: vec![
+                    Sim::get_player_ability(&parser, &mut vec![], "AdrenalineWave5").unwrap(),
+                ],
+            },
+            Buffs(HashMap::new()),
+        ));
+        world.push((
+            Enemy,
+            Report { activity: vec![] },
+            Debuffs(HashMap::new()),
+        ));
+
+        let mut resources = Resources::default();
+        resources.insert(item_mods);
+
+        let mut schedule = systems::build_schedule();
+
+        for _ in 0..20 {
+            schedule.execute(&mut world, &mut resources);
+        }
+
+        let entry = world.entry(player).unwrap();
+        let buffs = entry.get_component::<Buffs>().unwrap();
+        assert_eq!(buffs.0.len(), 1);
+        assert_eq!(buffs.0["Psi Adrenaline Wave 5"][0].remaining_duration, 1);
     }
 
     #[test]
@@ -488,6 +538,7 @@ mod tests {
             PlayerAbilities {
                 abilities: vec![test_ability],
             },
+            Buffs(HashMap::new()),
         ));
         let enemy: Entity = world.push((
             Enemy,
@@ -546,6 +597,7 @@ mod tests {
             PlayerAbilities {
                 abilities: vec![test_ability],
             },
+            Buffs(HashMap::new()),
         ));
         let enemy: Entity = world.push((
             Enemy,
