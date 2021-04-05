@@ -92,6 +92,18 @@ fn use_ability(
             }
         }
     }
+    let mut current_damage_type_vulnerabilities_to_damage_mod: HashMap<DamageType, f32> = HashMap::new();
+    for (_, debuffs) in &enemy_debuffs.0 {
+        for debuff in debuffs {
+            match debuff.effect {
+                DebuffEffect::VulnerabilityDebuff { damage_mod, damage_type } => {
+                    current_damage_type_vulnerabilities_to_damage_mod.insert(damage_type, damage_mod);
+                },
+                // We only care about vulnerability
+                _ => (),
+            }
+        }
+    }
     // Find best ability to use
     let mut max_potential_power = 0;
     let mut max_index = None;
@@ -106,8 +118,13 @@ fn use_ability(
             if let Some(damage_mod) = current_damage_type_buffs_to_damage_mod.get(&player_ability.damage_type) {
                 current_buff_damage_mod += damage_mod;
             }
+            // Get damage mods from enemy debuffs
+            let mut current_vulnerability_damage_mod = 0.0;
+            if let Some(damage_mod) = current_damage_type_vulnerabilities_to_damage_mod.get(&player_ability.damage_type) {
+                current_vulnerability_damage_mod += damage_mod;
+            }
             // Calculate damage
-            let (calculated_damage, calculated_damage_type, calculated_buffs, calculated_debuffs) = calculate_ability(player_ability, item_mods, current_buff_damage_mod);
+            let (calculated_damage, calculated_damage_type, calculated_buffs, calculated_debuffs) = calculate_ability(player_ability, item_mods, current_buff_damage_mod, current_vulnerability_damage_mod);
             let buff_power = calculated_buffs.iter().fold(0, |acc, debuff| {
                 acc + match debuff.effect {
                     // Very basic attempt at calculating the power of these kind of buffs
@@ -169,6 +186,7 @@ fn calculate_ability(
     player_ability: &PlayerAbility,
     item_mods: &ItemMods,
     current_buff_damage_mod: f32,
+    current_vulnerability_damage_mod: f32,
 ) -> (i32, DamageType, Vec<Buff>, Vec<Debuff>) {
     // Add item mods to damage calc
     let mut calculated_damage_type = player_ability.damage_type;
@@ -283,11 +301,10 @@ fn calculate_ability(
             _ => (),
         };
     }
-    // TODO: Get real weakness value
-    let target_weakness = 0.0;
+    // Calculate damage
     let calculated_damage = (((player_ability.damage + flat_damage) as f32
         * (1.0 + current_buff_damage_mod + damage_mod)
-        * (1.0 + target_weakness))
+        * (1.0 + current_vulnerability_damage_mod))
         + (player_ability.damage as f32 * base_damage_mod))
         .round() as i32;
 
@@ -306,7 +323,7 @@ mod tests {
         let player_ability = Sim::get_player_ability(&parser, &mut vec![], "Slice6").unwrap();
 
         let item_mods = parser.calculate_item_mods(&vec![], &vec![]);
-        let (calculated_damage, _, _, calculated_debuffs) = calculate_ability(&player_ability, &item_mods, 0.0);
+        let (calculated_damage, _, _, calculated_debuffs) = calculate_ability(&player_ability, &item_mods, 0.0, 0.0);
         assert_eq!(calculated_damage, 189);
         match calculated_debuffs[0].effect {
             DebuffEffect::Dot { damage_per_tick, damage_type, tick_per } => {
@@ -335,7 +352,7 @@ mod tests {
                 ("power_16101".to_string(), "id_10".to_string()),
             ],
         );
-        let (calculated_damage, _, _, calculated_debuffs) = calculate_ability(&player_ability, &item_mods, 0.0);
+        let (calculated_damage, _, _, calculated_debuffs) = calculate_ability(&player_ability, &item_mods, 0.0, 0.0);
         assert_eq!(calculated_damage, 362);
         match calculated_debuffs[0].effect {
             DebuffEffect::Dot { damage_per_tick, damage_type, tick_per } => {

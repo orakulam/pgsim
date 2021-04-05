@@ -12,16 +12,8 @@ use sim::{Sim, SimConfig};
 TODO
 
 Big remaining things
-    Finish damage calculation, dots, buffs, debuffs, etc., and corresponding tests
     Finish parsing of item mods, and corresponding tests
 
-Lots of sim tests
-    -Cooldown for abilities
-    -Cooldown for buffs
-    -Cooldown for debuffs
-    -Buff effectiveness (does it really boost damage, for example)
-    Debuff effectiveness (does it really cause weakness)
-    -Debuff as a dot (does it deal damage)
 Add in item mods
     Parse each item mod type, and either be able to handle it or explicitly ignore it (if it's something we don't care about yet, like evasion)
         IconID parsing
@@ -32,6 +24,7 @@ Review unused
 Write up the README
     Include client and server notes, mention buildWebData.js
     Mention --serve and CLI mode
+    Cite sources (damage calc)
 Move "TODO Phase 2" items to GitHub Issues
 Clean up these comments, anything else
 Clean up console logs and anything else in the web client

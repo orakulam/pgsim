@@ -702,14 +702,12 @@ mod tests {
         }
         let entry = world.entry(enemy).unwrap();
         let report = entry.get_component::<Report>().unwrap();
-        println!("test {:#?}", report);
 
         // First SparkOfDeath7 does normal base damage
         assert_eq!(report.activity[0].damage, 246);
         assert_eq!(report.activity[0].damage_type, DamageType::Electricity);
         // Second SparkOfDeath7 does buffed damage from the vulnerability applied by SparkOfDeath7
-        // TODO: This should be different than 246
-        assert_eq!(report.activity[5].damage, 50_000);
+        assert_eq!(report.activity[5].damage, 271);
         assert_eq!(report.activity[5].damage_type, DamageType::Electricity);
     }
 }
