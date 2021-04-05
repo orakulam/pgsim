@@ -13,6 +13,10 @@ pub enum ItemEffect {
         damage: i32,
         chance: f32,
     },
+    RangeFlatDamage {
+        min_damage: i32,
+        max_damage: i32,
+    },
     DamageMod(f32),
     ProcDamageMod {
         damage_mod: f32,
@@ -32,7 +36,7 @@ pub enum ItemEffect {
         damage_type: DamageType,
         damage_mod: f32,
         duration: i32,
-    }
+    },
 }
 
 #[derive(Debug, Clone)]
@@ -49,6 +53,7 @@ struct ParserRegex {
     attribute_effects: Regex,
     flat_damage: Regex,
     proc_flat_damage: Regex,
+    range_flat_damage: Regex,
     damage_mod: Regex,
     proc_damage_mod: Regex,
     dot_damage: Regex,
@@ -95,6 +100,7 @@ impl Parser {
             .unwrap(),
             flat_damage: Regex::new(r"(?:deal|deals|[dD]amage) \+?(?P<damage>[0-9]+) ?(?:$|\.|damage|armor damage)").unwrap(),
             proc_flat_damage:  Regex::new(r"(?P<chance>[0-9]+)% chance to deal \+(?P<damage>[0-9]+) damage").unwrap(),
+            range_flat_damage: Regex::new(r"between \+?(?P<min_damage>[0-9]+) and \+?(?P<max_damage>[0-9]+) extra damage").unwrap(),
             damage_mod: Regex::new(r"(?:deals|[dD]amage) \+?(?P<damage>[0-9]+)% ?(?:$|damage|and)").unwrap(),
             proc_damage_mod:  Regex::new(r"(?P<chance>[0-9]+)% chance to deal \+(?P<damage>[0-9]+)% damage").unwrap(),
             dot_damage:
@@ -235,7 +241,8 @@ impl Parser {
                     .unwrap()
                     .as_str()
                     .parse::<f32>()
-                    .unwrap() / 100.0,
+                    .unwrap()
+                    / 100.0,
             ));
         }
         if let Some(caps) = self.regex.dot_damage.captures(effect_desc) {
@@ -309,6 +316,22 @@ impl Parser {
                     / 100.0,
             });
         }
+        if let Some(caps) = self.regex.range_flat_damage.captures(effect_desc) {
+            new_effects.push(ItemEffect::RangeFlatDamage {
+                min_damage: caps
+                    .name("min_damage")
+                    .unwrap()
+                    .as_str()
+                    .parse::<i32>()
+                    .unwrap(),
+                max_damage: caps
+                    .name("max_damage")
+                    .unwrap()
+                    .as_str()
+                    .parse::<i32>()
+                    .unwrap(),
+            });
+        }
         if let Some(caps) = self.regex.damage_type.captures(effect_desc) {
             new_effects.push(ItemEffect::DamageType(
                 DamageType::from_str(caps.name("damage_type").unwrap().as_str())
@@ -377,9 +400,11 @@ impl Parser {
         }
         let effect;
         if attribute.starts_with("BOOST") {
-            effect = ItemEffect::FlatDamage(caps.name("mod").unwrap().as_str().parse::<i32>().unwrap());
+            effect =
+                ItemEffect::FlatDamage(caps.name("mod").unwrap().as_str().parse::<i32>().unwrap());
         } else if attribute.starts_with("MOD") {
-            effect = ItemEffect::DamageMod(caps.name("mod").unwrap().as_str().parse::<f32>().unwrap());
+            effect =
+                ItemEffect::DamageMod(caps.name("mod").unwrap().as_str().parse::<f32>().unwrap());
         } else {
             item_mods
                 .not_implemented
@@ -847,9 +872,22 @@ mod tests {
         );
         test_icon_id_effect(
             &parser,
-            "<icon=3499>Ice Spear deals between +1 and +20 extra damage (randomly determined)<icon=3476>Latent Charge deals +5 direct damage. In addition, the target takes a second full blast of delayed Electricity damage after an 8-second delay",
-            vec![],
-            vec![ItemEffect::FlatDamage(50_000)],
+            "<icon=3499>Ice Spear deals between +1 and +20 extra damage (randomly determined)",
+            vec![3499],
+            vec![ItemEffect::RangeFlatDamage {
+                min_damage: 1,
+                max_damage: 20,
+            }],
+            0,
+            0,
+        );
+        test_icon_id_effect(
+            &parser,
+            "<icon=3476>Latent Charge deals +5 direct damage. In addition, the target takes a second full blast of delayed Electricity damage after an 8-second delay",
+            vec![3476],
+            vec![
+                ItemEffect::FlatDamage(5),
+            ],
             0,
             0,
         );

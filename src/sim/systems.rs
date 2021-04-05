@@ -1,10 +1,10 @@
-use std::collections::HashMap;
 use legion::{world::SubWorld, *};
-use rand::prelude::*;
+use rand::{thread_rng, Rng};
+use std::collections::HashMap;
 
 use super::{
-    Activity, ActivitySource, Debuffs, Debuff, DebuffEffect, Buffs, Buff, BuffEffect, Enemy, Player, PlayerAbilities, PlayerAbility, Report,
-    TICK_LENGTH_IN_SECONDS,
+    Activity, ActivitySource, Buff, BuffEffect, Buffs, Debuff, DebuffEffect, Debuffs, Enemy,
+    Player, PlayerAbilities, PlayerAbility, Report, TICK_LENGTH_IN_SECONDS,
 };
 use crate::parser::{data::DamageType, ItemEffect, ItemMods};
 
@@ -41,7 +41,11 @@ fn tick_debuffs(report: &mut Report, debuffs: &mut Debuffs) {
             debuff.remaining_duration -= TICK_LENGTH_IN_SECONDS;
             // Handle any per-tick effects (mostly just dots need this)
             match debuff.effect {
-                DebuffEffect::Dot { damage_per_tick, damage_type, tick_per } => {
+                DebuffEffect::Dot {
+                    damage_per_tick,
+                    damage_type,
+                    tick_per,
+                } => {
                     // It's time to deal dot damage
                     if debuff.remaining_duration % tick_per == 0 {
                         report.activity.push(Activity {
@@ -51,7 +55,7 @@ fn tick_debuffs(report: &mut Report, debuffs: &mut Debuffs) {
                             source: ActivitySource::DoT,
                         });
                     }
-                },
+                }
                 _ => (),
             };
         }
@@ -86,19 +90,27 @@ fn use_ability(
     for (_, buffs) in &buffs.0 {
         for buff in buffs {
             match buff.effect {
-                BuffEffect::DamageTypeBuff { damage_mod, damage_type } => {
+                BuffEffect::DamageTypeBuff {
+                    damage_mod,
+                    damage_type,
+                } => {
                     current_damage_type_buffs_to_damage_mod.insert(damage_type, damage_mod);
                 }
             }
         }
     }
-    let mut current_damage_type_vulnerabilities_to_damage_mod: HashMap<DamageType, f32> = HashMap::new();
+    let mut current_damage_type_vulnerabilities_to_damage_mod: HashMap<DamageType, f32> =
+        HashMap::new();
     for (_, debuffs) in &enemy_debuffs.0 {
         for debuff in debuffs {
             match debuff.effect {
-                DebuffEffect::VulnerabilityDebuff { damage_mod, damage_type } => {
-                    current_damage_type_vulnerabilities_to_damage_mod.insert(damage_type, damage_mod);
-                },
+                DebuffEffect::VulnerabilityDebuff {
+                    damage_mod,
+                    damage_type,
+                } => {
+                    current_damage_type_vulnerabilities_to_damage_mod
+                        .insert(damage_type, damage_mod);
+                }
                 // We only care about vulnerability
                 _ => (),
             }
@@ -115,27 +127,47 @@ fn use_ability(
         if player_ability.cooldown == 0.0 {
             // Get damage mods from current buffs
             let mut current_buff_damage_mod = 0.0;
-            if let Some(damage_mod) = current_damage_type_buffs_to_damage_mod.get(&player_ability.damage_type) {
+            if let Some(damage_mod) =
+                current_damage_type_buffs_to_damage_mod.get(&player_ability.damage_type)
+            {
                 current_buff_damage_mod += damage_mod;
             }
             // Get damage mods from enemy debuffs
             let mut current_vulnerability_damage_mod = 0.0;
-            if let Some(damage_mod) = current_damage_type_vulnerabilities_to_damage_mod.get(&player_ability.damage_type) {
+            if let Some(damage_mod) =
+                current_damage_type_vulnerabilities_to_damage_mod.get(&player_ability.damage_type)
+            {
                 current_vulnerability_damage_mod += damage_mod;
             }
             // Calculate damage
-            let (calculated_damage, calculated_damage_type, calculated_buffs, calculated_debuffs) = calculate_ability(player_ability, item_mods, current_buff_damage_mod, current_vulnerability_damage_mod);
+            let (calculated_damage, calculated_damage_type, calculated_buffs, calculated_debuffs) =
+                calculate_ability(
+                    player_ability,
+                    item_mods,
+                    current_buff_damage_mod,
+                    current_vulnerability_damage_mod,
+                );
             let buff_power = calculated_buffs.iter().fold(0, |acc, debuff| {
                 acc + match debuff.effect {
                     // Very basic attempt at calculating the power of these kind of buffs
-                    BuffEffect::DamageTypeBuff { damage_mod, damage_type: _ } => (damage_mod * 100.0) as i32
+                    BuffEffect::DamageTypeBuff {
+                        damage_mod,
+                        damage_type: _,
+                    } => (damage_mod * 100.0) as i32,
                 }
             });
             let debuff_power = calculated_debuffs.iter().fold(0, |acc, debuff| {
                 acc + match debuff.effect {
-                    DebuffEffect::Dot { damage_per_tick, damage_type: _, tick_per } => damage_per_tick * (debuff.remaining_duration / tick_per),
+                    DebuffEffect::Dot {
+                        damage_per_tick,
+                        damage_type: _,
+                        tick_per,
+                    } => damage_per_tick * (debuff.remaining_duration / tick_per),
                     // Very basic attempt at calculating the power of these kind of debuffs
-                    DebuffEffect::VulnerabilityDebuff { damage_mod, damage_type: _ } => (damage_mod * 100.0) as i32
+                    DebuffEffect::VulnerabilityDebuff {
+                        damage_mod,
+                        damage_type: _,
+                    } => (damage_mod * 100.0) as i32,
                 }
             });
             let potential_power = calculated_damage + buff_power + debuff_power;
@@ -154,12 +186,17 @@ fn use_ability(
         // Add buffs, if any
         let max_calculated_buffs = max_calculated_buffs.expect("selected ability value was None");
         if !max_calculated_buffs.is_empty() {
-            buffs.0.insert(player_ability.name.clone(), max_calculated_buffs);
+            buffs
+                .0
+                .insert(player_ability.name.clone(), max_calculated_buffs);
         }
         // Add debuffs, if any
-        let max_calculated_debuffs = max_calculated_debuffs.expect("selected ability value was None");
+        let max_calculated_debuffs =
+            max_calculated_debuffs.expect("selected ability value was None");
         if !max_calculated_debuffs.is_empty() {
-            enemy_debuffs.0.insert(player_ability.name.clone(), max_calculated_debuffs);
+            enemy_debuffs
+                .0
+                .insert(player_ability.name.clone(), max_calculated_debuffs);
         }
         // Add to report
         report.activity.push(Activity {
@@ -206,21 +243,36 @@ fn calculate_ability(
                 ItemEffect::DotDamage(value) => dot_flat_damage += value,
                 ItemEffect::DamageType(damage_type) => calculated_damage_type = *damage_type,
                 ItemEffect::RestoreHealth(_) => (), // TODO: Handle
-                ItemEffect::RestoreArmor(_) => (), // TODO: Handle
-                ItemEffect::RestorePower(_) => (), // TODO: Handle
+                ItemEffect::RestoreArmor(_) => (),  // TODO: Handle
+                ItemEffect::RestorePower(_) => (),  // TODO: Handle
                 ItemEffect::ProcFlatDamage { damage, chance } => {
                     // Roll proc and add damage if we succeeded
                     if thread_rng().gen::<f32>() > *chance {
                         flat_damage += damage;
                     }
-                },
-                ItemEffect::ProcDamageMod { damage_mod: proc_damage_mod, chance } => {
+                }
+                ItemEffect::RangeFlatDamage {
+                    min_damage,
+                    max_damage,
+                } => {
+                    // Roll range damage
+                    // Max value for gen_range() is exclusive, so add one to make it inclusive
+                    flat_damage += thread_rng().gen_range(*min_damage, *max_damage + 1);
+                }
+                ItemEffect::ProcDamageMod {
+                    damage_mod: proc_damage_mod,
+                    chance,
+                } => {
                     // Roll proc and add damage mod if we succeeded
                     if thread_rng().gen::<f32>() > *chance {
                         damage_mod += proc_damage_mod;
                     }
-                },
-                ItemEffect::DamageTypeBuff { damage_type, damage_mod, duration } => {
+                }
+                ItemEffect::DamageTypeBuff {
+                    damage_type,
+                    damage_mod,
+                    duration,
+                } => {
                     calculated_buffs.push(Buff {
                         remaining_duration: *duration,
                         effect: BuffEffect::DamageTypeBuff {
@@ -229,7 +281,11 @@ fn calculate_ability(
                         },
                     });
                 }
-                ItemEffect::VulnerabilityDebuff { damage_type, damage_mod, duration } => {
+                ItemEffect::VulnerabilityDebuff {
+                    damage_type,
+                    damage_mod,
+                    duration,
+                } => {
                     calculated_debuffs.push(Debuff {
                         remaining_duration: *duration,
                         effect: DebuffEffect::VulnerabilityDebuff {
@@ -265,15 +321,23 @@ fn calculate_ability(
         }
     }
     // Damage type mods
-    if let Some(effects) = item_mods.attribute_effects.get(&format!("BOOST_{:?}", player_ability.damage_type).to_uppercase()) {
+    if let Some(effects) = item_mods
+        .attribute_effects
+        .get(&format!("BOOST_{:?}", player_ability.damage_type).to_uppercase())
+    {
         for effect in effects {
             match effect {
                 ItemEffect::FlatDamage(value) => flat_damage += value,
-                _ => panic!("Found non-FlatDamage effect in damage type boost, this shouldn't happen"),
+                _ => panic!(
+                    "Found non-FlatDamage effect in damage type boost, this shouldn't happen"
+                ),
             }
         }
     }
-    if let Some(effects) = item_mods.attribute_effects.get(&format!("MOD_{:?}", player_ability.damage_type).to_uppercase()) {
+    if let Some(effects) = item_mods
+        .attribute_effects
+        .get(&format!("MOD_{:?}", player_ability.damage_type).to_uppercase())
+    {
         for effect in effects {
             match effect {
                 ItemEffect::DamageMod(value) => damage_mod += value,
@@ -284,10 +348,17 @@ fn calculate_ability(
     // Apply damage mods to dots
     for debuff in &mut calculated_debuffs {
         match debuff.effect {
-            DebuffEffect::Dot { ref mut damage_per_tick, damage_type, tick_per: _ } => {
+            DebuffEffect::Dot {
+                ref mut damage_per_tick,
+                damage_type,
+                tick_per: _,
+            } => {
                 // Find dot damage modifiers based on the damage type of the dot
                 let mut dot_damage_mod = 0.0;
-                if let Some(effects) = item_mods.attribute_effects.get(&format!("MOD_{:?}_INDIRECT", damage_type).to_uppercase()) {
+                if let Some(effects) = item_mods
+                    .attribute_effects
+                    .get(&format!("MOD_{:?}_INDIRECT", damage_type).to_uppercase())
+                {
                     for effect in effects {
                         match effect {
                             ItemEffect::DamageMod(value) => dot_damage_mod += value,
@@ -295,8 +366,9 @@ fn calculate_ability(
                         }
                     }
                 }
-                *damage_per_tick = ((*damage_per_tick + dot_flat_damage) as f32 * (1.0 + dot_damage_mod)) as i32;
-            },
+                *damage_per_tick =
+                    ((*damage_per_tick + dot_flat_damage) as f32 * (1.0 + dot_damage_mod)) as i32;
+            }
             // We only care about damaging dot debuffs
             _ => (),
         };
@@ -308,13 +380,18 @@ fn calculate_ability(
         + (player_ability.damage as f32 * base_damage_mod))
         .round() as i32;
 
-    (calculated_damage, calculated_damage_type, calculated_buffs, calculated_debuffs)
+    (
+        calculated_damage,
+        calculated_damage_type,
+        calculated_buffs,
+        calculated_debuffs,
+    )
 }
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use super::super::Sim;
+    use super::*;
     use crate::parser::Parser;
 
     #[test]
@@ -323,15 +400,20 @@ mod tests {
         let player_ability = Sim::get_player_ability(&parser, &mut vec![], "Slice6").unwrap();
 
         let item_mods = parser.calculate_item_mods(&vec![], &vec![]);
-        let (calculated_damage, _, _, calculated_debuffs) = calculate_ability(&player_ability, &item_mods, 0.0, 0.0);
+        let (calculated_damage, _, _, calculated_debuffs) =
+            calculate_ability(&player_ability, &item_mods, 0.0, 0.0);
         assert_eq!(calculated_damage, 189);
         match calculated_debuffs[0].effect {
-            DebuffEffect::Dot { damage_per_tick, damage_type, tick_per } => {
+            DebuffEffect::Dot {
+                damage_per_tick,
+                damage_type,
+                tick_per,
+            } => {
                 assert_eq!(damage_per_tick, 0);
                 assert_eq!(damage_type, DamageType::Poison);
                 assert_eq!(tick_per, 2);
-            },
-            _ => ()
+            }
+            _ => (),
         };
 
         let item_mods = parser.calculate_item_mods(
@@ -352,15 +434,20 @@ mod tests {
                 ("power_16101".to_string(), "id_10".to_string()),
             ],
         );
-        let (calculated_damage, _, _, calculated_debuffs) = calculate_ability(&player_ability, &item_mods, 0.0, 0.0);
+        let (calculated_damage, _, _, calculated_debuffs) =
+            calculate_ability(&player_ability, &item_mods, 0.0, 0.0);
         assert_eq!(calculated_damage, 362);
         match calculated_debuffs[0].effect {
-            DebuffEffect::Dot { damage_per_tick, damage_type, tick_per } => {
+            DebuffEffect::Dot {
+                damage_per_tick,
+                damage_type,
+                tick_per,
+            } => {
                 assert_eq!(damage_per_tick, 115);
                 assert_eq!(damage_type, DamageType::Poison);
                 assert_eq!(tick_per, 2);
-            },
-            _ => ()
+            }
+            _ => (),
         };
     }
 }

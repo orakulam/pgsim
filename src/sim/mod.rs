@@ -74,7 +74,7 @@ enum DebuffEffect {
     VulnerabilityDebuff {
         damage_type: DamageType,
         damage_mod: f32,
-    }
+    },
 }
 
 #[derive(Debug)]
@@ -117,18 +117,13 @@ impl Sim {
                 abilities: config
                     .abilities
                     .iter()
-                    .filter_map(|x| {
-                        Sim::get_player_ability(&parser, &mut report_warnings, x)
-                    })
+                    .filter_map(|x| Sim::get_player_ability(&parser, &mut report_warnings, x))
                     .collect(),
             },
             Buffs(HashMap::new()),
         ));
-        let enemy: Entity = world.push((
-            Enemy,
-            Report { activity: vec![] },
-            Debuffs(HashMap::new()),
-        ));
+        let enemy: Entity =
+            world.push((Enemy, Report { activity: vec![] }, Debuffs(HashMap::new())));
 
         let mut resources = Resources::default();
         resources.insert(item_mods);
@@ -316,19 +311,14 @@ mod tests {
             Player,
             PlayerAbilities {
                 abilities: vec![
-                    Sim::get_player_ability(&parser, &mut vec![], "SwordSlash7")
-                        .unwrap(),
-                    Sim::get_player_ability(&parser, &mut vec![], "HackingBlade5")
-                        .unwrap(),
+                    Sim::get_player_ability(&parser, &mut vec![], "SwordSlash7").unwrap(),
+                    Sim::get_player_ability(&parser, &mut vec![], "HackingBlade5").unwrap(),
                 ],
             },
             Buffs(HashMap::new()),
         ));
-        let enemy: Entity = world.push((
-            Enemy,
-            Report { activity: vec![] },
-            Debuffs(HashMap::new()),
-        ));
+        let enemy: Entity =
+            world.push((Enemy, Report { activity: vec![] }, Debuffs(HashMap::new())));
 
         let mut resources = Resources::default();
         resources.insert(item_mods);
@@ -382,18 +372,16 @@ mod tests {
             world.push((
                 Player,
                 PlayerAbilities {
-                    abilities: vec![
-                        Sim::get_player_ability(&parser, &mut vec![], &ability.internal_name)
-                            .unwrap(),
-                    ],
+                    abilities: vec![Sim::get_player_ability(
+                        &parser,
+                        &mut vec![],
+                        &ability.internal_name,
+                    )
+                    .unwrap()],
                 },
                 Buffs(HashMap::new()),
             ));
-            world.push((
-                Enemy,
-                Report { activity: vec![] },
-                Debuffs(HashMap::new()),
-            ));
+            world.push((Enemy, Report { activity: vec![] }, Debuffs(HashMap::new())));
 
             let mut resources = Resources::default();
             resources.insert(item_mods);
@@ -418,16 +406,14 @@ mod tests {
             damage_type: DamageType::Slashing,
             reset_time: 10.0,
             buffs: vec![],
-            debuffs: vec![
-                Debuff {
-                    remaining_duration: 12,
-                    effect: DebuffEffect::Dot {
-                        damage_per_tick: 30,
-                        damage_type: DamageType::Trauma,
-                        tick_per: 2,
-                    },
+            debuffs: vec![Debuff {
+                remaining_duration: 12,
+                effect: DebuffEffect::Dot {
+                    damage_per_tick: 30,
+                    damage_type: DamageType::Trauma,
+                    tick_per: 2,
                 },
-            ],
+            }],
             cooldown: 0.0,
             icon_id: 3024,
             base_damage_attributes: vec![],
@@ -440,11 +426,7 @@ mod tests {
             },
             Buffs(HashMap::new()),
         ));
-        world.push((
-            Enemy,
-            Report { activity: vec![] },
-            Debuffs(HashMap::new()),
-        ));
+        world.push((Enemy, Report { activity: vec![] }, Debuffs(HashMap::new())));
 
         let mut resources = Resources::default();
         resources.insert(item_mods);
@@ -474,9 +456,10 @@ mod tests {
     fn buff_duration() {
         let parser = Parser::new();
         let mut world = World::default();
-        let item_mods = parser.calculate_item_mods(&vec![], &vec![
-            ("power_9602".to_string(), "id_1".to_string()),
-        ]);
+        let item_mods = parser.calculate_item_mods(
+            &vec![],
+            &vec![("power_9602".to_string(), "id_1".to_string())],
+        );
         let player: Entity = world.push((
             Player,
             PlayerAbilities {
@@ -486,11 +469,7 @@ mod tests {
             },
             Buffs(HashMap::new()),
         ));
-        world.push((
-            Enemy,
-            Report { activity: vec![] },
-            Debuffs(HashMap::new()),
-        ));
+        world.push((Enemy, Report { activity: vec![] }, Debuffs(HashMap::new())));
 
         let mut resources = Resources::default();
         resources.insert(item_mods);
@@ -511,9 +490,10 @@ mod tests {
     fn buff_damage_type_mod() {
         let parser = Parser::new();
         let mut world = World::default();
-        let item_mods = parser.calculate_item_mods(&vec![], &vec![
-            ("power_9602".to_string(), "id_1".to_string()),
-        ]);
+        let item_mods = parser.calculate_item_mods(
+            &vec![],
+            &vec![("power_9602".to_string(), "id_1".to_string())],
+        );
         world.push((
             Player,
             PlayerAbilities {
@@ -524,11 +504,8 @@ mod tests {
             },
             Buffs(HashMap::new()),
         ));
-        let enemy: Entity = world.push((
-            Enemy,
-            Report { activity: vec![] },
-            Debuffs(HashMap::new()),
-        ));
+        let enemy: Entity =
+            world.push((Enemy, Report { activity: vec![] }, Debuffs(HashMap::new())));
 
         let mut resources = Resources::default();
         resources.insert(item_mods);
@@ -560,16 +537,14 @@ mod tests {
             damage_type: DamageType::Slashing,
             reset_time: 60.0,
             buffs: vec![],
-            debuffs: vec![
-                Debuff {
-                    remaining_duration: 12,
-                    effect: DebuffEffect::Dot {
-                        damage_per_tick: 30,
-                        damage_type: DamageType::Trauma,
-                        tick_per: 2,
-                    },
+            debuffs: vec![Debuff {
+                remaining_duration: 12,
+                effect: DebuffEffect::Dot {
+                    damage_per_tick: 30,
+                    damage_type: DamageType::Trauma,
+                    tick_per: 2,
                 },
-            ],
+            }],
             cooldown: 0.0,
             icon_id: 3024,
             base_damage_attributes: vec![],
@@ -582,11 +557,8 @@ mod tests {
             },
             Buffs(HashMap::new()),
         ));
-        let enemy: Entity = world.push((
-            Enemy,
-            Report { activity: vec![] },
-            Debuffs(HashMap::new()),
-        ));
+        let enemy: Entity =
+            world.push((Enemy, Report { activity: vec![] }, Debuffs(HashMap::new())));
 
         let mut resources = Resources::default();
         resources.insert(item_mods);
@@ -619,16 +591,14 @@ mod tests {
             damage_type: DamageType::Slashing,
             reset_time: 3.0,
             buffs: vec![],
-            debuffs: vec![
-                Debuff {
-                    remaining_duration: 12,
-                    effect: DebuffEffect::Dot {
-                        damage_per_tick: 30,
-                        damage_type: DamageType::Trauma,
-                        tick_per: 2,
-                    },
+            debuffs: vec![Debuff {
+                remaining_duration: 12,
+                effect: DebuffEffect::Dot {
+                    damage_per_tick: 30,
+                    damage_type: DamageType::Trauma,
+                    tick_per: 2,
                 },
-            ],
+            }],
             cooldown: 0.0,
             icon_id: 3024,
             base_damage_attributes: vec![],
@@ -641,11 +611,8 @@ mod tests {
             },
             Buffs(HashMap::new()),
         ));
-        let enemy: Entity = world.push((
-            Enemy,
-            Report { activity: vec![] },
-            Debuffs(HashMap::new()),
-        ));
+        let enemy: Entity =
+            world.push((Enemy, Report { activity: vec![] }, Debuffs(HashMap::new())));
 
         let mut resources = Resources::default();
         resources.insert(item_mods);
@@ -674,9 +641,10 @@ mod tests {
     fn debuff_vulnerability_mod() {
         let parser = Parser::new();
         let mut world = World::default();
-        let item_mods = parser.calculate_item_mods(&vec![], &vec![
-            ("power_8003".to_string(), "id_1".to_string()),
-        ]);
+        let item_mods = parser.calculate_item_mods(
+            &vec![],
+            &vec![("power_8003".to_string(), "id_1".to_string())],
+        );
         world.push((
             Player,
             PlayerAbilities {
@@ -686,11 +654,8 @@ mod tests {
             },
             Buffs(HashMap::new()),
         ));
-        let enemy: Entity = world.push((
-            Enemy,
-            Report { activity: vec![] },
-            Debuffs(HashMap::new()),
-        ));
+        let enemy: Entity =
+            world.push((Enemy, Report { activity: vec![] }, Debuffs(HashMap::new())));
 
         let mut resources = Resources::default();
         resources.insert(item_mods);
