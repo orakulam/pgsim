@@ -19,13 +19,14 @@ Lots of sim tests
     -Cooldown for abilities
     -Cooldown for buffs
     -Cooldown for debuffs
-    Buff effectiveness (does it really boost damage, for example)
+    -Buff effectiveness (does it really boost damage, for example)
     Debuff effectiveness (does it really cause weakness)
     -Debuff as a dot (does it deal damage)
 Add in item mods
     Parse each item mod type, and either be able to handle it or explicitly ignore it (if it's something we don't care about yet, like evasion)
         IconID parsing
         Mod parsing
+    Buffs for attack type (Nice attacks, etc.)
 Review all TODOs
 Review unused
 Write up the README

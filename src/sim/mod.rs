@@ -41,13 +41,13 @@ struct Report {
 #[derive(Debug)]
 struct Buffs(HashMap<String, Vec<Buff>>);
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 struct Buff {
     remaining_duration: i32,
     effect: BuffEffect,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 enum BuffEffect {
     DamageTypeBuff {
         damage_type: DamageType,
@@ -471,7 +471,7 @@ mod tests {
     }
 
     #[test]
-    fn buff_duration_test() {
+    fn buff_duration() {
         let parser = Parser::new();
         let mut world = World::default();
         let item_mods = parser.calculate_item_mods(&vec![], &vec![
@@ -505,6 +505,48 @@ mod tests {
         let buffs = entry.get_component::<Buffs>().unwrap();
         assert_eq!(buffs.0.len(), 1);
         assert_eq!(buffs.0["Psi Adrenaline Wave 5"][0].remaining_duration, 1);
+    }
+
+    #[test]
+    fn buff_damage_type_mod() {
+        let parser = Parser::new();
+        let mut world = World::default();
+        let item_mods = parser.calculate_item_mods(&vec![], &vec![
+            ("power_9602".to_string(), "id_1".to_string()),
+        ]);
+        world.push((
+            Player,
+            PlayerAbilities {
+                abilities: vec![
+                    Sim::get_player_ability(&parser, &mut vec![], "SwordSlash7").unwrap(),
+                    Sim::get_player_ability(&parser, &mut vec![], "AdrenalineWave5").unwrap(),
+                ],
+            },
+            Buffs(HashMap::new()),
+        ));
+        let enemy: Entity = world.push((
+            Enemy,
+            Report { activity: vec![] },
+            Debuffs(HashMap::new()),
+        ));
+
+        let mut resources = Resources::default();
+        resources.insert(item_mods);
+
+        let mut schedule = systems::build_schedule();
+
+        for _ in 0..3 {
+            schedule.execute(&mut world, &mut resources);
+        }
+        let entry = world.entry(enemy).unwrap();
+        let report = entry.get_component::<Report>().unwrap();
+
+        // First SwordSlash7 does normal base damage
+        assert_eq!(report.activity[0].damage, 133);
+        assert_eq!(report.activity[0].damage_type, DamageType::Slashing);
+        // Second SwordSlash7 does buffed damage from the Slashing damage buff from AdrenalineWave5
+        assert_eq!(report.activity[2].damage, 136);
+        assert_eq!(report.activity[2].damage_type, DamageType::Slashing);
     }
 
     #[test]
