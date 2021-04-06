@@ -242,6 +242,7 @@ impl Parser {
             || effect_desc.contains("deal -1 damage for")
             || effect_desc.contains("8-second delay")
             || effect_desc.contains("Evasion")
+            || effect_desc.contains("Max Armor")
         {
             item_mods
                 .warnings
@@ -507,6 +508,7 @@ impl Parser {
 
     fn is_explicitly_ignored(&self, effect_desc: &str) -> bool {
         self.regex.racials.is_match(effect_desc)
+            || effect_desc.contains("Combat XP when feeling")
             || effect_desc.contains("taunt as if they did")
             || effect_desc
                 .contains("If you use Premeditated Doom while standing near your Web Trap")
@@ -538,7 +540,15 @@ impl Parser {
             || effect_desc.contains("After using Doe Eyes, your next attack deals")
             || effect_desc.contains("damage to undead")
             || effect_desc.contains("mitigation")
+            || effect_desc.contains("Mitigation")
+            || effect_desc.contains("Indirect Nature and Indirect Electricity damage")
+            || effect_desc.contains("Indirect Poison and Indirect Trauma damage")
+            || effect_desc.contains("Toxic Irritant boosts your Nice Attack Damage")
+            || effect_desc.contains("Melee attacks deal")
+            || effect_desc.contains("Max Power")
+            || effect_desc.contains("Max Health")
             || effect_desc.starts_with("Fairies gain")
+            || effect_desc.starts_with("(Wax)")
             || effect_desc.contains("_COST_MOD}")
             || effect_desc.starts_with("{MAX_HEALTH}")
             || effect_desc.starts_with("{MAX_ARMOR}")
@@ -563,7 +573,8 @@ impl Parser {
             || effect_desc.starts_with("{EVASION_CHANCE_")
             || effect_desc.starts_with("{ABILITY_RANGE_DELTA_")
             || effect_desc.starts_with("{ABILITY_COST_DELTA_")
-            || effect_desc.starts_with("{ABILITY_RESETTIME_DELTA_")
+            || effect_desc.starts_with("{ABILITY_RESETTIME_")
+            || effect_desc.starts_with("{SKILL_RESETTIME_")
             || effect_desc.starts_with("{MISS_CHANCE")
             || effect_desc.starts_with("{ACCURACY_BOOST")
             || effect_desc.starts_with("{COMBAT_XP_EARNED_MOD}")
@@ -576,6 +587,7 @@ impl Parser {
             || effect_desc.starts_with("{AVOID_DEATH_CHANCE}")
             || effect_desc.starts_with("{FLY_FASTSPEED_BOOST}")
             || effect_desc.starts_with("{FLY_FASTSPEED_COST_PER_SEC}")
+            || effect_desc.starts_with("{FLY_INCOMBAT_COST_PER_SEC}")
             || effect_desc.starts_with("{NONCOMBAT_SPRINT_BOOST}")
             || effect_desc.starts_with("{JUMP_BURST}")
             || effect_desc.starts_with("{SWIM_FASTSPEED_BOOST}")

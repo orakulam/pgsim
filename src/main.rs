@@ -41,6 +41,9 @@ Mods that affect DPS that aren't handled (or aren't handled correctly)
     Delayed damage
     "causes your next attack to deal +12 damage" is just a 1 round buff
     "After using Doe Eyes, your next attack deals +10 damage"
+    "Indirect Nature and Indirect Electricity" warden mod
+    "Indirect Poison and Indirect Trauma damage" warden mod
+    "Toxic Irritant boosts your Nice Attack Damage" mod for BC
 Better reporting
     Timestamp of each activity
     Maybe graphs and whatnot?

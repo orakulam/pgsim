@@ -16,7 +16,9 @@ fn calculate_item_mods_all_implemented() {
     let mut item_mods = parser.calculate_item_mods(&vec![], &equipped_mods);
     if item_mods.not_implemented.len() > 0 {
         item_mods.not_implemented.sort();
-        println!("Not implemented: {:#?}", item_mods.not_implemented.first());
+        for not_implemented in &item_mods.not_implemented {
+            println!("{}", not_implemented);
+        }
     }
     assert_eq!(item_mods.not_implemented.len(), 0);
 }
@@ -1173,14 +1175,6 @@ fn calculate_icon_id_effect_desc() {
     test_icon_id_effect(
         &parser,
         "<icon=3663><icon=3665>Whenever you take damage from an enemy, you gain Song of Discord Damage +3% and Song of Resurgence Healing +3 for 20 seconds. (Stacks up to 12x)",
-        vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
-        0,
-        0,
-    );
-    test_icon_id_effect(
-        &parser,
-        "Melee attacks deal +5 damage to Pigs",
         vec![],
         vec![ItemEffect::FlatDamage(50_000)],
         0,
@@ -2565,14 +2559,6 @@ fn calculate_icon_id_effect_desc() {
     test_icon_id_effect(
         &parser,
         "<icon=3694>Play Dead restores 15 Health",
-        vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
-        0,
-        0,
-    );
-    test_icon_id_effect(
-        &parser,
-        "Indirect Nature and Indirect Electricity damage is +5% per tick while Warden skill active",
         vec![],
         vec![ItemEffect::FlatDamage(50_000)],
         0,
