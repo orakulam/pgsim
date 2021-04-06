@@ -36,6 +36,15 @@
 		}
 	}
 
+	function beforeUnload(e) {
+		// Cancel the event as stated by the standard.
+		e.preventDefault();
+		// Chrome requires returnValue to be set.
+		e.returnValue = '';
+		// more compatibility
+		return '...';
+	}
+
 	// Check for hash on initial load
 	if (window.location.hash !== '') {
 		hashchange();
@@ -108,7 +117,10 @@
 	<script async src="https://www.googletagmanager.com/gtag/js?id=G-PY9ZYT4D7K"></script>
 </svelte:head>
 
-<svelte:window on:hashchange={hashchange}/>
+<svelte:window
+	on:hashchange={hashchange}
+	on:beforeunload={beforeUnload}
+/>
 
 <main>
 	<h1>pgsim</h1>
