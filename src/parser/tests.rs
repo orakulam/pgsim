@@ -718,6 +718,30 @@ fn calculate_icon_id_effect_desc() {
     );
     test_icon_id_effect(
         &parser,
+        "<icon=3795>Nip boosts the damage of Basic, Core, and Nice attacks +5 for 6 seconds. (This buff does not stack with itself.)",
+        vec![3795],
+        vec![
+            ItemEffect::KeywordFlatDamageBuff {
+                keyword: "BasicAttack".to_string(),
+                damage: 5,
+                duration: 6,
+            },
+            ItemEffect::KeywordFlatDamageBuff {
+                keyword: "CoreAttack".to_string(),
+                damage: 5,
+                duration: 6,
+            },
+            ItemEffect::KeywordFlatDamageBuff {
+                keyword: "NiceAttack".to_string(),
+                damage: 5,
+                duration: 6,
+            },
+        ],
+        0,
+        0,
+    );
+    test_icon_id_effect(
+        &parser,
         "<icon=2209>Room-Temperature Ball deals Darkness damage and causes +24 damage over 12 seconds",
         vec![],
         vec![ItemEffect::FlatDamage(50_000)],
@@ -2630,7 +2654,7 @@ fn calculate_icon_id_effect_desc() {
     );
     test_icon_id_effect(
         &parser,
-        "<icon=3795>Nip boosts the damage of Basic, Core, and Nice attacks +5 for 6 seconds. (This buff does not stack with itself.)<icon=3738>Give Warmth restores 3 Health and +2 Body Heat",
+        "<icon=3738>Give Warmth restores 3 Health and +2 Body Heat",
         vec![],
         vec![ItemEffect::FlatDamage(50_000)],
         0,
@@ -2895,14 +2919,6 @@ fn calculate_icon_id_effect_desc() {
     test_icon_id_effect(
         &parser,
         "<icon=3463>Shield Team grants all allies 3% evasion of burst attacks for 10 seconds",
-        vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
-        0,
-        0,
-    );
-    test_icon_id_effect(
-        &parser,
-        "<icon=3795>Nip boosts the damage of Basic, Core, and Nice attacks +5 for 6 seconds. (This buff does not stack with itself.)",
         vec![],
         vec![ItemEffect::FlatDamage(50_000)],
         0,

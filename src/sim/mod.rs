@@ -543,6 +543,44 @@ mod tests {
     }
 
     #[test]
+    fn buff_core_attack_damage() {
+        let parser = Parser::new();
+        let mut world = World::default();
+        let item_mods = parser.calculate_item_mods(
+            &vec![],
+            &vec![("power_4203".to_string(), "id_1".to_string())],
+        );
+        world.push((
+            Player,
+            PlayerAbilities {
+                abilities: vec![
+                    Sim::get_player_ability(&parser, &mut vec![], "PositiveAttitude5").unwrap(),
+                    Sim::get_player_ability(&parser, &mut vec![], "StrikeANerve6").unwrap(),
+                ],
+            },
+            Buffs(HashMap::new()),
+        ));
+        let enemy: Entity =
+            world.push((Enemy, Report { activity: vec![] }, Debuffs(HashMap::new())));
+
+        let mut resources = Resources::default();
+        resources.insert(item_mods);
+
+        let mut schedule = systems::build_schedule();
+
+        for _ in 0..9 {
+            schedule.execute(&mut world, &mut resources);
+        }
+        let entry = world.entry(enemy).unwrap();
+        let report = entry.get_component::<Report>().unwrap();
+
+        // First StrikeANerve6 does normal base damage
+        assert_eq!(report.activity[0].damage, 275);
+        // Second StrikeANerve6 does buffed damage from the Core Attack damage buff from PositiveAttitude5
+        assert_eq!(report.activity[2].damage, 285);
+    }
+
+    #[test]
     fn debuff_duration() {
         let parser = Parser::new();
         let mut world = World::default();

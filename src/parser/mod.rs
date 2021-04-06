@@ -80,6 +80,7 @@ struct ParserRegex {
     damage_type_buff: Regex,
     keyword_next_attack_buff: Regex,
     keyword_core_attack_buff: Regex,
+    keyword_nip_buff: Regex,
     vulnerability_damage_mod_debuff: Regex,
     vulnerability_flat_damage_debuff: Regex,
 }
@@ -136,6 +137,7 @@ impl Parser {
             damage_type_buff: Regex::new(r"(?P<damage_type>Slashing) damage \+(?P<damage_mod>[0-9]+)% for (?P<duration>[0-9]+) seconds").unwrap(),
             keyword_next_attack_buff: Regex::new(r"next attack to deal \+?(?P<damage>[0-9]+) damage if it is a (?P<keyword>Werewolf) (?:ability|attack)").unwrap(),
             keyword_core_attack_buff: Regex::new(r"Core Attack Damage \+?(?P<damage>[0-9]+) for (?P<duration>[0-9]+) seconds").unwrap(),
+            keyword_nip_buff: Regex::new(r"Nip boosts the damage of Basic, Core, and Nice attacks \+?(?P<damage>[0-9]+) for (?P<duration>[0-9]+) seconds").unwrap(),
             vulnerability_damage_mod_debuff: Regex::new(r"(?P<damage_mod>[0-9]+)% more vulnerable to (?P<damage_type>Electricity) damage for (?P<duration>[0-9]+) seconds").unwrap(),
             vulnerability_flat_damage_debuff: Regex::new(r"suffer \+?(?P<damage>[0-9]+) damage from direct (?P<damage_type>Cold) attacks for (?P<duration>[0-9]+) seconds").unwrap(),
         }
@@ -414,6 +416,35 @@ impl Parser {
                     .as_str()
                     .parse::<i32>()
                     .unwrap(),
+            });
+        }
+        if let Some(caps) = self.regex.keyword_nip_buff.captures(effect_desc) {
+            let damage = caps
+                .name("damage")
+                .unwrap()
+                .as_str()
+                .parse::<i32>()
+                .unwrap();
+            let duration = caps
+                .name("duration")
+                .unwrap()
+                .as_str()
+                .parse::<i32>()
+                .unwrap();
+            new_effects.push(ItemEffect::KeywordFlatDamageBuff {
+                keyword: "BasicAttack".to_string(),
+                damage,
+                duration,
+            });
+            new_effects.push(ItemEffect::KeywordFlatDamageBuff {
+                keyword: "CoreAttack".to_string(),
+                damage,
+                duration,
+            });
+            new_effects.push(ItemEffect::KeywordFlatDamageBuff {
+                keyword: "NiceAttack".to_string(),
+                damage,
+                duration,
             });
         }
         if let Some(caps) = self
