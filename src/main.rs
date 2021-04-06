@@ -18,10 +18,6 @@ Add in item mods
         Duration-based keyword buff
             Versions for both flat damage and damage mod
 Review all TODOs, any that need to be addressed before alpha?
-Write up the README
-    Include client and server notes, mention buildWebData.js
-    Mention --serve and CLI mode
-    Cite sources (damage calc)
 Move "TODO Phase 2" items to GitHub Issues
 Clean up these comments, anything else
 Clean up console logs and anything else in the web client

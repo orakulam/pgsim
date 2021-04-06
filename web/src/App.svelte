@@ -114,6 +114,7 @@
 </script>
 
 <svelte:head>
+	<title>pgsim</title>
 	<script async src="https://www.googletagmanager.com/gtag/js?id=G-PY9ZYT4D7K"></script>
 </svelte:head>
 
