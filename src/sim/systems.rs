@@ -76,8 +76,8 @@ fn use_ability(
         .next()
         .expect("failed to get target");
     // Calculate current buff (on the player) and debuff (on the enemy) damage mods
-    let mut current_damage_type_buffs_to_damage_mod: HashMap<DamageType, f32> = HashMap::new();
     let mut current_keyword_buffs_to_damage: HashMap<String, i32> = HashMap::new();
+    let mut current_damage_type_buffs_to_damage_mod: HashMap<DamageType, f32> = HashMap::new();
     for (_, buffs) in &buffs.0 {
         for buff in buffs {
             match &buff.effect {

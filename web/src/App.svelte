@@ -4,6 +4,7 @@
 	let report;
 	let processNextHashChange = true;
 	let state = {
+		version: 1,
 		skill1: '',
 		skill1Abilities: [],
 		skill2: '',

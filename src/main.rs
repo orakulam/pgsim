@@ -18,9 +18,7 @@ Add in item mods
         Duration-based keyword buff
             Versions for both flat damage and damage mod
 Client
-    Put a version number in the state object stored in hash on the client (so we can change formats later and still support old formats, within reason)
     Add GA
-    Make sure we can spam sending requests to the server and it resolves each one correctly
 Review all TODOs, any that need to be addressed before alpha?
 Write up the README
     Include client and server notes, mention buildWebData.js
