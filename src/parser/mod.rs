@@ -73,7 +73,7 @@ struct ParserRegex {
     damage_type: Regex,
     racials: Regex,
     damage_type_buff: Regex,
-    keyword_flat_damage_buff: Regex,
+    keyword_next_attack_buff: Regex,
     vulnerability_debuff: Regex,
 }
 
@@ -121,13 +121,13 @@ impl Parser {
                 Regex::new(r"(?:restore|restores|heals|heals you for) \+?(?P<restore>[0-9]+) [hH]ealth")
                     .unwrap(),
             restore_armor:
-                Regex::new(r"(?:restore|restores) \+?(?P<restore>[0-9]+) [aA]rmor").unwrap(),
+                Regex::new(r"(?:restore|restores|and) \+?(?P<restore>[0-9]+) [aA]rmor").unwrap(),
             restore_power:
                 Regex::new(r"(?:restore|restores) \+?(?P<restore>[0-9]+) [pP]ower").unwrap(),
             damage_type: Regex::new(r"[dD]amage(?:| type) becomes (?P<damage_type>[a-zA-Z]*)").unwrap(),
             racials: Regex::new(r"(?:Humans|Orcs|Elves|Dwarves|Rakshasa) gain \+?(?:[0-9]+) Max (?:Health|Hydration|Metabolism|Power|Armor|Bodyheat)").unwrap(),
             damage_type_buff: Regex::new(r"(?P<damage_type>Slashing) damage \+(?P<damage_mod>[0-9]+)% for (?P<duration>[0-9]+) seconds").unwrap(),
-            keyword_flat_damage_buff: Regex::new(r"next attack to deal \+?(?P<damage>[0-9]+) damage if it is a (?P<keyword>Werewolf) ability").unwrap(),
+            keyword_next_attack_buff: Regex::new(r"next attack to deal \+?(?P<damage>[0-9]+) damage if it is a (?P<keyword>Werewolf) (?:ability|attack)").unwrap(),
             vulnerability_debuff: Regex::new(r"(?P<damage_mod>[0-9]+)% more vulnerable to (?P<damage_type>Electricity) damage for (?P<duration>[0-9]+) seconds").unwrap(),
         }
     }
@@ -231,6 +231,7 @@ impl Parser {
             || effect_desc.contains("hits all enemies within 5 meters")
             || effect_desc.contains("deal -1 damage for")
             || effect_desc.contains("damage after an")
+            || effect_desc.contains("generates no Rage")
         {
             item_mods
                 .warnings
@@ -375,7 +376,7 @@ impl Parser {
                     .unwrap(),
             });
         }
-        if let Some(caps) = self.regex.keyword_flat_damage_buff.captures(effect_desc) {
+        if let Some(caps) = self.regex.keyword_next_attack_buff.captures(effect_desc) {
             new_effects.push(ItemEffect::KeywordFlatDamageBuff {
                 keyword: caps.name("keyword").unwrap().as_str().to_string(),
                 damage: caps
@@ -470,9 +471,11 @@ impl Parser {
             || effect_desc.contains("Coordinated Assault grants all allies")
             || effect_desc.contains("Blocking Stance boosts your Direct Cold Damage")
             || effect_desc.contains("Squeal uniformly diminishes all targets' entire aggro lists")
-            || effect_desc.contains("Infuriating Bash generates no Rage and lowers Rage by")
             || effect_desc.contains("Provoke Undead causes your minions to deal")
             || effect_desc.contains("Shield Team causes all targets' Survival Utility abilities to restore")
+            || effect_desc.contains("Psi Health Wave grants all targets")
+            || effect_desc.contains("If Screech, Sonic Burst, or Deathscream deal Trauma damage")
+            || effect_desc.contains("Frenzy boosts targets'")
             || effect_desc.contains("Power every 20 seconds")
             || effect_desc.contains("Power every 5 seconds")
             || effect_desc.contains("Health every 5 seconds")

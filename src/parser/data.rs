@@ -123,7 +123,7 @@ impl Data {
             &fs::read_to_string("./data/skills.json").expect("Unable to read skills.json"),
         )
         .unwrap();
-        let mut abilities: HashMap<String, Ability> = serde_json::from_str(
+        let abilities: HashMap<String, Ability> = serde_json::from_str(
             &fs::read_to_string("./data/abilities.json").expect("Unable to read abilities.json"),
         )
         .unwrap();

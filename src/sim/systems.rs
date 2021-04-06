@@ -309,7 +309,6 @@ fn calculate_ability(
                     damage,
                     duration,
                 } => {
-                    // TODO
                     calculated_buffs.push(Buff {
                         remaining_duration: *duration,
                         effect: BuffEffect::KeywordFlatDamageBuff {

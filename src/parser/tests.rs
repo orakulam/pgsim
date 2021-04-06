@@ -292,8 +292,8 @@ fn calculate_icon_id_effect_desc() {
         "<icon=3448>Infuriating Bash generates no Rage and lowers Rage by 100",
         vec![3448],
         vec![],
-        0,
         1,
+        0,
     );
     test_icon_id_effect(
         &parser,
@@ -500,33 +500,44 @@ fn calculate_icon_id_effect_desc() {
     );
     test_icon_id_effect(
         &parser,
-        "<icon=2131>For 10 seconds, Frenzy boosts targets' indirect damage +1<icon=3421>Pin generates no Rage and reduces Rage by 50",
+        "<icon=2131>For 10 seconds, Frenzy boosts targets' indirect damage +1",
+        vec![2131],
         vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
         0,
+        1,
+    );
+    test_icon_id_effect(
+        &parser,
+        "<icon=3421>Pin generates no Rage and reduces Rage by 50",
+        vec![3421],
+        vec![],
+        1,
         0,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3746>Psi Health Wave grants all targets +6 Mitigation vs. Electricity, Acid, and Nature attacks for 20 seconds",
+        vec![3746],
         vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
         0,
-        0,
+        1,
     );
     test_icon_id_effect(
         &parser,
-        "<icon=3542><icon=3544><icon=3541>If Screech, Sonic Burst, or Deathscream deal Trauma damage, that damage is boosted +15% per tick",
+        "<icon=3542><icon=3544><icon=3544>If Screech, Sonic Burst, or Deathscream deal Trauma damage, that damage is boosted +15% per tick",
+        vec![3542, 3544],
         vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
         0,
-        0,
+        1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3320>Snare Arrow restores 2 Health and 2 Armor to you",
-        vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
+        vec![3320],
+        vec![
+            ItemEffect::RestoreHealth(2),
+            ItemEffect::RestoreArmor(2),
+        ],
         0,
         0,
     );
@@ -597,14 +608,6 @@ fn calculate_icon_id_effect_desc() {
     test_icon_id_effect(
         &parser,
         "<icon=3465>Nimble Limbs grants your pet +1 mitigation vs. physical (slashing, piercing, and crushing) attacks for 15 seconds",
-        vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
-        0,
-        0,
-    );
-    test_icon_id_effect(
-        &parser,
-        "(Wax) Melee Attackers suffer 3 indirect Acid damage while Shield skill Active",
         vec![],
         vec![ItemEffect::FlatDamage(50_000)],
         0,

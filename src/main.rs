@@ -19,6 +19,7 @@ Add in item mods
         Duration-based keyword buff
             Handles "next attack does more if it's Werewolf", handles "NiceAttack", etc.
             Versions for both flat damage and damage mod
+            Handle multiple keywords (just add multiple ItemBuffs)
         Test for keyword buffs (probably a Nice attack or similar one)
 Client
     Put a version number in the state object stored in hash on the client (so we can change formats later and still support old formats, within reason)
