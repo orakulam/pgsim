@@ -115,8 +115,7 @@ impl Sim {
     pub fn run(parser: &Parser, config: &SimConfig) -> String {
         let mut world = World::default();
         let item_mods = parser.calculate_item_mods(&config.items, &config.item_mods);
-        // Copy all the warnings to use in the report later
-        // TODO: Probably some way to avoid a copy here, but meh
+        // Copy all the warnings to use in the report later (this is necessary because we give ownership to legion as a resouce)
         let mut report_warnings = item_mods.warnings.clone();
         report_warnings.append(&mut item_mods.ignored.clone());
         report_warnings.append(&mut item_mods.not_implemented.clone());
@@ -197,7 +196,6 @@ impl Sim {
         warnings: &mut Vec<String>,
         ability_name: &str,
     ) -> Option<PlayerAbility> {
-        // TODO: Better error messages, mention skill and ability names
         match parser.internal_name_ability_key_map.get(ability_name) {
             Some(ability_key) => {
                 match parser.data.abilities.get(ability_key) {

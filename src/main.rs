@@ -17,34 +17,8 @@ Add in item mods
     Buffs for attack type (Nice attacks, etc.)
         Duration-based keyword buff
             Versions for both flat damage and damage mod
-Review all TODOs, any that need to be addressed before alpha?
-Move "TODO Phase 2" items to GitHub Issues
-Clean up these comments, anything else
-Clean up console logs and anything else in the web client
-
-
-TODO Phase 2
-
-Mods that affect DPS that aren't handled (or aren't handled correctly)
-    Delayed damage
-    "causes your next attack to deal +12 damage" is just a 1 round buff
-    "After using Doe Eyes, your next attack deals +10 damage"
-    "Indirect Nature and Indirect Electricity" warden mod
-    "Indirect Poison and Indirect Trauma damage" warden mod
-    "Toxic Irritant boosts your Nice Attack Damage" mod for BC
-Better reporting
-    Timestamp of each activity
-    Maybe graphs and whatnot?
-Smarter application of dots
-    Check if the dot is present and try to only re-apply when needed
-    Some abilities may mostly be about up front damage even when having a dot though, weigh desire to use the ability based on both upfront and dot damage (re-applying in this case may be better)
-Gather ongoing damage from abilities (advanced)
-    Healing
-    Power regen
-    Also gather number of CCs and type (CC per minute or something like that)
-Add elapsed time resource and tag each Activity with a timestamp, for things like damage over time graphs
-Validate correctness of a built (item slots, number of mods, etc.)
-Sim pets
+Review all TODOs, any that need to be addressed before alpha? Reviewed once, do one last pass
+Clean up this comment block
 */
 
 struct ActixState {

@@ -143,7 +143,6 @@ impl Parser {
         }
     }
 
-    // TODO: Clean up unwraps in this series of functions
     pub fn calculate_item_mods(
         &self,
         equipped_items: &Vec<String>,

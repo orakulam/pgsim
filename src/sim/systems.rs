@@ -276,7 +276,6 @@ fn calculate_ability(
     let mut flat_damage = 0;
     let mut damage_mod = 0.0;
     let mut base_damage_mod = 0.0;
-    // Main calc: ((ability_base_damage+flat_damage)*(1+damage_mod)*(1+target_weakness))+(ability_base_damage*base_damage_multiplier)
     // Icon ID mods
     if let Some(effects) = item_mods.icon_id_effects.get(&player_ability.icon_id) {
         for effect in effects {
@@ -285,9 +284,9 @@ fn calculate_ability(
                 ItemEffect::DamageMod(value) => damage_mod += value,
                 ItemEffect::DotDamage(value) => dot_flat_damage += value,
                 ItemEffect::DamageType(damage_type) => calculated_damage_type = *damage_type,
-                ItemEffect::RestoreHealth(_) => (), // TODO: Handle
-                ItemEffect::RestoreArmor(_) => (),  // TODO: Handle
-                ItemEffect::RestorePower(_) => (),  // TODO: Handle
+                ItemEffect::RestoreHealth(_) => (),
+                ItemEffect::RestoreArmor(_) => (),
+                ItemEffect::RestorePower(_) => (),
                 ItemEffect::ProcFlatDamage { damage, chance } => {
                     // Roll proc and add damage if we succeeded
                     if thread_rng().gen::<f32>() > *chance {
