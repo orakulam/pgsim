@@ -1,6 +1,18 @@
 <script lang="ts">
 	import data from './data.json';
 
+	// Google analytics
+	if (window.location.hostname !== 'localhost') {
+		// @ts-ignore
+		window.dataLayer = window.dataLayer || [];
+		// @ts-ignore
+		function gtag(){dataLayer.push(arguments);}
+		// @ts-ignore
+		gtag('js', new Date());
+		// @ts-ignore
+		gtag('config', 'G-PY9ZYT4D7K');
+	}
+
 	let report;
 	let processNextHashChange = true;
 	let state = {
@@ -91,6 +103,10 @@
 		report = await fetchResponse.text();
 	}
 </script>
+
+<svelte:head>
+	<script async src="https://www.googletagmanager.com/gtag/js?id=G-PY9ZYT4D7K"></script>
+</svelte:head>
 
 <svelte:window on:hashchange={hashchange}/>
 

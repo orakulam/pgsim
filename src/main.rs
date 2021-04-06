@@ -17,8 +17,6 @@ Add in item mods
     Buffs for attack type (Nice attacks, etc.)
         Duration-based keyword buff
             Versions for both flat damage and damage mod
-Client
-    Add GA
 Review all TODOs, any that need to be addressed before alpha?
 Write up the README
     Include client and server notes, mention buildWebData.js
