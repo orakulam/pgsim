@@ -309,7 +309,7 @@ fn calculate_icon_id_effect_desc() {
         vec![3430],
         vec![
             ItemEffect::FlatDamage(1),
-            ItemEffect::VulnerabilityDebuff {
+            ItemEffect::VulnerabilityDamageModDebuff {
                 damage_type: DamageType::Electricity,
                 damage_mod: 0.1,
                 duration: 30,
@@ -534,170 +534,183 @@ fn calculate_icon_id_effect_desc() {
         &parser,
         "<icon=3320>Snare Arrow restores 2 Health and 2 Armor to you",
         vec![3320],
-        vec![
-            ItemEffect::RestoreHealth(2),
-            ItemEffect::RestoreArmor(2),
-        ],
+        vec![ItemEffect::RestoreHealth(2), ItemEffect::RestoreArmor(2)],
         0,
         0,
     );
     test_icon_id_effect(
         &parser,
-        "<icon=108>All Major Healing abilities targeting you restore +10 Health (while Cow skill active)<icon=3525>You regain 15 Health when using Blizzard",
+        "<icon=108>All Major Healing abilities targeting you restore +10 Health (while Cow skill active)",
+        vec![108],
         vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
+        0,
+        1,
+    );
+    test_icon_id_effect(
+        &parser,
+        "<icon=3525>You regain 15 Health when using Blizzard",
+        vec![3525],
+        vec![ItemEffect::RestoreHealth(15)],
         0,
         0,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3774>Lethal Force deals 40 additional Fire damage over 8 seconds",
-        vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
+        vec![3774],
+        vec![ItemEffect::DotDamage(40)],
         0,
         0,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3704>Bun-Fu Strike reduces target's rage by 30, then reduces it by 30 more after a 5 second delay",
+        vec![3704],
         vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
-        0,
+        1,
         0,
     );
     test_icon_id_effect(
         &parser,
         "<icon=2153>After using Doe Eyes, your next attack deals +10 damage",
+        vec![2153],
         vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
         0,
-        0,
+        1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3443>Flashing Strike deals +22 damage to undead",
+        vec![3443],
         vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
         0,
-        0,
+        1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3017>Sanguine Fangs suddenly deals 35 Trauma damage after an 8-second delay",
+        vec![3017],
         vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
-        0,
+        1,
         0,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3312>Bow Bash gives you +1 mitigation of any physical damage for 20 seconds. (This effect does not stack with itself.)",
+        vec![3312],
         vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
         0,
-        0,
+        1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3044>Fast Talk taunts -60 and reduces Rage by 100",
+        vec![3044],
         vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
-        0,
+        1,
         0,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3465>Nimble Limbs grants your pet +1 mitigation vs. physical (slashing, piercing, and crushing) attacks for 15 seconds",
+        vec![3465],
         vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
         0,
-        0,
+        1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3401>Inject Venom heals you for 2 health",
-        vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
+        vec![3401],
+        vec![ItemEffect::RestoreHealth(2)],
         0,
         0,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3782>Astral Strike causes all targets to suffer +12 damage from direct Cold attacks for 10 seconds",
-        vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
+        vec![3782],
+        vec![ItemEffect::VulnerabilityFlatDamageDebuff {
+            damage_type: DamageType::Cold,
+            damage: 12,
+            duration: 10,
+        }],
         0,
         0,
     );
     test_icon_id_effect(
         &parser,
         "<icon=2132>Double Claw Damage +13",
-        vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
+        vec![2132],
+        vec![ItemEffect::FlatDamage(13)],
         0,
         0,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3547><icon=3553>Bat Stability provides +10% Projectile Evasion for 10 seconds",
+        vec![3547, 3553],
         vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
-        0,
+        1,
         0,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3601>Surge Cut deals 35 Trauma damage over 10 seconds",
-        vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
+        vec![3601],
+        vec![ItemEffect::DotDamage(35)],
         0,
         0,
     );
     test_icon_id_effect(
         &parser,
         "<icon=2222>Positive Attitude increases your Core Attack Damage +10 for 15 seconds",
-        vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
+        vec![2222],
+        vec![ItemEffect::KeywordFlatDamageBuff {
+            keyword: "CoreAttack".to_string(),
+            damage: 10,
+            duration: 15,
+        }],
         0,
         0,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3047>Precision Pierce deals +5 direct health damage and further reduces target's Rage by 30",
-        vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
-        0,
+        vec![3047],
+        vec![ItemEffect::FlatDamage(5)],
+        1,
         0,
     );
     test_icon_id_effect(
         &parser,
         "<icon=2175>Healing Mist restores 4 power",
-        vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
+        vec![2175],
+        vec![ItemEffect::RestorePower(4)],
         0,
         0,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3046><icon=3024>Hacking Blade and Debilitating Blow deal 48 Trauma damage over 12 seconds",
-        vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
+        vec![3046, 3024],
+        vec![ItemEffect::DotDamage(48)],
         0,
         0,
     );
     test_icon_id_effect(
         &parser,
         "<icon=2232>Mudbath restores 7 armor to the target",
-        vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
+        vec![2232],
+        vec![ItemEffect::RestoreArmor(7)],
         0,
         0,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3044>Fast Talk heals you for 10 armor",
-        vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
+        vec![3044],
+        vec![ItemEffect::RestoreArmor(10)],
         0,
         0,
     );

@@ -42,9 +42,14 @@ pub enum ItemEffect {
     //     damage_mod: f32,
     //     duration: i32,
     // },
-    VulnerabilityDebuff {
+    VulnerabilityDamageModDebuff {
         damage_type: DamageType,
         damage_mod: f32,
+        duration: i32,
+    },
+    VulnerabilityFlatDamageDebuff {
+        damage_type: DamageType,
+        damage: i32,
         duration: i32,
     },
 }
@@ -74,7 +79,9 @@ struct ParserRegex {
     racials: Regex,
     damage_type_buff: Regex,
     keyword_next_attack_buff: Regex,
-    vulnerability_debuff: Regex,
+    keyword_core_attack_buff: Regex,
+    vulnerability_damage_mod_debuff: Regex,
+    vulnerability_flat_damage_debuff: Regex,
 }
 
 pub struct Parser {
@@ -109,7 +116,7 @@ impl Parser {
                 r"\{(?P<attribute>[_A-Z]*)\}\{(?P<mod>[+-]?[0-9]*[.]?[0-9]+)\}(?P<extra>$|\{[a-zA-Z]*\})",
             )
             .unwrap(),
-            flat_damage: Regex::new(r"(?:deal|deals|[dD]amage) \+?(?P<damage>[0-9]+) ?(?:$|\.|and|damage|armor damage|direct damage)").unwrap(),
+            flat_damage: Regex::new(r"(?:deal|deals|[dD]amage) \+?(?P<damage>[0-9]+) ?(?:$|\.|and|damage|armor damage|direct damage|direct health damage)").unwrap(),
             proc_flat_damage:  Regex::new(r"(?P<chance>[0-9]+)% chance to deal \+(?P<damage>[0-9]+) damage").unwrap(),
             range_flat_damage: Regex::new(r"between \+?(?P<min_damage>[0-9]+) and \+?(?P<max_damage>[0-9]+) extra damage").unwrap(),
             damage_mod: Regex::new(r"(?:deals|[dD]amage) \+?(?P<damage>[0-9]+)% ?(?:$|damage|and)").unwrap(),
@@ -118,17 +125,19 @@ impl Parser {
                 Regex::new(r"(?:deal|deals|deals an additional) \+?(?P<damage>[0-9]+).*(?:damage over|damage to melee attackers)")
                     .unwrap(),
             restore_health:
-                Regex::new(r"(?:restore|restores|heals|heals you for) \+?(?P<restore>[0-9]+) [hH]ealth")
+                Regex::new(r"(?:restore|restores|regain|heals|heals you for) \+?(?P<restore>[0-9]+) [hH]ealth")
                     .unwrap(),
             restore_armor:
-                Regex::new(r"(?:restore|restores|and) \+?(?P<restore>[0-9]+) [aA]rmor").unwrap(),
+                Regex::new(r"(?:restore|restores|and|heals you for) \+?(?P<restore>[0-9]+) [aA]rmor").unwrap(),
             restore_power:
                 Regex::new(r"(?:restore|restores) \+?(?P<restore>[0-9]+) [pP]ower").unwrap(),
             damage_type: Regex::new(r"[dD]amage(?:| type) becomes (?P<damage_type>[a-zA-Z]*)").unwrap(),
             racials: Regex::new(r"(?:Humans|Orcs|Elves|Dwarves|Rakshasa) gain \+?(?:[0-9]+) Max (?:Health|Hydration|Metabolism|Power|Armor|Bodyheat)").unwrap(),
             damage_type_buff: Regex::new(r"(?P<damage_type>Slashing) damage \+(?P<damage_mod>[0-9]+)% for (?P<duration>[0-9]+) seconds").unwrap(),
             keyword_next_attack_buff: Regex::new(r"next attack to deal \+?(?P<damage>[0-9]+) damage if it is a (?P<keyword>Werewolf) (?:ability|attack)").unwrap(),
-            vulnerability_debuff: Regex::new(r"(?P<damage_mod>[0-9]+)% more vulnerable to (?P<damage_type>Electricity) damage for (?P<duration>[0-9]+) seconds").unwrap(),
+            keyword_core_attack_buff: Regex::new(r"Core Attack Damage \+?(?P<damage>[0-9]+) for (?P<duration>[0-9]+) seconds").unwrap(),
+            vulnerability_damage_mod_debuff: Regex::new(r"(?P<damage_mod>[0-9]+)% more vulnerable to (?P<damage_type>Electricity) damage for (?P<duration>[0-9]+) seconds").unwrap(),
+            vulnerability_flat_damage_debuff: Regex::new(r"suffer \+?(?P<damage>[0-9]+) damage from direct (?P<damage_type>Cold) attacks for (?P<duration>[0-9]+) seconds").unwrap(),
         }
     }
 
@@ -227,11 +236,12 @@ impl Parser {
             || effect_desc.contains("reuse time")
             || effect_desc.contains("Reuse Time")
             || effect_desc.contains("Rage")
+            || effect_desc.contains("rage")
             || effect_desc.contains("total damage against Demons")
             || effect_desc.contains("hits all enemies within 5 meters")
             || effect_desc.contains("deal -1 damage for")
-            || effect_desc.contains("damage after an")
-            || effect_desc.contains("generates no Rage")
+            || effect_desc.contains("8-second delay")
+            || effect_desc.contains("Evasion")
         {
             item_mods
                 .warnings
@@ -388,8 +398,29 @@ impl Parser {
                 duration: 1,
             });
         }
-        if let Some(caps) = self.regex.vulnerability_debuff.captures(effect_desc) {
-            new_effects.push(ItemEffect::VulnerabilityDebuff {
+        if let Some(caps) = self.regex.keyword_core_attack_buff.captures(effect_desc) {
+            new_effects.push(ItemEffect::KeywordFlatDamageBuff {
+                keyword: "CoreAttack".to_string(),
+                damage: caps
+                    .name("damage")
+                    .unwrap()
+                    .as_str()
+                    .parse::<i32>()
+                    .unwrap(),
+                duration: caps
+                    .name("duration")
+                    .unwrap()
+                    .as_str()
+                    .parse::<i32>()
+                    .unwrap(),
+            });
+        }
+        if let Some(caps) = self
+            .regex
+            .vulnerability_damage_mod_debuff
+            .captures(effect_desc)
+        {
+            new_effects.push(ItemEffect::VulnerabilityDamageModDebuff {
                 damage_type: DamageType::from_str(caps.name("damage_type").unwrap().as_str())
                     .expect("Failed to parse damage type string as enum"),
                 damage_mod: caps
@@ -399,6 +430,28 @@ impl Parser {
                     .parse::<f32>()
                     .unwrap()
                     / 100.0,
+                duration: caps
+                    .name("duration")
+                    .unwrap()
+                    .as_str()
+                    .parse::<i32>()
+                    .unwrap(),
+            });
+        }
+        if let Some(caps) = self
+            .regex
+            .vulnerability_flat_damage_debuff
+            .captures(effect_desc)
+        {
+            new_effects.push(ItemEffect::VulnerabilityFlatDamageDebuff {
+                damage_type: DamageType::from_str(caps.name("damage_type").unwrap().as_str())
+                    .expect("Failed to parse damage type string as enum"),
+                damage: caps
+                    .name("damage")
+                    .unwrap()
+                    .as_str()
+                    .parse::<i32>()
+                    .unwrap(),
                 duration: caps
                     .name("duration")
                     .unwrap()
@@ -472,7 +525,8 @@ impl Parser {
             || effect_desc.contains("Blocking Stance boosts your Direct Cold Damage")
             || effect_desc.contains("Squeal uniformly diminishes all targets' entire aggro lists")
             || effect_desc.contains("Provoke Undead causes your minions to deal")
-            || effect_desc.contains("Shield Team causes all targets' Survival Utility abilities to restore")
+            || effect_desc
+                .contains("Shield Team causes all targets' Survival Utility abilities to restore")
             || effect_desc.contains("Psi Health Wave grants all targets")
             || effect_desc.contains("If Screech, Sonic Burst, or Deathscream deal Trauma damage")
             || effect_desc.contains("Frenzy boosts targets'")
@@ -480,6 +534,10 @@ impl Parser {
             || effect_desc.contains("Power every 5 seconds")
             || effect_desc.contains("Health every 5 seconds")
             || effect_desc.contains("Chance to Ignore Knockbacks")
+            || effect_desc.contains("Major Healing abilities")
+            || effect_desc.contains("After using Doe Eyes, your next attack deals")
+            || effect_desc.contains("damage to undead")
+            || effect_desc.contains("mitigation")
             || effect_desc.starts_with("Fairies gain")
             || effect_desc.contains("_COST_MOD}")
             || effect_desc.starts_with("{MAX_HEALTH}")

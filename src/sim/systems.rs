@@ -93,17 +93,25 @@ fn use_ability(
             }
         }
     }
+    let mut current_damage_type_vulnerabilities_to_damage: HashMap<DamageType, i32> =
+        HashMap::new();
     let mut current_damage_type_vulnerabilities_to_damage_mod: HashMap<DamageType, f32> =
         HashMap::new();
     for (_, debuffs) in &enemy_debuffs.0 {
         for debuff in debuffs {
             match debuff.effect {
-                DebuffEffect::VulnerabilityDebuff {
+                DebuffEffect::VulnerabilityDamageModDebuff {
                     damage_mod,
                     damage_type,
                 } => {
                     current_damage_type_vulnerabilities_to_damage_mod
                         .insert(damage_type, damage_mod);
+                }
+                DebuffEffect::VulnerabilityFlatDamageDebuff {
+                    damage,
+                    damage_type,
+                } => {
+                    current_damage_type_vulnerabilities_to_damage.insert(damage_type, damage);
                 }
                 // We only care about vulnerability
                 _ => (),
@@ -133,7 +141,13 @@ fn use_ability(
                 }
             }
             // Get damage mods from enemy debuffs
+            let mut current_vulnerability_damage = 0;
             let mut current_vulnerability_damage_mod = 0.0;
+            if let Some(damage) =
+                current_damage_type_vulnerabilities_to_damage.get(&player_ability.damage_type)
+            {
+                current_vulnerability_damage += damage;
+            }
             if let Some(damage_mod) =
                 current_damage_type_vulnerabilities_to_damage_mod.get(&player_ability.damage_type)
             {
@@ -147,6 +161,7 @@ fn use_ability(
                     current_buff_damage_mod,
                     current_buff_damage,
                     current_vulnerability_damage_mod,
+                    current_vulnerability_damage,
                 );
             let buff_power = calculated_buffs.iter().fold(0, |acc, buff| {
                 acc + match buff.effect {
@@ -166,10 +181,14 @@ fn use_ability(
                         tick_per,
                     } => damage_per_tick * (debuff.remaining_duration / tick_per),
                     // Very basic attempt at calculating the power of these kind of debuffs
-                    DebuffEffect::VulnerabilityDebuff {
+                    DebuffEffect::VulnerabilityDamageModDebuff {
                         damage_mod,
                         damage_type: _,
                     } => (damage_mod * 100.0) as i32,
+                    DebuffEffect::VulnerabilityFlatDamageDebuff {
+                        damage,
+                        damage_type: _,
+                    } => damage,
                 }
             });
             let potential_power = calculated_damage + buff_power + debuff_power;
@@ -247,6 +266,7 @@ fn calculate_ability(
     current_buff_damage_mod: f32,
     current_buff_damage: i32,
     current_vulnerability_damage_mod: f32,
+    current_vulnerability_damage: i32,
 ) -> (i32, DamageType, Vec<Buff>, Vec<Debuff>) {
     // Add item mods to damage calc
     let mut calculated_damage_type = player_ability.damage_type;
@@ -317,16 +337,29 @@ fn calculate_ability(
                         },
                     });
                 }
-                ItemEffect::VulnerabilityDebuff {
+                ItemEffect::VulnerabilityDamageModDebuff {
                     damage_type,
                     damage_mod,
                     duration,
                 } => {
                     calculated_debuffs.push(Debuff {
                         remaining_duration: *duration,
-                        effect: DebuffEffect::VulnerabilityDebuff {
+                        effect: DebuffEffect::VulnerabilityDamageModDebuff {
                             damage_type: *damage_type,
                             damage_mod: *damage_mod,
+                        },
+                    });
+                }
+                ItemEffect::VulnerabilityFlatDamageDebuff {
+                    damage_type,
+                    damage,
+                    duration,
+                } => {
+                    calculated_debuffs.push(Debuff {
+                        remaining_duration: *duration,
+                        effect: DebuffEffect::VulnerabilityFlatDamageDebuff {
+                            damage_type: *damage_type,
+                            damage: *damage,
                         },
                     });
                 }
@@ -410,7 +443,10 @@ fn calculate_ability(
         };
     }
     // Calculate damage
-    let calculated_damage = (((player_ability.damage + current_buff_damage + flat_damage) as f32
+    let calculated_damage = (((player_ability.damage
+        + current_buff_damage
+        + current_vulnerability_damage
+        + flat_damage) as f32
         * (1.0 + current_buff_damage_mod + damage_mod)
         * (1.0 + current_vulnerability_damage_mod))
         + (player_ability.damage as f32 * base_damage_mod))
@@ -437,7 +473,7 @@ mod tests {
 
         let item_mods = parser.calculate_item_mods(&vec![], &vec![]);
         let (calculated_damage, _, _, calculated_debuffs) =
-            calculate_ability(&player_ability, &item_mods, 0.0, 0, 0.0);
+            calculate_ability(&player_ability, &item_mods, 0.0, 0, 0.0, 0);
         assert_eq!(calculated_damage, 189);
         match calculated_debuffs[0].effect {
             DebuffEffect::Dot {
@@ -471,7 +507,7 @@ mod tests {
             ],
         );
         let (calculated_damage, _, _, calculated_debuffs) =
-            calculate_ability(&player_ability, &item_mods, 0.0, 0, 0.0);
+            calculate_ability(&player_ability, &item_mods, 0.0, 0, 0.0, 0);
         assert_eq!(calculated_damage, 362);
         match calculated_debuffs[0].effect {
             DebuffEffect::Dot {

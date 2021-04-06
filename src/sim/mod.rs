@@ -76,9 +76,13 @@ enum DebuffEffect {
         damage_type: DamageType,
         tick_per: i32,
     },
-    VulnerabilityDebuff {
+    VulnerabilityDamageModDebuff {
         damage_type: DamageType,
         damage_mod: f32,
+    },
+    VulnerabilityFlatDamageDebuff {
+        damage_type: DamageType,
+        damage: i32,
     },
 }
 
