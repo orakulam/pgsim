@@ -9,6 +9,8 @@ The output report includes several sections:
 - The `NOTES` section lists warnings for your build and what's currently supported. Many of these warnings are okay (things like `Ignored base item mod: {MAX_ARMOR}{6}`, which doesn't matter since we don't simulate your character's tankiness), but others may be impactful to the simulated DPS of your build. For warnings that do impact your build, please notify me so I can check it out and get it fixed!
 - The `SUMMARY` section gives a breakdown of your build's DPS, and damage by source and damage type. Given the variety of resistances and immunities in Project Gorgon, DPS by damage type is very important to understand how viable your build is.
 
+Link to use it: https://pgsim.herokuapp.com
+
 Need help? File an issue here on GitHub, or ping `Valius` on the Project Gorgon Discord or in-game.
 
 Want to help? I'd love it, hit me up!

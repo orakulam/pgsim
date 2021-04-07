@@ -12,8 +12,8 @@ use sim::{Sim, SimConfig};
 TODO
 
 Add in item mods
-    Parse each item mod type, and either be able to handle it or explicitly ignore it (if it's something we don't care about yet, like evasion)
-        IconID parsing
+    Finish tests for each item mode (even if they don't pass)
+    Work through and make each one pass
 Review all TODOs, any that need to be addressed before alpha? Reviewed once, do one last pass
 Clean up this comment block
 */
