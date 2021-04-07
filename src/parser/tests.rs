@@ -1550,153 +1550,176 @@ fn calculate_icon_id_effect_desc() {
     test_icon_id_effect(
         &parser,
         "<icon=3626>Agonize deals +36 Psychic damage over 12 seconds",
-        vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
+        vec![3626],
+        vec![ItemEffect::DotDamage(36)],
         0,
         0,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3690>Rabbit Scratch restores 1 Armor to you",
-        vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
+        vec![3690],
+        vec![ItemEffect::RestoreArmor(1)],
         0,
         0,
     );
     test_icon_id_effect(
         &parser,
         "<icon=2241>Bruising Blow deals Trauma damage instead of Crushing, and targets suffer +5% damage from other Trauma attacks for 20 seconds",
-        vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
+        vec![2241],
+        vec![ItemEffect::DamageType(DamageType::Trauma), ItemEffect::DamageTypeDamageModBuff {
+            damage_type: DamageType::Trauma,
+            damage_mod: 0.05,
+            duration: 20,
+        }],
         0,
         0,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3204>Psi Adrenaline Wave increases all targets' Electricity damage +2% for 20 seconds",
-        vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
+        vec![3204],
+        vec![ItemEffect::DamageTypeDamageModBuff {
+            damage_type: DamageType::Electricity,
+            damage_mod: 0.02,
+            duration: 20,
+        }],
         0,
         0,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3270>Panic Charge boosts the damage of all your attacks +2 for 20 seconds",
+        vec![3270],
         vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
         0,
-        0,
+        1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3600>Backstab steals 7 health from the target and gives it to you",
+        vec![3600],
         vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
         0,
-        0,
+        1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3430>Electrify restores 8 Health to you",
-        vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
+        vec![3430],
+        vec![ItemEffect::RestoreHealth(8)],
         0,
         0,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3592>Blur Cut restores 6 Health after a 15 second delay",
+        vec![3592],
         vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
-        0,
+        1,
         0,
     );
     test_icon_id_effect(
         &parser,
         "<icon=2116>Pep Talk removes ongoing Fire effects (up to 3 dmg/sec)",
+        vec![2116],
         vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
         0,
-        0,
+        1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=2204><icon=2112>While Unarmed skill active: 10% of all Acid, Poison, and Nature damage you take is mitigated and added to the damage done by your next Kick at a 100% rate",
+        vec![2204, 2112],
         vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
         0,
-        0,
+        1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3471>Pound To Slag deals +32 damage if target's Rage is at least 66% full",
-        vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
-        0,
+        vec![3471],
+        vec![ItemEffect::FlatDamage(32)],
+        1,
         0,
     );
     test_icon_id_effect(
         &parser,
         "<icon=2224>Pig Bite has a 3% chance to deal +40 damage and hit all targets within 5 meters",
-        vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
-        0,
+        vec![2224],
+        vec![ItemEffect::ProcFlatDamage {
+            damage: 40,
+            chance: 0.03,
+        }],
+        1,
         0,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3427>Death's Hold causes target to take +5% damage from Darkness for 15 seconds",
-        vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
+        vec![3427],
+        vec![ItemEffect::DamageTypeDamageModBuff {
+            damage_type: DamageType::Darkness,
+            damage_mod: 0.05,
+            duration: 15,
+        }],
         0,
         0,
     );
     test_icon_id_effect(
         &parser,
         "<icon=2253>Tough Hoof deals 9 Trauma damage to the target each time they attack and damage you (within 8 seconds)",
+        vec![2253],
         vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
         0,
-        0,
+        1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3203>Psi Power Wave instantly restores 5 power to all targets",
-        vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
+        vec![3203],
+        vec![ItemEffect::RestorePower(5)],
         0,
         0,
     );
     test_icon_id_effect(
         &parser,
         "<icon=2250>Grunt of Abeyance restores 4 Armor to all targets",
-        vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
+        vec![2250],
+        vec![ItemEffect::RestoreArmor(4)],
         0,
         0,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3444><icon=3047>Precision Pierce and Heart Piercer restore 3 Health to you",
-        vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
+        vec![3444, 3047],
+        vec![ItemEffect::RestoreHealth(3)],
         0,
         0,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3480>Regrowth restores 6 Power",
-        vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
+        vec![3480],
+        vec![ItemEffect::RestorePower(6)],
         0,
         0,
     );
     test_icon_id_effect(
         &parser,
-        "<icon=2246>Pummeling Hooves deals +5% damage and taunts +125<icon=3734>Triage gives the target +4% Melee Evasion for 10 seconds",
-        vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
+        "<icon=2246>Pummeling Hooves deals +5% damage and taunts +125",
+        vec![2246],
+        vec![ItemEffect::DamageMod(0.05)],
+        1,
         0,
+    );
+    test_icon_id_effect(
+        &parser,
+        "<icon=3734>Triage gives the target +4% Melee Evasion for 10 seconds",
+        vec![3734],
+        vec![],
+        1,
         0,
     );
     test_icon_id_effect(
@@ -1710,58 +1733,61 @@ fn calculate_icon_id_effect_desc() {
     test_icon_id_effect(
         &parser,
         "<icon=3440>You Were Adopted deals +10% damage and Power cost is -3",
-        vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
-        0,
+        vec![3440],
+        vec![ItemEffect::DamageMod(0.1)],
+        1,
         0,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3421>Pin deals +10 damage and has +3 Accuracy (which cancels out the Evasion that certain monsters have)",
-        vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
-        0,
+        vec![3421],
+        vec![ItemEffect::FlatDamage(10)],
+        1,
         0,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3480>Regrowth restores +10 Health and conjures a magical field on the target that mitigates 10% of all physical damage they take for 1 minute (or until 100 damage is mitigated)",
-        vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
-        0,
+        vec![3480],
+        vec![ItemEffect::RestoreHealth(10)],
+        1,
         0,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3525>Blizzard deals +1% damage, generates -90 Rage and taunts -80",
-        vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
-        0,
+        vec![3525],
+        vec![ItemEffect::DamageMod(0.01)],
+        2,
         0,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3775>Privacy Field also deals its damage when you are hit by burst attacks, and damage is +10",
-        vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
-        0,
+        vec![3775],
+        vec![ItemEffect::DotDamage(10)],
+        1,
         0,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3469>After using Wild Endurance, your next use of Feed Pet restores +15 Health/Armor",
+        vec![3469],
         vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
         0,
-        0,
+        1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3492><icon=3586><icon=3499><icon=3505>All Ice Magic attacks that hit a single target have a 33% chance to deal +11% damage",
-        vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
+        vec![3492, 3586, 3499, 3505],
+        vec![ItemEffect::ProcDamageMod {
+            damage_mod: 0.11,
+            chance: 0.33,
+        }],
         0,
-        0,
+        1,
     );
     test_icon_id_effect(
         &parser,
