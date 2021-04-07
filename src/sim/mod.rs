@@ -62,6 +62,10 @@ enum BuffEffect {
         keyword: String,
         damage: i32,
     },
+    KeywordDamageModBuff {
+        keyword: String,
+        damage_mod: f32,
+    },
 }
 
 #[derive(Debug)]

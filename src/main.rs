@@ -14,9 +14,6 @@ TODO
 Add in item mods
     Parse each item mod type, and either be able to handle it or explicitly ignore it (if it's something we don't care about yet, like evasion)
         IconID parsing
-    Buffs for attack type (Nice attacks, etc.)
-        Duration-based keyword buff
-            Versions for both flat damage and damage mod
 Review all TODOs, any that need to be addressed before alpha? Reviewed once, do one last pass
 Clean up this comment block
 */

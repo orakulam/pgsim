@@ -77,6 +77,7 @@ fn use_ability(
         .expect("failed to get target");
     // Calculate current buff (on the player) and debuff (on the enemy) damage mods
     let mut current_keyword_buffs_to_damage: HashMap<String, i32> = HashMap::new();
+    let mut current_keyword_buffs_to_damage_mod: HashMap<String, f32> = HashMap::new();
     let mut current_damage_type_buffs_to_damage: HashMap<DamageType, i32> = HashMap::new();
     let mut current_damage_type_buffs_to_damage_mod: HashMap<DamageType, f32> = HashMap::new();
     for (_, buffs) in &buffs.0 {
@@ -96,6 +97,12 @@ fn use_ability(
                 }
                 BuffEffect::KeywordFlatDamageBuff { keyword, damage } => {
                     current_keyword_buffs_to_damage.insert(keyword.clone(), *damage);
+                }
+                BuffEffect::KeywordDamageModBuff {
+                    keyword,
+                    damage_mod,
+                } => {
+                    current_keyword_buffs_to_damage_mod.insert(keyword.clone(), *damage_mod);
                 }
             }
         }
@@ -151,6 +158,9 @@ fn use_ability(
                 if let Some(damage) = current_keyword_buffs_to_damage.get(keyword) {
                     current_buff_damage += damage;
                 }
+                if let Some(damage_mod) = current_keyword_buffs_to_damage_mod.get(keyword) {
+                    current_buff_damage_mod += damage_mod;
+                }
             }
             // Get damage mods from enemy debuffs
             let mut current_vulnerability_damage = 0;
@@ -182,8 +192,15 @@ fn use_ability(
                         damage_mod,
                         damage_type: _,
                     } => (damage_mod * 100.0) as i32,
-                    BuffEffect::DamageTypeFlatDamageBuff { damage_type: _, damage } => damage,
+                    BuffEffect::DamageTypeFlatDamageBuff {
+                        damage_type: _,
+                        damage,
+                    } => damage,
                     BuffEffect::KeywordFlatDamageBuff { keyword: _, damage } => damage,
+                    BuffEffect::KeywordDamageModBuff {
+                        keyword: _,
+                        damage_mod,
+                    } => (damage_mod * 100.0) as i32,
                 }
             });
             let debuff_power = calculated_debuffs.iter().fold(0, |acc, debuff| {
@@ -359,6 +376,19 @@ fn calculate_ability(
                         effect: BuffEffect::KeywordFlatDamageBuff {
                             keyword: keyword.clone(),
                             damage: *damage,
+                        },
+                    });
+                }
+                ItemEffect::KeywordDamageModBuff {
+                    keyword,
+                    damage_mod,
+                    duration,
+                } => {
+                    calculated_buffs.push(Buff {
+                        remaining_duration: *duration,
+                        effect: BuffEffect::KeywordDamageModBuff {
+                            keyword: keyword.clone(),
+                            damage_mod: *damage_mod,
                         },
                     });
                 }

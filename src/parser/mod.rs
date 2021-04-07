@@ -42,11 +42,11 @@ pub enum ItemEffect {
         damage: i32,
         duration: i32,
     },
-    // KeywordDamageModBuff {
-    //     keyword: String,
-    //     damage_mod: f32,
-    //     duration: i32,
-    // },
+    KeywordDamageModBuff {
+        keyword: String,
+        damage_mod: f32,
+        duration: i32,
+    },
     VulnerabilityDamageModDebuff {
         damage_type: DamageType,
         damage_mod: f32,
@@ -396,7 +396,11 @@ impl Parser {
                     .unwrap(),
             });
         }
-        if let Some(caps) = self.regex.damage_type_next_attack_buff.captures(effect_desc) {
+        if let Some(caps) = self
+            .regex
+            .damage_type_next_attack_buff
+            .captures(effect_desc)
+        {
             new_effects.push(ItemEffect::DamageTypeFlatDamageBuff {
                 damage_type: DamageType::from_str(caps.name("damage_type").unwrap().as_str())
                     .expect("Failed to parse damage type string as enum"),
