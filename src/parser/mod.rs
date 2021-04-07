@@ -27,7 +27,12 @@ pub enum ItemEffect {
     RestoreArmor(i32),
     RestorePower(i32),
     DamageType(DamageType),
-    DamageTypeBuff {
+    DamageTypeFlatDamageBuff {
+        damage_type: DamageType,
+        damage: i32,
+        duration: i32,
+    },
+    DamageTypeDamageModBuff {
         damage_type: DamageType,
         damage_mod: f32,
         duration: i32,
@@ -77,7 +82,8 @@ struct ParserRegex {
     restore_power: Regex,
     damage_type: Regex,
     racials: Regex,
-    damage_type_buff: Regex,
+    damage_type_damage_mod_buff: Regex,
+    damage_type_next_attack_buff: Regex,
     keyword_next_attack_buff: Regex,
     keyword_core_attack_buff: Regex,
     keyword_nip_buff: Regex,
@@ -134,7 +140,8 @@ impl Parser {
                 Regex::new(r"(?:restore|restores) \+?(?P<restore>[0-9]+) [pP]ower").unwrap(),
             damage_type: Regex::new(r"[dD]amage(?:| type) becomes (?P<damage_type>[a-zA-Z]*)").unwrap(),
             racials: Regex::new(r"(?:Humans|Orcs|Elves|Dwarves|Rakshasa) gain \+?(?:[0-9]+) Max (?:Health|Hydration|Metabolism|Power|Armor|Bodyheat)").unwrap(),
-            damage_type_buff: Regex::new(r"(?P<damage_type>Slashing) damage \+(?P<damage_mod>[0-9]+)% for (?P<duration>[0-9]+) seconds").unwrap(),
+            damage_type_damage_mod_buff: Regex::new(r"(?P<damage_type>Slashing) damage \+(?P<damage_mod>[0-9]+)% for (?P<duration>[0-9]+) seconds").unwrap(),
+            damage_type_next_attack_buff: Regex::new(r"next attack to deal \+?(?P<damage>[0-9]+) damage if it is a (?P<damage_type>Crushing) (?:ability|attack)").unwrap(),
             keyword_next_attack_buff: Regex::new(r"next attack to deal \+?(?P<damage>[0-9]+) damage if it is a (?P<keyword>Werewolf) (?:ability|attack)").unwrap(),
             keyword_core_attack_buff: Regex::new(r"Core Attack Damage \+?(?P<damage>[0-9]+) for (?P<duration>[0-9]+) seconds").unwrap(),
             keyword_nip_buff: Regex::new(r"Nip boosts the damage of Basic, Core, and Nice attacks \+?(?P<damage>[0-9]+) for (?P<duration>[0-9]+) seconds").unwrap(),
@@ -242,6 +249,7 @@ impl Parser {
             || effect_desc.contains("hits all enemies within 5 meters")
             || effect_desc.contains("deal -1 damage for")
             || effect_desc.contains("8-second delay")
+            || effect_desc.contains("doesn't cause the target to yell for help")
             || effect_desc.contains("Evasion")
             || effect_desc.contains("Max Armor")
         {
@@ -369,8 +377,8 @@ impl Parser {
                     .expect("Failed to parse damage type string as enum"),
             ));
         }
-        if let Some(caps) = self.regex.damage_type_buff.captures(effect_desc) {
-            new_effects.push(ItemEffect::DamageTypeBuff {
+        if let Some(caps) = self.regex.damage_type_damage_mod_buff.captures(effect_desc) {
+            new_effects.push(ItemEffect::DamageTypeDamageModBuff {
                 damage_type: DamageType::from_str(caps.name("damage_type").unwrap().as_str())
                     .expect("Failed to parse damage type string as enum"),
                 damage_mod: caps
@@ -386,6 +394,19 @@ impl Parser {
                     .as_str()
                     .parse::<i32>()
                     .unwrap(),
+            });
+        }
+        if let Some(caps) = self.regex.damage_type_next_attack_buff.captures(effect_desc) {
+            new_effects.push(ItemEffect::DamageTypeFlatDamageBuff {
+                damage_type: DamageType::from_str(caps.name("damage_type").unwrap().as_str())
+                    .expect("Failed to parse damage type string as enum"),
+                damage: caps
+                    .name("damage")
+                    .unwrap()
+                    .as_str()
+                    .parse::<i32>()
+                    .unwrap(),
+                duration: 1,
             });
         }
         if let Some(caps) = self.regex.keyword_next_attack_buff.captures(effect_desc) {

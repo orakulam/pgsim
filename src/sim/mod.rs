@@ -50,9 +50,13 @@ struct Buff {
 
 #[derive(Debug, Clone)]
 enum BuffEffect {
-    DamageTypeBuff {
+    DamageTypeDamageModBuff {
         damage_type: DamageType,
         damage_mod: f32,
+    },
+    DamageTypeFlatDamageBuff {
+        damage_type: DamageType,
+        damage: i32,
     },
     KeywordFlatDamageBuff {
         keyword: String,

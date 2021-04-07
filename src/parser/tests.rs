@@ -205,7 +205,6 @@ fn calculate_icon_id_effect_desc() {
         1,
         0,
     );
-    // New below
     test_icon_id_effect(
         &parser,
         "<icon=3541>Sonic Burst has a 60% chance to deal +10% damage to all targets",
@@ -217,13 +216,12 @@ fn calculate_icon_id_effect_desc() {
         0,
         0,
     );
-    // TODO: Not handling the "over 60 seconds" part
     test_icon_id_effect(
         &parser,
         "<icon=2191>Deflective Spin heals 6 Health over 60 seconds",
         vec![2191],
         vec![ItemEffect::RestoreHealth(6)],
-        0,
+        1,
         0,
     );
     test_icon_id_effect(
@@ -246,7 +244,7 @@ fn calculate_icon_id_effect_desc() {
         &parser,
         "<icon=3204>Psi Adrenaline Wave increases all targets' Slashing damage +2% for 20 seconds",
         vec![3204],
-        vec![ItemEffect::DamageTypeBuff {
+        vec![ItemEffect::DamageTypeDamageModBuff {
             damage_type: DamageType::Slashing,
             damage_mod: 0.02,
             duration: 20,
@@ -743,201 +741,215 @@ fn calculate_icon_id_effect_desc() {
     test_icon_id_effect(
         &parser,
         "<icon=2209>Room-Temperature Ball deals Darkness damage and causes +24 damage over 12 seconds",
-        vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
+        vec![2209],
+        vec![
+            ItemEffect::DamageType(DamageType::Darkness),
+            ItemEffect::DotDamage(24),
+        ],
         0,
         0,
     );
     test_icon_id_effect(
         &parser,
         "<icon=2120>Ring of Fire deals +8% damage but has a 5% chance to deal 50 fire damage to YOU",
-        vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
+        vec![2120],
+        vec![ItemEffect::DamageMod(0.08)],
         0,
         0,
     );
     test_icon_id_effect(
         &parser,
         "<icon=2118>Psychoanalyze causes the target to take +1 damage from Psychic attacks for 60 seconds",
-        vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
-        0,
+        vec![2118],
+        vec![ItemEffect::VulnerabilityFlatDamageDebuff {
+            damage_type: DamageType::Psychic,
+            damage: 1,
+            duration: 60,
+        }],
+        1,
         0,
     );
     test_icon_id_effect(
         &parser,
         "<icon=2240><icon=2105>Cobra Strike and Mamba Strike restore 10 Armor to you",
-        vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
+        vec![2240, 2105],
+        vec![ItemEffect::RestoreArmor(10)],
         0,
         0,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3017>Sanguine Fangs deals +14% Crushing damage and doesn't cause the target to yell for help",
-        vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
-        0,
+        vec![3017],
+        vec![ItemEffect::DamageMod(0.14)],
+        1,
         0,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3458>Strategic Preparation boosts your in-combat Armor regeneration +2 for 20 seconds",
+        vec![3458],
         vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
         0,
-        0,
+        1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3666>Rally restores 20 Armor after a 20 second delay",
-        vec![],
+        vec![3666],
         vec![ItemEffect::FlatDamage(50_000)],
         0,
-        0,
+        1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3754>Deadly Emission Deals +30 Nature damage over 10 seconds and Taunts +25",
-        vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
+        vec![3754],
+        vec![ItemEffect::DotDamage(30)],
         0,
         0,
     );
     test_icon_id_effect(
         &parser,
         "<icon=2237>Provoke Undead deals 12 damage to your minions, who then deal +5 damage for 10 seconds",
+        vec![2237],
         vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
         0,
-        0,
+        1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3252>Incubated Spiders have a 6% chance to avoid being hit by burst attacks",
+        vec![3252],
         vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
         0,
-        0,
+        1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=108>Your attacks deal +1 damage to Canines",
+        vec![108],
         vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
         0,
-        0,
+        1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=108>Your attacks deal +1 damage to Humans",
+        vec![108],
         vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
         0,
-        0,
+        1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3496>Your Cold Sphere's Rage attack deals +35 damage",
+        vec![3496],
         vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
         0,
-        0,
+        1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3527><icon=3491>You regain 6 Power after using Ice Nova or Shardblast",
-        vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
+        vec![3527, 3491],
+        vec![ItemEffect::RestorePower(6)],
         0,
         0,
     );
     test_icon_id_effect(
         &parser,
         "<icon=2190>Double Hit causes your next attack to deal +15 damage if it is a Crushing attack",
-        vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
+        vec![2190],
+        vec![ItemEffect::DamageTypeFlatDamageBuff {
+            damage_type: DamageType::Crushing,
+            damage: 15,
+            duration: 1,
+        }],
         0,
         0,
     );
     test_icon_id_effect(
         &parser,
         "<icon=2149>Stampede boosts your Slashing/Crushing/Piercing Mitigation vs. Elites +2 for 30 seconds (stacks up to 5 times)",
+        vec![2149],
         vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
-        0,
+        1,
         0,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3698>Hare Dash restores 5 Power over 15 seconds",
-        vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
-        0,
+        vec![3698],
+        vec![ItemEffect::RestorePower(5)],
+        1,
         0,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3803>Spirit Bolt deals +6 damage and there's a 50% chance it deals +10% damage",
-        vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
+        vec![3803],
+        vec![ItemEffect::FlatDamage(1), ItemEffect::ProcDamageMod {
+            damage_mod: 0.1,
+            chance: 0.5,
+        }],
         0,
         0,
     );
     test_icon_id_effect(
         &parser,
         "<icon=2127>Fire Walls have +11 Max Health",
+        vec![2127],
         vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
         0,
-        0,
+        1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3320>Snare Arrow raises target's Max Rage by 120, requiring more Rage to use their Rage Abilities",
+        vec![3320],
         vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
         0,
-        0,
-    );
-    test_icon_id_effect(
-        &parser,
-        "Fairies gain +4 Max Power",
-        vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
-        0,
-        0,
+        1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3479>Your Healing Sanctuary heals +5 health and buffs Melee Accuracy +5",
+        vec![3479],
         vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
         0,
-        0,
+        1,
     );
     test_icon_id_effect(
         &parser,
-        "<icon=2107>Super Fireball causes the target to take +11% damage from indirect Fire (this effect does not stack with itself)<icon=3773><icon=3768>Apprehend deals +10 damage and hastens the current reuse timer of Controlled Burn by 0.5 seconds (so it can be used again more quickly)",
+        "<icon=2107>Super Fireball causes the target to take +11% damage from indirect Fire (this effect does not stack with itself)",
+        vec![2107],
         vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
         0,
+        1,
+    );
+    test_icon_id_effect(
+        &parser,
+        "<icon=3773><icon=3768>Apprehend deals +10 damage and hastens the current reuse timer of Controlled Burn by 0.5 seconds (so it can be used again more quickly)",
+        vec![3773, 3768],
+        vec![ItemEffect::FlatDamage(10)],
+        1,
         0,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3785>Fae Conduit restores +1 Power every 5 seconds",
+        vec![3785],
         vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
         0,
-        0,
+        1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3697><icon=3751>Love Tap hastens the current reuse timer of Carrot Power by 1 second",
-        vec![],
+        vec![3697, 3751],
         vec![ItemEffect::FlatDamage(50_000)],
-        0,
+        1,
         0,
     );
     test_icon_id_effect(
