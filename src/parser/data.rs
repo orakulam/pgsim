@@ -49,6 +49,8 @@ pub struct Ability {
 #[serde(rename_all = "PascalCase")]
 pub struct AbilityPvE {
     pub damage: Option<i32>,
+    pub health_specific_damage: Option<i32>,
+    pub armor_specific_damage: Option<i32>,
     pub attributes_that_delta_damage: Option<Vec<String>>,
     pub attributes_that_mod_base_damage: Option<Vec<String>>,
     pub attributes_that_mod_damage: Option<Vec<String>>,

@@ -209,7 +209,13 @@ impl Sim {
                         }
                         let damage = match ability.pve.damage {
                             Some(damage) => damage,
-                            None => 0,
+                            None => match ability.pve.health_specific_damage {
+                                Some(damage) => damage,
+                                None => match ability.pve.armor_specific_damage {
+                                    Some(damage) => damage,
+                                    None => 0,
+                                },
+                            },
                         };
                         let mut debuffs = vec![];
                         if let Some(ability_dots) = &ability.pve.dots {
@@ -370,6 +376,36 @@ mod tests {
         assert_eq!(report.activity[3].damage_type, DamageType::Slashing);
         assert_eq!(report.activity[4].damage, 30);
         assert_eq!(report.activity[4].damage_type, DamageType::Trauma);
+    }
+
+    #[test]
+    fn rotskin_sim() {
+        let parser = Parser::new();
+        let mut world = World::default();
+        let item_mods = parser.calculate_item_mods(&vec![], &vec![]);
+        world.push((
+            Player,
+            PlayerAbilities {
+                abilities: vec![Sim::get_player_ability(&parser, &mut vec![], "Rotskin8").unwrap()],
+            },
+            Buffs(HashMap::new()),
+        ));
+        let enemy: Entity =
+            world.push((Enemy, Report { activity: vec![] }, Debuffs(HashMap::new())));
+
+        let mut resources = Resources::default();
+        resources.insert(item_mods);
+
+        let mut schedule = systems::build_schedule();
+
+        schedule.execute(&mut world, &mut resources);
+
+        let entry = world.entry(enemy).unwrap();
+        let report = entry.get_component::<Report>().unwrap();
+
+        assert_eq!(report.activity.len(), 1);
+        assert_eq!(report.activity[0].damage, 339);
+        assert_eq!(report.activity[0].damage_type, DamageType::Nature);
     }
 
     #[test]
