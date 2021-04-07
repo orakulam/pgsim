@@ -220,9 +220,9 @@ fn calculate_icon_id_effect_desc() {
         &parser,
         "<icon=2191>Deflective Spin heals 6 Health over 60 seconds",
         vec![2191],
-        vec![ItemEffect::RestoreHealth(6)],
-        1,
+        vec![],
         0,
+        1,
     );
     test_icon_id_effect(
         &parser,
@@ -446,7 +446,7 @@ fn calculate_icon_id_effect_desc() {
         &parser,
         "<icon=108>Chance to Ignore Knockbacks +33%, Chance to Ignore Stuns +20%",
         vec![108],
-        vec![ItemEffect::FlatDamage(50_000)],
+        vec![],
         0,
         1,
     );
@@ -1518,26 +1518,34 @@ fn calculate_icon_id_effect_desc() {
     test_icon_id_effect(
         &parser,
         "<icon=2196>Heal Undead restores +7 Health/Armor and boosts your next attack +5 if it is a Darkness attack",
-        vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
+        vec![2196],
+        vec![
+            ItemEffect::RestoreHealth(7),
+            ItemEffect::RestoreArmor(7),
+            ItemEffect::DamageTypeFlatDamageBuff {
+                damage_type: DamageType::Darkness,
+                damage: 5,
+                duration: 1,
+            },
+        ],
         0,
         0,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3322><icon=2110>Hip Throw deals +12 armor damage",
-        vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
+        vec![3322, 2110],
+        vec![ItemEffect::FlatDamage(12)],
         0,
         0,
     );
     test_icon_id_effect(
         &parser,
         "<icon=108>Nice Attacks deal +2 damage and cause the target's next Rage Attack to deal -25% damage (debuff cannot stack with itself)",
+        vec![108],
         vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
         0,
-        0,
+        1,
     );
     test_icon_id_effect(
         &parser,
@@ -1694,10 +1702,10 @@ fn calculate_icon_id_effect_desc() {
     test_icon_id_effect(
         &parser,
         "<icon=108>Your projectile attacks deal +6 damage to Elite enemies",
+        vec![108],
         vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
         0,
-        0,
+        1,
     );
     test_icon_id_effect(
         &parser,
@@ -1942,10 +1950,10 @@ fn calculate_icon_id_effect_desc() {
     test_icon_id_effect(
         &parser,
         "<icon=108>Signature Support abilities restore 20 Armor to all allies within 20 meters",
+        vec![108],
         vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
         0,
-        0,
+        1,
     );
     test_icon_id_effect(
         &parser,
@@ -2022,10 +2030,10 @@ fn calculate_icon_id_effect_desc() {
     test_icon_id_effect(
         &parser,
         "<icon=108>Your attacks deal +1 damage to Constructs",
+        vec![108],
         vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
         0,
-        0,
+        1,
     );
     test_icon_id_effect(
         &parser,
@@ -2158,10 +2166,10 @@ fn calculate_icon_id_effect_desc() {
     test_icon_id_effect(
         &parser,
         "<icon=108>While Unarmed skill is active: any time you Evade an attack, your next attack deals +24 damage",
+        vec![108],
         vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
         0,
-        0,
+        1,
     );
     test_icon_id_effect(
         &parser,
@@ -2277,11 +2285,19 @@ fn calculate_icon_id_effect_desc() {
     );
     test_icon_id_effect(
         &parser,
-        "<icon=3495><icon=3499>Ice Spear and Ice Lightning damage +11%<icon=108>Your attacks deal +1 damage to Dinosaurs",
+        "<icon=3495><icon=3499>Ice Spear and Ice Lightning damage +11%",
         vec![],
         vec![ItemEffect::FlatDamage(50_000)],
         0,
         0,
+    );
+    test_icon_id_effect(
+        &parser,
+        "<icon=108>Your attacks deal +1 damage to Dinosaurs",
+        vec![108],
+        vec![],
+        0,
+        1,
     );
     test_icon_id_effect(
         &parser,
@@ -2294,10 +2310,10 @@ fn calculate_icon_id_effect_desc() {
     test_icon_id_effect(
         &parser,
         "<icon=108>Minor Heals restore 11 Armor",
+        vec![108],
         vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
         0,
-        0,
+        1,
     );
     test_icon_id_effect(
         &parser,
@@ -2453,7 +2469,15 @@ fn calculate_icon_id_effect_desc() {
     );
     test_icon_id_effect(
         &parser,
-        "<icon=108>Whenever you take damage from an enemy, you gain Bard Base Damage +5% for 15 seconds. (Stacks up to 10x)<icon=3598>Hamstring Throw deals +10 direct health damage",
+        "<icon=108>Whenever you take damage from an enemy, you gain Bard Base Damage +5% for 15 seconds. (Stacks up to 10x)",
+        vec![108],
+        vec![],
+        0,
+        1,
+    );
+    test_icon_id_effect(
+        &parser,
+        "<icon=3598>Hamstring Throw deals +10 direct health damage",
         vec![],
         vec![ItemEffect::FlatDamage(50_000)],
         0,
@@ -2542,10 +2566,10 @@ fn calculate_icon_id_effect_desc() {
     test_icon_id_effect(
         &parser,
         "<icon=108>You regenerate +1 Health per tick (every 5 seconds, in and out of combat) while Cow skill active",
+        vec![108],
         vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
         0,
-        0,
+        1,
     );
     test_icon_id_effect(
         &parser,
@@ -2614,10 +2638,10 @@ fn calculate_icon_id_effect_desc() {
     test_icon_id_effect(
         &parser,
         "<icon=108>Your attacks deal +1 damage to Incorporeal Creatures",
+        vec![108],
         vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
         0,
-        0,
+        1,
     );
     test_icon_id_effect(
         &parser,
@@ -2814,10 +2838,10 @@ fn calculate_icon_id_effect_desc() {
     test_icon_id_effect(
         &parser,
         "<icon=108>All Druid abilities have a 7% chance to restore 15 Power to you",
+        vec![108],
         vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
         0,
-        0,
+        1,
     );
     test_icon_id_effect(
         &parser,
@@ -2862,10 +2886,10 @@ fn calculate_icon_id_effect_desc() {
     test_icon_id_effect(
         &parser,
         "<icon=108>Your attacks deal +1 damage to Rodents",
+        vec![108],
         vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
         0,
-        0,
+        1,
     );
     test_icon_id_effect(
         &parser,
@@ -2910,10 +2934,10 @@ fn calculate_icon_id_effect_desc() {
     test_icon_id_effect(
         &parser,
         "<icon=108>Nice Attacks deal +4 damage and hasten your current Combat Refresh delay by 1 second",
+        vec![108],
         vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
         0,
-        0,
+        1,
     );
     test_icon_id_effect(
         &parser,
@@ -2942,26 +2966,26 @@ fn calculate_icon_id_effect_desc() {
     test_icon_id_effect(
         &parser,
         "<icon=108>Your attacks deal +1 damage to Felines",
+        vec![108],
         vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
         0,
-        0,
+        1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=108>All Hammer attacks except for Pound have a 10% chance to restore 5 health and armor",
+        vec![108],
         vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
         0,
-        0,
+        1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=108>Your attacks deal +1 damage to Elves",
+        vec![108],
         vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
         0,
-        0,
+        1,
     );
     test_icon_id_effect(
         &parser,
@@ -3054,10 +3078,10 @@ fn calculate_icon_id_effect_desc() {
     test_icon_id_effect(
         &parser,
         "<icon=108>Your attacks deal +1 damage to (corporeal) Undead",
+        vec![108],
         vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
         0,
-        0,
+        1,
     );
     test_icon_id_effect(
         &parser,
@@ -3278,10 +3302,10 @@ fn calculate_icon_id_effect_desc() {
     test_icon_id_effect(
         &parser,
         "<icon=108>Your attacks deal +1 damage to Elementals",
+        vec![108],
         vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
         0,
-        0,
+        1,
     );
     test_icon_id_effect(
         &parser,
@@ -3390,10 +3414,10 @@ fn calculate_icon_id_effect_desc() {
     test_icon_id_effect(
         &parser,
         "<icon=108>Core Attacks deal +11 damage and reduce the Power cost of your next Minor Heal ability by -7",
+        vec![108],
         vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
         0,
-        0,
+        1,
     );
     test_icon_id_effect(
         &parser,
@@ -3430,10 +3454,10 @@ fn calculate_icon_id_effect_desc() {
     test_icon_id_effect(
         &parser,
         "<icon=108>Your attacks deal +1 damage to (non-ruminant) Ungulates",
+        vec![108],
         vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
         0,
-        0,
+        1,
     );
     test_icon_id_effect(
         &parser,
@@ -3453,7 +3477,15 @@ fn calculate_icon_id_effect_desc() {
     );
     test_icon_id_effect(
         &parser,
-        "<icon=108>All fire spells deal up to +10 damage (randomly determined)<icon=2109>Molten Veins causes any nearby Fire Walls to recover 12 health",
+        "<icon=108>All fire spells deal up to +10 damage (randomly determined)",
+        vec![108],
+        vec![],
+        0,
+        1,
+    );
+    test_icon_id_effect(
+        &parser,
+        "<icon=2109>Molten Veins causes any nearby Fire Walls to recover 12 health",
         vec![],
         vec![ItemEffect::FlatDamage(50_000)],
         0,
@@ -3646,18 +3678,18 @@ fn calculate_icon_id_effect_desc() {
     test_icon_id_effect(
         &parser,
         "<icon=108>If you are using the Priest skill and you have not been attacked in the past 15 seconds, your Power Regeneration is +5 (meaning you recover this Power every 5 seconds, in and out of combat)",
+        vec![108],
         vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
         0,
-        0,
+        1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=108>Your attacks deal +1 damage to Fey",
+        vec![108],
         vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
         0,
-        0,
+        1,
     );
     test_icon_id_effect(
         &parser,
@@ -3670,10 +3702,10 @@ fn calculate_icon_id_effect_desc() {
     test_icon_id_effect(
         &parser,
         "<icon=108>Your melee attacks deal +6 damage to Elite enemies",
+        vec![108],
         vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
         0,
-        0,
+        1,
     );
     test_icon_id_effect(
         &parser,
@@ -3766,10 +3798,10 @@ fn calculate_icon_id_effect_desc() {
     test_icon_id_effect(
         &parser,
         "<icon=108>While the Shield skill is active, you mitigate 1 point of attack damage for every 20 Armor you have remaining. (Normally, you would mitigate 1 for every 25 Armor remaining.)",
+        vec![108],
         vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
         0,
-        0,
+        1,
     );
     test_icon_id_effect(
         &parser,

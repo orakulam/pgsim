@@ -520,6 +520,11 @@ impl Parser {
         // This is an Icon ID style effect desc
         for caps in self.regex.icon_ids.captures_iter(effect_desc) {
             let icon_id = caps.get(1).unwrap().as_str().parse::<i32>().unwrap();
+            // Specifically ignore icon_id 108s for now (generic mods of some flavor)
+            if icon_id == 108 {
+                item_mods.ignored.push(format!("Ignored mod: {}", effect_desc));
+                return;
+            }
             // Get current effects, or insert an empty vec
             let effects = item_mods.icon_id_effects.entry(icon_id).or_insert(vec![]);
             // Extend current effects vec with our new list of effects
