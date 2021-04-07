@@ -80,6 +80,7 @@ fn use_ability(
     let mut current_keyword_buffs_to_damage_mod: HashMap<String, f32> = HashMap::new();
     let mut current_damage_type_buffs_to_damage: HashMap<DamageType, i32> = HashMap::new();
     let mut current_damage_type_buffs_to_damage_mod: HashMap<DamageType, f32> = HashMap::new();
+    let mut current_damage_type_buffs_to_per_tick_damage: HashMap<DamageType, i32> = HashMap::new();
     for (_, buffs) in &buffs.0 {
         for buff in buffs {
             match &buff.effect {
@@ -94,6 +95,12 @@ fn use_ability(
                     damage_type,
                 } => {
                     current_damage_type_buffs_to_damage.insert(*damage_type, *damage);
+                }
+                BuffEffect::DamageTypePerTickDamageBuff {
+                    damage,
+                    damage_type,
+                } => {
+                    current_damage_type_buffs_to_per_tick_damage.insert(*damage_type, *damage);
                 }
                 BuffEffect::KeywordFlatDamageBuff { keyword, damage } => {
                     current_keyword_buffs_to_damage.insert(keyword.clone(), *damage);
@@ -144,6 +151,7 @@ fn use_ability(
             // Get damage mods from current buffs
             let mut current_buff_damage_mod = 0.0;
             let mut current_buff_damage = 0;
+            let mut current_buff_per_tick_damage = 0;
             if let Some(damage_mod) =
                 current_damage_type_buffs_to_damage_mod.get(&player_ability.damage_type)
             {
@@ -153,6 +161,11 @@ fn use_ability(
                 current_damage_type_buffs_to_damage.get(&player_ability.damage_type)
             {
                 current_buff_damage += damage;
+            }
+            if let Some(damage) =
+                current_damage_type_buffs_to_per_tick_damage.get(&player_ability.damage_type)
+            {
+                current_buff_per_tick_damage += damage;
             }
             for keyword in &player_ability.keywords {
                 if let Some(damage) = current_keyword_buffs_to_damage.get(keyword) {
@@ -182,6 +195,7 @@ fn use_ability(
                     item_mods,
                     current_buff_damage_mod,
                     current_buff_damage,
+                    current_buff_per_tick_damage,
                     current_vulnerability_damage_mod,
                     current_vulnerability_damage,
                 );
@@ -196,6 +210,10 @@ fn use_ability(
                         damage_type: _,
                         damage,
                     } => damage,
+                    BuffEffect::DamageTypePerTickDamageBuff {
+                        damage_type: _,
+                        damage,
+                    } => damage * 10,
                     BuffEffect::KeywordFlatDamageBuff { keyword: _, damage } => damage,
                     BuffEffect::KeywordDamageModBuff {
                         keyword: _,
@@ -295,6 +313,7 @@ fn calculate_ability(
     item_mods: &ItemMods,
     current_buff_damage_mod: f32,
     current_buff_damage: i32,
+    current_buff_per_tick_damage: i32,
     current_vulnerability_damage_mod: f32,
     current_vulnerability_damage: i32,
 ) -> (i32, DamageType, Vec<Buff>, Vec<Debuff>) {
@@ -361,6 +380,19 @@ fn calculate_ability(
                     calculated_buffs.push(Buff {
                         remaining_duration: *duration,
                         effect: BuffEffect::DamageTypeFlatDamageBuff {
+                            damage_type: *damage_type,
+                            damage: *damage,
+                        },
+                    });
+                }
+                ItemEffect::DamageTypePerTickDamageBuff {
+                    damage_type,
+                    damage,
+                    duration,
+                } => {
+                    calculated_buffs.push(Buff {
+                        remaining_duration: *duration,
+                        effect: BuffEffect::DamageTypePerTickDamageBuff {
                             damage_type: *damage_type,
                             damage: *damage,
                         },
@@ -491,7 +523,7 @@ fn calculate_ability(
                     }
                 }
                 *damage_per_tick =
-                    ((*damage_per_tick + dot_flat_damage) as f32 * (1.0 + dot_damage_mod)) as i32;
+                    ((*damage_per_tick + current_buff_per_tick_damage + (dot_flat_damage / debuff.remaining_duration)) as f32 * (1.0 + dot_damage_mod)) as i32;
             }
             // We only care about damaging dot debuffs
             _ => (),
@@ -528,7 +560,7 @@ mod tests {
 
         let item_mods = parser.calculate_item_mods(&vec![], &vec![]);
         let (calculated_damage, _, _, calculated_debuffs) =
-            calculate_ability(&player_ability, &item_mods, 0.0, 0, 0.0, 0);
+            calculate_ability(&player_ability, &item_mods, 0.0, 0, 0, 0.0, 0);
         assert_eq!(calculated_damage, 189);
         match calculated_debuffs[0].effect {
             DebuffEffect::Dot {
@@ -562,7 +594,7 @@ mod tests {
             ],
         );
         let (calculated_damage, _, _, calculated_debuffs) =
-            calculate_ability(&player_ability, &item_mods, 0.0, 0, 0.0, 0);
+            calculate_ability(&player_ability, &item_mods, 0.0, 0, 0, 0.0, 0);
         assert_eq!(calculated_damage, 362);
         match calculated_debuffs[0].effect {
             DebuffEffect::Dot {

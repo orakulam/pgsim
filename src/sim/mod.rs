@@ -58,6 +58,10 @@ enum BuffEffect {
         damage_type: DamageType,
         damage: i32,
     },
+    DamageTypePerTickDamageBuff {
+        damage_type: DamageType,
+        damage: i32,
+    },
     KeywordFlatDamageBuff {
         keyword: String,
         damage: i32,

@@ -32,6 +32,11 @@ pub enum ItemEffect {
         damage: i32,
         duration: i32,
     },
+    DamageTypePerTickDamageBuff {
+        damage_type: DamageType,
+        damage: i32,
+        duration: i32,
+    },
     DamageTypeDamageModBuff {
         damage_type: DamageType,
         damage_mod: f32,
