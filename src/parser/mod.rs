@@ -69,7 +69,6 @@ pub struct ItemMods {
     pub icon_id_effects: HashMap<i32, Vec<ItemEffect>>,
     pub attribute_effects: HashMap<String, Vec<ItemEffect>>,
     pub warnings: Vec<String>,
-    pub ignored: Vec<String>,
     pub not_implemented: Vec<String>,
 }
 
@@ -164,7 +163,6 @@ impl Parser {
             icon_id_effects: HashMap::new(),
             attribute_effects: HashMap::new(),
             warnings: vec![],
-            ignored: vec![],
             not_implemented: vec![],
         };
 
@@ -173,13 +171,6 @@ impl Parser {
                 Some(item) => {
                     if let Some(effect_descs) = &item.effect_descs {
                         for effect_desc in effect_descs {
-                            // Explicitly ignored mods
-                            if self.is_explicitly_ignored(effect_desc) {
-                                item_mods
-                                    .ignored
-                                    .push(format!("Ignored base item mod: {}", effect_desc));
-                                continue;
-                            }
                             if self.regex.attribute_effects.is_match(effect_desc) {
                                 self.calculate_attribute_effect_desc(&mut item_mods, effect_desc);
                             } else {
@@ -203,13 +194,6 @@ impl Parser {
                     match item_mod.tiers.get(tier_id) {
                         Some(item_mod_effect) => {
                             for effect_desc in &item_mod_effect.effect_descs {
-                                // Explicitly ignored mods
-                                if self.is_explicitly_ignored(effect_desc) {
-                                    item_mods
-                                        .ignored
-                                        .push(format!("Ignored mod: {}", effect_desc));
-                                    continue;
-                                }
                                 if self.regex.icon_ids.is_match(effect_desc) {
                                     self.calculate_icon_id_effect_desc(&mut item_mods, effect_desc);
                                 } else if self.regex.attribute_effects.is_match(effect_desc) {
@@ -218,10 +202,27 @@ impl Parser {
                                         effect_desc,
                                     );
                                 } else {
-                                    item_mods.not_implemented.push(format!(
-                                        "Unknown type of effect desc: {}",
-                                        effect_desc
-                                    ));
+                                    if self.regex.racials.is_match(effect_desc)
+                                        || effect_desc.contains("Combat XP when feeling")
+                                        || effect_desc.contains("Indirect Nature and Indirect Electricity damage")
+                                        || effect_desc.contains("Indirect Poison and Indirect Trauma damage")
+                                        || effect_desc.contains("Toxic Irritant boosts your Nice Attack Damage")
+                                        || effect_desc.contains("Melee attacks deal")
+                                        || effect_desc.contains("Max Power")
+                                        || effect_desc.contains("Max Health")
+                                        || effect_desc.contains("While Spider skill is active, gain Direct Poison and Acid Mitigation")
+                                        || effect_desc.starts_with("Fairies gain")
+                                        || effect_desc.starts_with("(Wax)") {
+                                        item_mods.warnings.push(format!(
+                                            "Ignored generic item mod: {}",
+                                            effect_desc
+                                        ));
+                                    } else {
+                                        item_mods.not_implemented.push(format!(
+                                            "Unknown type of effect desc: {}",
+                                            effect_desc
+                                        ));
+                                    }
                                 }
                             }
                         }
@@ -242,7 +243,38 @@ impl Parser {
 
     fn calculate_icon_id_effect_desc(&self, item_mods: &mut ItemMods, effect_desc: &str) {
         // Add warnings
-        if effect_desc.contains("if the target is not focused on you")
+        if effect_desc.contains("taunt as if they did")
+            || effect_desc
+                .contains("If you use Premeditated Doom while standing near your Web Trap")
+            || effect_desc.contains("chance to avoid being hit by burst attacks")
+            || effect_desc.contains("Combo: ")
+            || effect_desc.contains("For 12 seconds after using Infinite Legs")
+            || effect_desc.contains("Poisoner's Cut boosts Indirect Poison Damage an additional")
+            || effect_desc
+                .contains("Chew Cud increases your mitigation versus all attacks by Elites")
+            || effect_desc.contains("When you are hit, Finish It damage is")
+            || effect_desc.contains("sprint speed")
+            || effect_desc.contains("When Skulk is used, you recover")
+            || effect_desc.contains("Your Knee Spikes mutation causes kicks to deal an additional")
+            || effect_desc.contains("Coordinated Assault grants all allies")
+            || effect_desc.contains("Blocking Stance boosts your Direct Cold Damage")
+            || effect_desc.contains("Squeal uniformly diminishes all targets' entire aggro lists")
+            || effect_desc.contains("Provoke Undead causes your minions to deal")
+            || effect_desc
+                .contains("Shield Team causes all targets' Survival Utility abilities to restore")
+            || effect_desc.contains("Psi Health Wave grants all targets")
+            || effect_desc.contains("If Screech, Sonic Burst, or Deathscream deal Trauma damage")
+            || effect_desc.contains("Frenzy boosts targets'")
+            || effect_desc.contains("Power every 20 seconds")
+            || effect_desc.contains("Power every 5 seconds")
+            || effect_desc.contains("Health every 5 seconds")
+            || effect_desc.contains("Chance to Ignore Knockbacks")
+            || effect_desc.contains("Major Healing abilities")
+            || effect_desc.contains("After using Doe Eyes, your next attack deals")
+            || effect_desc.contains("damage to undead")
+            || effect_desc.contains("mitigation")
+            || effect_desc.contains("Mitigation")
+            || effect_desc.contains("if the target is not focused on you")
             || effect_desc.contains("terrifies the target")
             || effect_desc.contains("to non-Elite targets")
             || effect_desc.contains("reset timer")
@@ -260,7 +292,7 @@ impl Parser {
         {
             item_mods
                 .warnings
-                .push(format!("Partially handled mod: {}", effect_desc));
+                .push(format!("Not fully supported: {}", effect_desc));
         }
         if effect_desc.contains("armor damage") {
             item_mods.warnings.push(format!("pgsim doesn't differentiate between regular damage, 'armor damage', and 'health damage': {}", effect_desc));
@@ -528,8 +560,8 @@ impl Parser {
             // Specifically ignore icon_id 108s for now (generic mods of some flavor)
             if icon_id == 108 {
                 item_mods
-                    .ignored
-                    .push(format!("Ignored mod: {}", effect_desc));
+                    .warnings
+                    .push(format!("Ignored generic mod: {}", effect_desc));
                 return;
             }
             // Get current effects, or insert an empty vec
@@ -540,83 +572,7 @@ impl Parser {
     }
 
     fn calculate_attribute_effect_desc(&self, item_mods: &mut ItemMods, effect_desc: &str) {
-        let caps = self
-            .regex
-            .attribute_effects
-            .captures(effect_desc)
-            .expect("Failed to get attribute mods after already checking is_match() is true");
-        let attribute = caps.name("attribute").unwrap().as_str();
-        let extra = caps.name("extra").unwrap().as_str();
-        if !extra.is_empty() {
-            item_mods.warnings.push(format!("pgsim doesn't handle extra attribute modifiers and assumes they are all active: {}", effect_desc));
-        }
-        let effect;
-        if attribute.starts_with("BOOST") {
-            effect =
-                ItemEffect::FlatDamage(caps.name("mod").unwrap().as_str().parse::<i32>().unwrap());
-        } else if attribute.starts_with("MOD") {
-            effect =
-                ItemEffect::DamageMod(caps.name("mod").unwrap().as_str().parse::<f32>().unwrap());
-        } else {
-            item_mods
-                .not_implemented
-                .push(format!("Unknown type of attribute mod: {}", effect_desc));
-            // Bail out here, since we don't have any modifier to add
-            return;
-        }
-        // Get current effects, or insert an empty vec
-        let effects = item_mods
-            .attribute_effects
-            .entry(attribute.to_string())
-            .or_insert(vec![]);
-        // Add our damage mod effect
-        effects.push(effect);
-    }
-
-    fn is_explicitly_ignored(&self, effect_desc: &str) -> bool {
-        self.regex.racials.is_match(effect_desc)
-            || effect_desc.contains("Combat XP when feeling")
-            || effect_desc.contains("taunt as if they did")
-            || effect_desc
-                .contains("If you use Premeditated Doom while standing near your Web Trap")
-            || effect_desc.contains("chance to avoid being hit by burst attacks")
-            || effect_desc.contains("Combo: ")
-            || effect_desc.contains("For 12 seconds after using Infinite Legs")
-            || effect_desc.contains("Poisoner's Cut boosts Indirect Poison Damage an additional")
-            || effect_desc
-                .contains("Chew Cud increases your mitigation versus all attacks by Elites")
-            || effect_desc.contains("When you are hit, Finish It damage is")
-            || effect_desc.contains("sprint speed")
-            || effect_desc.contains("Combat XP when feeling Clean")
-            || effect_desc.contains("When Skulk is used, you recover")
-            || effect_desc.contains("Your Knee Spikes mutation causes kicks to deal an additional")
-            || effect_desc.contains("Coordinated Assault grants all allies")
-            || effect_desc.contains("Blocking Stance boosts your Direct Cold Damage")
-            || effect_desc.contains("Squeal uniformly diminishes all targets' entire aggro lists")
-            || effect_desc.contains("Provoke Undead causes your minions to deal")
-            || effect_desc
-                .contains("Shield Team causes all targets' Survival Utility abilities to restore")
-            || effect_desc.contains("Psi Health Wave grants all targets")
-            || effect_desc.contains("If Screech, Sonic Burst, or Deathscream deal Trauma damage")
-            || effect_desc.contains("Frenzy boosts targets'")
-            || effect_desc.contains("Power every 20 seconds")
-            || effect_desc.contains("Power every 5 seconds")
-            || effect_desc.contains("Health every 5 seconds")
-            || effect_desc.contains("Chance to Ignore Knockbacks")
-            || effect_desc.contains("Major Healing abilities")
-            || effect_desc.contains("After using Doe Eyes, your next attack deals")
-            || effect_desc.contains("damage to undead")
-            || effect_desc.contains("mitigation")
-            || effect_desc.contains("Mitigation")
-            || effect_desc.contains("Indirect Nature and Indirect Electricity damage")
-            || effect_desc.contains("Indirect Poison and Indirect Trauma damage")
-            || effect_desc.contains("Toxic Irritant boosts your Nice Attack Damage")
-            || effect_desc.contains("Melee attacks deal")
-            || effect_desc.contains("Max Power")
-            || effect_desc.contains("Max Health")
-            || effect_desc.starts_with("Fairies gain")
-            || effect_desc.starts_with("(Wax)")
-            || effect_desc.contains("_COST_MOD}")
+        if effect_desc.contains("_COST_MOD}")
             || effect_desc.starts_with("{MAX_HEALTH}")
             || effect_desc.starts_with("{MAX_ARMOR}")
             || effect_desc.starts_with("{MAX_POWER}")
@@ -658,7 +614,43 @@ impl Parser {
             || effect_desc.starts_with("{NONCOMBAT_SPRINT_BOOST}")
             || effect_desc.starts_with("{JUMP_BURST}")
             || effect_desc.starts_with("{SWIM_FASTSPEED_BOOST}")
-            || effect_desc.starts_with("{SPRINT_BOOST}")
+            || effect_desc.starts_with("{SPRINT_BOOST}") {
+            item_mods
+                .warnings
+                .push(format!("Ignored attribute mod: {}", effect_desc));
+            return;
+        }
+        let caps = self
+            .regex
+            .attribute_effects
+            .captures(effect_desc)
+            .expect("Failed to get attribute mods after already checking is_match() is true");
+        let attribute = caps.name("attribute").unwrap().as_str();
+        let extra = caps.name("extra").unwrap().as_str();
+        if !extra.is_empty() {
+            item_mods.warnings.push(format!("pgsim doesn't handle extra attribute modifiers and assumes they are all active: {}", effect_desc));
+        }
+        let effect;
+        if attribute.starts_with("BOOST") {
+            effect =
+                ItemEffect::FlatDamage(caps.name("mod").unwrap().as_str().parse::<i32>().unwrap());
+        } else if attribute.starts_with("MOD") {
+            effect =
+                ItemEffect::DamageMod(caps.name("mod").unwrap().as_str().parse::<f32>().unwrap());
+        } else {
+            item_mods
+                .not_implemented
+                .push(format!("Unknown type of attribute mod: {}", effect_desc));
+            // Bail out here, since we don't have any modifier to add
+            return;
+        }
+        // Get current effects, or insert an empty vec
+        let effects = item_mods
+            .attribute_effects
+            .entry(attribute.to_string())
+            .or_insert(vec![]);
+        // Add our damage mod effect
+        effects.push(effect);
     }
 }
 

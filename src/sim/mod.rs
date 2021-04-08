@@ -129,7 +129,6 @@ impl Sim {
         let item_mods = parser.calculate_item_mods(&config.items, &config.item_mods);
         // Copy all the warnings to use in the report later (this is necessary because we give ownership to legion as a resouce)
         let mut report_warnings = item_mods.warnings.clone();
-        report_warnings.append(&mut item_mods.ignored.clone());
         report_warnings.append(&mut item_mods.not_implemented.clone());
         world.push((
             Player,

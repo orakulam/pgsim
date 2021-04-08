@@ -12,8 +12,6 @@ use sim::{Sim, SimConfig};
 TODO
 
 Add in item mods
-    Add a test for dot damage (test DotDamage and damage type per tick buffs)
-        This is probably just calculate_ability_matches_ingame, modify it
     Finish tests for each item mode (even if they don't pass)
     Work through and make each one pass
 Review all TODOs, any that need to be addressed before alpha? Reviewed once, do one last pass
