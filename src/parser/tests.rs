@@ -2979,93 +2979,97 @@ fn calculate_icon_id_effect_desc() {
     test_icon_id_effect(
         &parser,
         "<icon=3543>Confusing Double heals you for 18 health",
-        vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
+        vec![3543],
+        vec![ItemEffect::RestoreHealth(18)],
         0,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3626>Agonize deals +10% damage and reuse timer is -6 seconds, but the ability deals 15 health damage to YOU",
-        vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
-        0,
+        vec![3626],
+        vec![ItemEffect::DamageMod(0.1)],
+        2,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3203><icon=3202><icon=3746>Psi Health Wave, Armor Wave, and Power Wave restore +1 Health, Armor, and Power respectively every few seconds",
+        vec![3203, 3202, 3746],
         vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
-        0,
+        1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3671>Blast of Fury deals +10% damage and knocks the target back, but the ability's reuse timer is +2 seconds",
-        vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
-        0,
+        vec![3671],
+        vec![ItemEffect::DamageMod(0.1)],
+        2,
     );
     test_icon_id_effect(
         &parser,
         "<icon=2247>King of the Forest gives you +4 mitigation of any physical damage for 20 seconds",
+        vec![2247],
         vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
-        0,
+        1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3401>Fill With Bile increases target's direct Poison damage +10",
-        vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
+        vec![3401],
+        vec![ItemEffect::DamageTypeFlatDamageBuff {
+            damage_type: DamageType::Poison,
+            damage: 10,
+            duration: 60,
+        }],
         0,
     );
     test_icon_id_effect(
         &parser,
         "<icon=2179>Your Extra Skin mutation causes the target to heal 10 Health every 20 seconds",
+        vec![2179],
         vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
-        0,
+        1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3640>Finish It Damage +5% and Power Cost -4",
-        vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
-        0,
+        vec![3640],
+        vec![ItemEffect::DamageMod(0.05)],
+        1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3599><icon=3598><icon=3602>Fan of Blades, Hamstring Throw, and Surprise Throw deal +7% damage and reuse timer is -1 second",
-        vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
-        0,
+        vec![3599, 3598, 3602],
+        vec![ItemEffect::DamageMod(0.07)],
+        1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3432>Reconstruct restores +4 Health and causes the target to take 4 less damage from attacks for 10 seconds",
-        vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
-        0,
+        vec![3432],
+        vec![ItemEffect::RestoreHealth(4)],
+        1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3735>Remedy restores 5 Armor and mitigates all damage over time by 1 per tick for 10 seconds",
-        vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
-        0,
+        vec![3735],
+        vec![ItemEffect::RestoreArmor(5)],
+        1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=2179>Your Extra Skin mutation provides +3 mitigation from Piercing attacks",
+        vec![2179],
         vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
-        0,
+        1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=2191>Deflective Spin restores 6 Power after a 20 second delay",
+        vec![2191],
         vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
-        0,
+        1,
     );
     test_icon_id_effect(
         &parser,
@@ -3077,93 +3081,111 @@ fn calculate_icon_id_effect_desc() {
     test_icon_id_effect(
         &parser,
         "<icon=3424>For 15 seconds after using Mindreave, your Major Healing abilities restore +6 Health (this effect does not stack with itself)",
+        vec![3424],
         vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
-        0,
+        1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3070>System Shock restores 10 Armor to you",
-        vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
+        vec![3070],
+        vec![ItemEffect::RestoreArmor(10)],
         0,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3204>Psi Adrenaline Wave increases all targets' Crushing damage +2% for 20 seconds",
-        vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
+        vec![3204],
+        vec![ItemEffect::DamageTypeDamageModBuff {
+            damage_type: DamageType::Crushing,
+            damage_mod: 0.02,
+            duration: 20,
+        }],
         0,
     );
     test_icon_id_effect(
         &parser,
-        "<icon=2112><icon=2240>Mamba Strike and Front Kick damage +10<icon=3495>Ice Lightning causes the target to become 2% more vulnerable to Fire attacks for 7 seconds",
-        vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
+        "<icon=2112><icon=2240>Mamba Strike and Front Kick damage +10",
+        vec![2112, 2240],
+        vec![ItemEffect::FlatDamage(10)],
+        0,
+    );
+    test_icon_id_effect(
+        &parser,
+        "<icon=3495>Ice Lightning causes the target to become 2% more vulnerable to Fire attacks for 7 seconds",
+        vec![3495],
+        vec![ItemEffect::VulnerabilityDamageModDebuff {
+            damage_type: DamageType::Fire,
+            damage_mod: 0.02,
+            duration: 7,
+        }],
         0,
     );
     test_icon_id_effect(
         &parser,
         "<icon=2127>Fire Walls deal +8 damage per hit",
+        vec![2127],
         vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
-        0,
+        1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3769>Stun Trap reuse timer is 1 second faster",
+        vec![3769],
         vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
-        0,
+        1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3309>Fire Arrow deals +7% damage and taunts +50",
-        vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
-        0,
+        vec![3309],
+        vec![ItemEffect::DamageMod(0.07)],
+        1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3628>For 30 seconds after using Phoenix Strike, your Survival Utility and Major Heal abilities restore 20 Health to you",
+        vec![3628],
         vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
-        0,
+        1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3482>Rotskin hits all targets within 10 meters and further debuffs their mitigation -3",
+        vec![3482],
         vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
-        0,
+        2,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3464>Clobbering Hoof attacks have a 50% chance to deal +12% damage",
-        vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
+        vec![3464],
+        vec![ItemEffect::ProcDamageMod {
+            damage_mod: 0.12,
+            chance: 0.5,
+        }],
         0,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3670>Moment of Resolve dispels any Slow or Root effects on allies and grants them immunity to Slow and Root effects for 8 seconds",
+        vec![3670],
         vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
-        0,
+        1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3542>Deathscream deals +15% damage and Power cost is -2, but the ability's range is reduced to 12m",
-        vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
-        0,
+        vec![3542],
+        vec![ItemEffect::DamageMod(0.15)],
+        2,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3704><icon=3752>Bun-Fu Blast deals +6 damage and hastens the current reuse timer of Bun-Fu Strike by 1 seconds",
-        vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
-        0,
+        vec![3704, 3752],
+        vec![ItemEffect::FlatDamage(6)],
+        1,
     );
     test_icon_id_effect(
         &parser,
@@ -3175,29 +3197,32 @@ fn calculate_icon_id_effect_desc() {
     test_icon_id_effect(
         &parser,
         "<icon=3675>Entrancing Lullaby deals 35 Trauma damage after a 20 second delay",
+        vec![3675],
         vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
-        0,
+        1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3774>Lethal Force deals +13 damage and reuse time is -3 seconds",
-        vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
-        0,
+        vec![3774],
+        vec![ItemEffect::FlatDamage(13)],
+        1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3204><icon=3746>Psi Health Wave and Psi Adrenaline Wave instantly heal all targets for 10 health",
-        vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
+        vec![3204, 3746],
+        vec![ItemEffect::RestoreHealth(10)],
         0,
     );
     test_icon_id_effect(
         &parser,
         "<icon=2124>Strike a Nerve deals between 3 and 10 extra damage",
-        vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
+        vec![2124],
+        vec![ItemEffect::RangeFlatDamage {
+            min_damage: 3,
+            max_damage: 10,
+        }],
         0,
     );
     test_icon_id_effect(
@@ -3210,15 +3235,19 @@ fn calculate_icon_id_effect_desc() {
     test_icon_id_effect(
         &parser,
         "<icon=3773>Controlled Burn costs -4 Power",
+        vec![3773],
         vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
-        0,
+        1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3487><icon=3486>Slashing Strike and Claw Barrage boost damage from Epic attacks +20 for 10 seconds",
-        vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
+        vec![3487, 3486],
+        vec![ItemEffect::KeywordFlatDamageBuff {
+            keyword: "EpicAttack".to_string(),
+            damage: 20,
+            duration: 10,
+        }],
         0,
     );
     test_icon_id_effect(
@@ -3231,36 +3260,47 @@ fn calculate_icon_id_effect_desc() {
     test_icon_id_effect(
         &parser,
         "<icon=2109>Molten Veins causes any nearby Fire Walls to recover 12 health",
+        vec![2109],
         vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
-        0,
+        1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=2191><icon=3413>Suppress and Deflective Spin Damage +7%",
-        vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
+        vec![2191, 3413],
+        vec![ItemEffect::DamageMod(0.07)],
         0,
     );
     test_icon_id_effect(
         &parser,
         "<icon=2172>You heal 1 health and 1 armor every other second while under the effect of Haste Concoction",
+        vec![2172],
         vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
-        0,
+        1,
     );
     test_icon_id_effect(
         &parser,
-        "<icon=3783>Fairy Fire damage is +4 and attack range is +5<icon=3596>Venomstrike deals an additional 24 Poison damage over 12 seconds",
-        vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
+        "<icon=3783>Fairy Fire damage is +4 and attack range is +5",
+        vec![3783],
+        vec![ItemEffect::FlatDamage(4)],
+        1,
+    );
+    test_icon_id_effect(
+        &parser,
+        "<icon=3596>Venomstrike deals an additional 24 Poison damage over 12 seconds",
+        vec![3596],
+        vec![ItemEffect::DotDamage(24)],
         0,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3691>Bun-Fu Blitz causes the target to take +2% damage from Trauma attacks for 20 seconds",
-        vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
+        vec![3691],
+        vec![ItemEffect::VulnerabilityDamageModDebuff {
+            damage_type: DamageType::Trauma,
+            damage_mod: 0.02,
+            duration: 20,
+        }],
         0,
     );
     test_icon_id_effect(
