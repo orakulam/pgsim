@@ -131,7 +131,6 @@ impl Parser {
 
     fn get_parser_regex() -> ParserRegex {
         // Regexes (it's important to declare these once for performance, so we do it when the parser is loaded)
-        //Slashing damage +2% for 20 seconds
         ParserRegex {
             icon_ids: Regex::new(r"<icon=([0-9]+)>").unwrap(),
             attribute_effects: Regex::new(
@@ -141,10 +140,10 @@ impl Parser {
             flat_damage: Regex::new(r"(?:deal|deals|[dD]amage) \+?(?P<damage>[0-9]+) ?(?:$|\.|and|damage|armor damage|direct damage|direct health damage)").unwrap(),
             proc_flat_damage:  Regex::new(r"(?P<chance>[0-9]+)% chance to deal \+(?P<damage>[0-9]+) damage").unwrap(),
             range_flat_damage: Regex::new(r"between \+?(?P<min_damage>[0-9]+) and \+?(?P<max_damage>[0-9]+) extra damage").unwrap(),
-            damage_mod: Regex::new(r"(?:deals|[dD]amage) \+?(?P<damage>[0-9]+)% ?(?:$|damage|and)").unwrap(),
+            damage_mod: Regex::new(r"(?:deals|[dD]amage) \+?(?P<damage>[0-9]+)% ?(?:$|damage|and|Crushing damage)").unwrap(),
             proc_damage_mod:  Regex::new(r"(?P<chance>[0-9]+)% chance to deal \+(?P<damage>[0-9]+)% damage").unwrap(),
             dot_damage:
-                Regex::new(r"(?:deal|deals|deals an additional) \+?(?P<damage>[0-9]+).*(?:damage over|damage to melee attackers)")
+                Regex::new(r"(?:deal|deals|Deals|deals an additional|causes) \+?(?P<damage>[0-9]+).*(?:damage over|damage to melee attackers|Nature damage)")
                     .unwrap(),
             restore_health:
                 Regex::new(r"(?:restore|restores|regain|heals|heals you for) \+?(?P<restore>[0-9]+) [hH]ealth")
@@ -152,8 +151,8 @@ impl Parser {
             restore_armor:
                 Regex::new(r"(?:restore|restores|and|heals you for) \+?(?P<restore>[0-9]+) [aA]rmor").unwrap(),
             restore_power:
-                Regex::new(r"(?:restore|restores) \+?(?P<restore>[0-9]+) [pP]ower").unwrap(),
-            damage_type: Regex::new(r"[dD]amage(?:| type) becomes (?P<damage_type>[a-zA-Z]*)").unwrap(),
+                Regex::new(r"(?:restore|restores|regain) \+?(?P<restore>[0-9]+) [pP]ower").unwrap(),
+            damage_type: Regex::new(r"(?:becomes|deals) (?P<damage_type>Trauma|Fire|Darkness)").unwrap(),
             racials: Regex::new(r"(?:Humans|Orcs|Elves|Dwarves|Rakshasa) gain \+?(?:[0-9]+) Max (?:Health|Hydration|Metabolism|Power|Armor|Bodyheat)").unwrap(),
             damage_type_damage_mod_buff: Regex::new(r"(?P<damage_type>Slashing) damage \+(?P<damage_mod>[0-9]+)% for (?P<duration>[0-9]+) seconds").unwrap(),
             damage_type_next_attack_buff: Regex::new(r"next attack to deal \+?(?P<damage>[0-9]+) damage if it is a (?P<damage_type>Crushing) (?:ability|attack)").unwrap(),
@@ -161,7 +160,7 @@ impl Parser {
             keyword_core_attack_buff: Regex::new(r"Core Attack Damage \+?(?P<damage>[0-9]+) for (?P<duration>[0-9]+) seconds").unwrap(),
             keyword_nip_buff: Regex::new(r"Nip boosts the damage of Basic, Core, and Nice attacks \+?(?P<damage>[0-9]+) for (?P<duration>[0-9]+) seconds").unwrap(),
             vulnerability_damage_mod_debuff: Regex::new(r"(?P<damage_mod>[0-9]+)% more vulnerable to (?P<damage_type>Electricity) damage for (?P<duration>[0-9]+) seconds").unwrap(),
-            vulnerability_flat_damage_debuff: Regex::new(r"suffer \+?(?P<damage>[0-9]+) damage from direct (?P<damage_type>Cold) attacks for (?P<duration>[0-9]+) seconds").unwrap(),
+            vulnerability_flat_damage_debuff: Regex::new(r"(?:suffer|take) \+?(?P<damage>[0-9]+) damage from(?:| direct) (?P<damage_type>Cold|Psychic) attacks for (?P<duration>[0-9]+) seconds").unwrap(),
         }
     }
 
@@ -266,18 +265,18 @@ impl Parser {
     }
 
     fn calculate_icon_id_effect_desc(&self, item_mods: &mut ItemMods, effect_desc: &str) {
+        // Specifically ignore icon_id 108s for now (generic mods of some flavor)
+        if effect_desc.contains("<icon=108>") {
+            item_mods
+                .warnings
+                .push(format!("Ignored generic mod: {}", effect_desc));
+            return;
+        }
         let new_effects =
             self.get_effects_and_add_warnings_from_desc(&mut item_mods.warnings, effect_desc);
         // This is an Icon ID style effect desc
         for caps in self.regex.icon_ids.captures_iter(effect_desc) {
             let icon_id = caps.get(1).unwrap().as_str().parse::<i32>().unwrap();
-            // Specifically ignore icon_id 108s for now (generic mods of some flavor)
-            if icon_id == 108 {
-                item_mods
-                    .warnings
-                    .push(format!("Ignored generic mod: {}", effect_desc));
-                return;
-            }
             // Get current effects, or insert an empty vec
             let effects = item_mods.icon_id_effects.entry(icon_id).or_insert(vec![]);
             // Extend current effects vec with our new list of effects
@@ -295,9 +294,7 @@ impl Parser {
             || effect_desc
                 .contains("If you use Premeditated Doom while standing near your Web Trap")
             || effect_desc.contains("chance to avoid being hit by burst attacks")
-            || effect_desc.contains("Combo: ")
             || effect_desc.contains("For 12 seconds after using Infinite Legs")
-            || effect_desc.contains("Poisoner's Cut boosts Indirect Poison Damage an additional")
             || effect_desc
                 .contains("Chew Cud increases your mitigation versus all attacks by Elites")
             || effect_desc.contains("When you are hit, Finish It damage is")
@@ -307,19 +304,10 @@ impl Parser {
             || effect_desc.contains("Coordinated Assault grants all allies")
             || effect_desc.contains("Blocking Stance boosts your Direct Cold Damage")
             || effect_desc.contains("Squeal uniformly diminishes all targets' entire aggro lists")
-            || effect_desc.contains("Provoke Undead causes your minions to deal")
-            || effect_desc
-                .contains("Shield Team causes all targets' Survival Utility abilities to restore")
             || effect_desc.contains("Psi Health Wave grants all targets")
             || effect_desc.contains("If Screech, Sonic Burst, or Deathscream deal Trauma damage")
-            || effect_desc.contains("Frenzy boosts targets'")
-            || effect_desc.contains("Power every 20 seconds")
-            || effect_desc.contains("Power every 5 seconds")
-            || effect_desc.contains("Health every 5 seconds")
             || effect_desc.contains("Chance to Ignore Knockbacks")
             || effect_desc.contains("Major Healing abilities")
-            || effect_desc.contains("After using Doe Eyes, your next attack deals")
-            || effect_desc.contains("damage to undead")
             || effect_desc.contains("mitigation")
             || effect_desc.contains("Mitigation")
             || effect_desc.contains("if the target is not focused on you")
@@ -340,8 +328,23 @@ impl Parser {
         {
             warnings.push(format!("Not fully supported: {}", effect_desc));
         }
-        if effect_desc.contains("armor damage") {
-            warnings.push(format!("pgsim doesn't differentiate between regular damage, 'armor damage', and 'health damage': {}", effect_desc));
+        // Add warnings that prevent further parsing of the effect desc
+        if effect_desc.contains("Power every")
+            || effect_desc.contains("Power over")
+            || effect_desc.contains("Health every")
+            || effect_desc.contains("Health over")
+            || effect_desc.contains("after a 20 second delay")
+            || effect_desc.contains("Combo: ")
+            || effect_desc.contains("Provoke Undead")
+            || effect_desc
+                .contains("Shield Team causes all targets' Survival Utility abilities to restore")
+            || effect_desc.contains("Frenzy boosts targets'")
+            || effect_desc.contains("After using Doe Eyes, your next attack deals")
+            || effect_desc.contains("damage to undead")
+            || effect_desc.contains("Strategic Preparation boosts your in-combat Armor regeneration")
+        {
+            warnings.push(format!("Not fully supported: {}", effect_desc));
+            return vec![];
         }
         // Collect all item effects
         let mut effects = vec![];

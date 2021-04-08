@@ -79,6 +79,10 @@ fn test_icon_id_effect(
     );
     parser.calculate_icon_id_effect_desc(&mut item_mods, effect_desc);
     for icon_id in &icon_ids {
+        if *icon_id == 108 {
+            // If it's 108, then we just need to check warnings below, because it's a skipped generic mod
+            continue;
+        }
         assert!(
             item_mods.icon_id_effects.contains_key(&icon_id),
             "item_mods didn't contain icon_id: effect_desc = {}, item_mods = {:#?}, icon_ids = {:#?}",
@@ -107,9 +111,10 @@ fn test_icon_id_effect(
     assert_eq!(
         item_mods.warnings.len(),
         warnings_length,
-        "item_mods had an incorrect number of warnings: effect_desc = {}, test_effects = {:#?}",
+        "item_mods had an incorrect number of warnings: effect_desc = {}, test_effects = {:#?}, warnings = {:#?}",
         effect_desc,
         test_effects,
+        item_mods.warnings,
     );
 }
 
@@ -252,7 +257,7 @@ fn calculate_icon_id_effect_desc() {
         "<icon=3525>Blizzard deals 14 armor damage and generates -10 Rage",
         vec![3525],
         vec![Effect::FlatDamage(14)],
-        2,
+        1,
     );
     test_icon_id_effect(
         &parser,
@@ -276,7 +281,7 @@ fn calculate_icon_id_effect_desc() {
             Effect::Debuff(Debuff {
             remaining_duration: 30,
             effect: DebuffEffect::VulnerabilityDamageModDebuff {
-                damage_type: DamageType::Slashing,
+                damage_type: DamageType::Electricity,
                 damage_mod: 0.1,
             },
         })],
@@ -694,7 +699,7 @@ fn calculate_icon_id_effect_desc() {
                 damage: 1,
             },
         })],
-        1,
+        0,
     );
     test_icon_id_effect(
         &parser,
@@ -763,7 +768,7 @@ fn calculate_icon_id_effect_desc() {
         &parser,
         "<icon=3496>Your Cold Sphere's Rage attack deals +35 damage",
         vec![3496],
-        vec![],
+        vec![Effect::FlatDamage(35)],
         1,
     );
     test_icon_id_effect(
@@ -797,7 +802,7 @@ fn calculate_icon_id_effect_desc() {
         &parser,
         "<icon=3698>Hare Dash restores 5 Power over 15 seconds",
         vec![3698],
-        vec![Effect::RestorePower(5)],
+        vec![],
         1,
     );
     test_icon_id_effect(
