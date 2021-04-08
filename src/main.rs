@@ -12,7 +12,6 @@ use sim::{Sim, SimConfig};
 TODO
 
 Add in item mods
-    Finish tests for each item mode (even if they don't pass)
     Work through and make each one pass
 Review all TODOs, any that need to be addressed before alpha? Reviewed once, do one last pass
 Run more tests with my current test build

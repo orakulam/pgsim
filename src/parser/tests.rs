@@ -3400,135 +3400,179 @@ fn calculate_icon_id_effect_desc() {
     test_icon_id_effect(
         &parser,
         "<icon=3000>Cosmic Strike deals +20 damage, generates no Rage, and removes 40 Rage",
-        vec![],
-        vec![Effect::FlatDamage(50_000)],
-        0,
+        vec![3000],
+        vec![Effect::FlatDamage(20)],
+        2,
     );
     test_icon_id_effect(
         &parser,
         "<icon=2233>Riposte restores 5 armor",
-        vec![],
-        vec![Effect::FlatDamage(50_000)],
+        vec![2233],
+        vec![Effect::RestoreArmor(5)],
         0,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3730>Unfetter allows free-form movement while leaping, and if the target can fly, fly speed is boosted +0.3 m/s for 20 seconds",
+        vec![3730],
         vec![],
-        vec![Effect::FlatDamage(50_000)],
-        0,
+        1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3601>Surge Cut restores +6 Health to you",
-        vec![],
-        vec![Effect::FlatDamage(50_000)],
+        vec![3601],
+        vec![Effect::RestoreHealth(6)],
         0,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3674>Thunderous Note causes the target to take +6% damage from Nature attacks for 15 seconds",
-        vec![],
-        vec![Effect::FlatDamage(50_000)],
+        vec![3674],
+        vec![Effect::Debuff(Debuff {
+            remaining_duration: 15,
+            effect: DebuffEffect::VulnerabilityDamageModDebuff {
+                damage_type: DamageType::Nature,
+                damage_mod: 0.06,
+            }
+        })],
         0,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3802>Dimensional Snare deals Fire damage (instead of Darkness) and ignites the target, dealing 24 Fire damage over 12 seconds",
-        vec![],
-        vec![Effect::FlatDamage(50_000)],
+        vec![3802],
+        vec![Effect::DamageType(DamageType::Fire), Effect::DotDamage(24)],
         0,
     );
     test_icon_id_effect(
         &parser,
         "<icon=2210>Moo of Determination restores +6 armor",
-        vec![],
-        vec![Effect::FlatDamage(50_000)],
+        vec![2210],
+        vec![Effect::RestoreArmor(6)],
         0,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3548>Virulent Bite deals 12 Trauma damage over 12 seconds and also has a 25% chance to deal +16% immediate Piercing damage",
-        vec![],
-        vec![Effect::FlatDamage(50_000)],
+        vec![3548],
+        vec![Effect::DotDamage(12), Effect::ProcDamageMod {
+            damage_mod: 0.16,
+            chance: 0.25,
+        }],
         0,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3799>Power Glyph restores 5 additional Power after a 6-second delay",
+        vec![3799],
         vec![],
-        vec![Effect::FlatDamage(50_000)],
-        0,
+        1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=2118>Psychoanalyze deals between 10 and 60 extra damage",
-        vec![],
-        vec![Effect::FlatDamage(50_000)],
+        vec![2118],
+        vec![Effect::RangeFlatDamage {
+            min_damage: 10,
+            max_damage: 60,
+        }],
         0,
     );
     test_icon_id_effect(
         &parser,
-        "<icon=2188>For 60 seconds after using Redirect, First Aid heals you +15<icon=2200><icon=2199><icon=2201>Summoned Skeletal Archers and Mages deal +6% direct damage, but are instantly destroyed by ANY Nature Damage",
+        "<icon=2188>For 60 seconds after using Redirect, First Aid heals you +15",
+        vec![2188],
         vec![],
-        vec![Effect::FlatDamage(50_000)],
-        0,
+        1,
+    );
+    test_icon_id_effect(
+        &parser,
+        "<icon=2200><icon=2199><icon=2201>Summoned Skeletal Archers and Mages deal +6% direct damage, but are instantly destroyed by ANY Nature Damage",
+        vec![2200, 2199, 2201],
+        vec![],
+        1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3549>For 30 seconds after using Drink Blood, all Nature attacks deal +3 damage",
-        vec![],
-        vec![Effect::FlatDamage(50_000)],
+        vec![3549],
+        vec![Effect::Buff(Buff {
+            remaining_duration: 30,
+            effect: BuffEffect::DamageTypeFlatDamageBuff {
+                damage_type: DamageType::Nature,
+                damage: 3,
+            }
+        })],
         0,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3782>Astral Strike's reuse timer is -1 secs, and damage is boosted +5% vs Elite enemies",
+        vec![3782],
         vec![],
-        vec![Effect::FlatDamage(50_000)],
-        0,
+        2,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3495>Ice Lightning boosts your Core Attack Damage +10 for 7 seconds",
-        vec![],
-        vec![Effect::FlatDamage(50_000)],
+        vec![3495],
+        vec![Effect::Buff(Buff {
+            remaining_duration: 7,
+            effect: BuffEffect::KeywordFlatDamageBuff {
+                keyword: "CoreAttack".to_string(),
+                damage: 10,
+            },
+        })],
         0,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3735>Remedy restores 6 Armor",
-        vec![],
-        vec![Effect::FlatDamage(50_000)],
+        vec![3735],
+        vec![Effect::RestoreArmor(6)],
         0,
     );
     test_icon_id_effect(
         &parser,
-        "<icon=3772>Warning Jolt restores 1 Armor and taunts +25<icon=2150>Chew Cud increases your mitigation versus Crushing, Slashing, and Piercing attacks +3 for 10 seconds",
-        vec![],
-        vec![Effect::FlatDamage(50_000)],
+        "<icon=3772>Warning Jolt restores 1 Armor and taunts +25",
+        vec![3772],
+        vec![Effect::RestoreArmor(1)],
         0,
+    );
+    test_icon_id_effect(
+        &parser,
+        "<icon=2150>Chew Cud increases your mitigation versus Crushing, Slashing, and Piercing attacks +3 for 10 seconds",
+        vec![2150],
+        vec![],
+        1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=2131>Frenzy gives all targets +4 absorption of any physical damage for 20 seconds",
+        vec![2131],
         vec![],
-        vec![Effect::FlatDamage(50_000)],
-        0,
+        1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3738>Give Warmth causes the target's next attack to deal +13 damage if it is a Fire attack",
-        vec![],
-        vec![Effect::FlatDamage(50_000)],
+        vec![3738],
+        vec![Effect::Buff(Buff {
+            remaining_duration: 1,
+            effect: BuffEffect::DamageTypeFlatDamageBuff {
+                damage_type: DamageType::Fire,
+                damage: 13,
+            },
+        })],
         0,
     );
     test_icon_id_effect(
         &parser,
         "<icon=2230>Pig Punt causes the target to ignore you for 3 seconds, or until you attack it again",
+        vec![2230],
         vec![],
-        vec![Effect::FlatDamage(50_000)],
-        0,
+        1,
     );
     test_icon_id_effect(
         &parser,
@@ -3547,8 +3591,8 @@ fn calculate_icon_id_effect_desc() {
     test_icon_id_effect(
         &parser,
         "<icon=2190>Double Hit ignites the target, dealing 18 Fire damage over 12 seconds",
-        vec![],
-        vec![Effect::FlatDamage(50_000)],
+        vec![2190],
+        vec![Effect::DotDamage(18)],
         0,
     );
     test_icon_id_effect(
@@ -3561,78 +3605,96 @@ fn calculate_icon_id_effect_desc() {
     test_icon_id_effect(
         &parser,
         "<icon=2189>Lunge hits all enemies within 5 meters, but deals -50% damage and reuse timer is +2 seconds",
-        vec![],
-        vec![Effect::FlatDamage(50_000)],
-        0,
+        vec![2189],
+        vec![Effect::DamageMod(-0.5)],
+        1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3594>Fending Blade deals +7 damage and reduces Rage by 30",
-        vec![],
-        vec![Effect::FlatDamage(50_000)],
-        0,
+        vec![3594],
+        vec![Effect::FlatDamage(7)],
+        1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3421>Pin boosts Core Attack and Nice Attack Damage +8 for 7 seconds",
-        vec![],
-        vec![Effect::FlatDamage(50_000)],
+        vec![3421],
+        vec![
+            Effect::Buff(Buff {
+                remaining_duration: 7,
+                effect: BuffEffect::KeywordFlatDamageBuff {
+                    keyword: "CoreAttack".to_string(),
+                    damage: 8,
+                },
+            }),
+            Effect::Buff(Buff {
+                remaining_duration: 7,
+                effect: BuffEffect::KeywordFlatDamageBuff {
+                    keyword: "NiceAttack".to_string(),
+                    damage: 8,
+                },
+            }),
+        ],
         0,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3784><icon=3782>Astral Strike deals +10 damage and resets the timer on Pixie Flare (so it can be used again immediately)",
-        vec![],
-        vec![Effect::FlatDamage(50_000)],
-        0,
+        vec![3784, 3782],
+        vec![Effect::FlatDamage(10)],
+        1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3542>Deathscream has a 60% chance to deal +25% damage",
-        vec![],
-        vec![Effect::FlatDamage(50_000)],
+        vec![3542],
+        vec![Effect::ProcDamageMod {
+            damage_mod: 0.25,
+            chance: 0.6,
+        }],
         0,
     );
     test_icon_id_effect(
         &parser,
         "<icon=2208><icon=3436>Scintillating Flame and Scintillating Frost Damage +1 and Power Cost -2",
-        vec![],
-        vec![Effect::FlatDamage(50_000)],
-        0,
+        vec![2208, 3436],
+        vec![Effect::FlatDamage(1)],
+        1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3778><icon=3773>Controlled Burn and Aggression Deterrent deal +10 damage",
-        vec![],
-        vec![Effect::FlatDamage(50_000)],
+        vec![3778, 3773],
+        vec![Effect::FlatDamage(10)],
         0,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3776>Coordinated Assault causes all allies' melee attacks to deal up to +15 damage (randomly determined for each attack) for 30 seconds",
+        vec![3776],
         vec![],
-        vec![Effect::FlatDamage(50_000)],
-        0,
+        1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=2200><icon=2199><icon=2201>Summoned Skeletons have +8 health",
+        vec![2200, 2199, 2201],
         vec![],
-        vec![Effect::FlatDamage(50_000)],
-        0,
+        1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3697>Carrot Power's reuse timer is -1 second and chance to consume carrot is -4%",
+        vec![3697],
         vec![],
-        vec![Effect::FlatDamage(50_000)],
-        0,
+        1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3254>Grappling Web deals 48 Poison damage over 12 seconds",
-        vec![],
-        vec![Effect::FlatDamage(50_000)],
+        vec![3254],
+        vec![Effect::DotDamage(48)],
         0,
     );
     test_icon_id_effect(
@@ -3645,211 +3707,245 @@ fn calculate_icon_id_effect_desc() {
     test_icon_id_effect(
         &parser,
         "<icon=3631>Restorative Arrow boosts target's Nice Attack and Epic Attack Damage +12 for 10 seconds",
-        vec![],
-        vec![Effect::FlatDamage(50_000)],
+        vec![3631],
+        vec![
+            Effect::Buff(Buff {
+                remaining_duration: 10,
+                effect: BuffEffect::KeywordFlatDamageBuff {
+                    keyword: "NiceAttack".to_string(),
+                    damage: 12,
+                },
+            }),
+            Effect::Buff(Buff {
+                remaining_duration: 10,
+                effect: BuffEffect::KeywordFlatDamageBuff {
+                    keyword: "EpicAttack".to_string(),
+                    damage: 12,
+                },
+            }),
+        ],
         0,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3483>Brambleskin increases your Max Armor by +20 for 30 seconds and restores 20 Armor",
-        vec![],
-        vec![Effect::FlatDamage(50_000)],
-        0,
+        vec![3483],
+        vec![Effect::RestoreArmor(20)],
+        1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3496>Your Cold Sphere's attacks deal +2 damage and taunt -3%",
-        vec![],
-        vec![Effect::FlatDamage(50_000)],
-        0,
+        vec![3496],
+        vec![Effect::FlatDamage(2)],
+        1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3069>Calefaction restores 14 Health",
-        vec![],
-        vec![Effect::FlatDamage(50_000)],
+        vec![3069],
+        vec![Effect::RestoreHealth(14)],
         0,
     );
     test_icon_id_effect(
         &parser,
-        "<icon=2150>Chew Cud's chance to consume grass is -4%<icon=3443>Flashing Strike heals you for 3 health",
+        "<icon=2150>Chew Cud's chance to consume grass is -4%",
+        vec![2150],
         vec![],
-        vec![Effect::FlatDamage(50_000)],
+        1,
+    );
+    test_icon_id_effect(
+        &parser,
+        "<icon=3443>Flashing Strike heals you for 3 health",
+        vec![3443],
+        vec![Effect::RestoreHealth(3)],
         0,
     );
     test_icon_id_effect(
         &parser,
         "<icon=2253>Tough Hoof immediately restores 13 armor",
-        vec![],
-        vec![Effect::FlatDamage(50_000)],
+        vec![2253],
+        vec![Effect::RestoreArmor(13)],
         0,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3252>Incubated Spiders have +10 armor",
+        vec![3252],
         vec![],
-        vec![Effect::FlatDamage(50_000)],
-        0,
+        1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3726>Admonish makes the target 1% more vulnerable to Psychic damage for 10 seconds (this effect does not stack with itself)",
-        vec![],
-        vec![Effect::FlatDamage(50_000)],
+        vec![3726],
+        vec![Effect::Debuff(Debuff {
+            remaining_duration: 10,
+            effect: DebuffEffect::VulnerabilityDamageModDebuff {
+                damage_type: DamageType::Psychic,
+                damage_mod: 0.01,
+            },
+        })],
         0,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3486>Slashing Strike deals +6% damage and hastens the current reuse timer of Hip Throw by 2 seconds",
-        vec![],
-        vec![Effect::FlatDamage(50_000)],
-        0,
+        vec![3486],
+        vec![Effect::DamageMod(0.06)],
+        1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=2113>Many Cuts deals +15 armor damage",
-        vec![],
-        vec![Effect::FlatDamage(50_000)],
+        vec![2113],
+        vec![Effect::FlatDamage(15)],
         0,
     );
     test_icon_id_effect(
         &parser,
         "<icon=2193>All Staff attacks have a 1.75% chance to trigger the target's Vulnerability",
+        vec![2193],
         vec![],
-        vec![Effect::FlatDamage(50_000)],
-        0,
+        1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3672>Blast of Despair restores 4 Armor to you",
-        vec![],
-        vec![Effect::FlatDamage(50_000)],
+        vec![3672],
+        vec![Effect::RestoreArmor(4)],
         0,
     );
     test_icon_id_effect(
         &parser,
         "<icon=2131>Smell Fear deals +6% damage and taunts -30",
-        vec![],
-        vec![Effect::FlatDamage(50_000)],
-        0,
+        vec![2131],
+        vec![Effect::DamageMod(0.06)],
+        1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=2236><icon=2196>Heal Undead and Rebuild Undead restore +6 Health/Armor",
+        vec![2236, 2196],
         vec![],
-        vec![Effect::FlatDamage(50_000)],
-        0,
+        1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3797>Spirit Pounce Damage +5% and there's a 50% chance target is Stunned",
-        vec![],
-        vec![Effect::FlatDamage(50_000)],
-        0,
+        vec![3797],
+        vec![Effect::DamageMod(0.05)],
+        1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3730>Unfetter boosts swim speed +0.4 m/s for 20 seconds",
+        vec![3730],
         vec![],
-        vec![Effect::FlatDamage(50_000)],
-        0,
+        1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=2174>Your golem minion's Self Destruct deals +30 damage",
-        vec![],
-        vec![Effect::FlatDamage(50_000)],
+        vec![2174],
+        vec![Effect::FlatDamage(30)],
         0,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3672>Blast of Despair damage is +10% and reduces 10 more Rage",
-        vec![],
-        vec![Effect::FlatDamage(50_000)],
-        0,
+        vec![3672],
+        vec![Effect::DamageMod(0.1)],
+        1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=2209>Room-Temperature Ball Damage +5% and reuse timer -1 second",
-        vec![],
-        vec![Effect::FlatDamage(50_000)],
-        0,
+        vec![2209],
+        vec![Effect::DamageMod(0.05)],
+        1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=2195>Raised Zombies deal +1 damage and speed is +2",
-        vec![],
-        vec![Effect::FlatDamage(50_000)],
-        0,
+        vec![2195],
+        vec![Effect::FlatDamage(1)],
+        1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3203><icon=3202><icon=3746>Psi Health Wave, Armor Wave, and Power Wave grant all targets +10 Psychic Damage for 60 seconds",
-        vec![],
-        vec![Effect::FlatDamage(50_000)],
+        vec![3203, 3202, 3746],
+        vec![Effect::Buff(Buff {
+            remaining_duration: 60,
+            effect: BuffEffect::DamageTypeFlatDamageBuff {
+                damage_type: DamageType::Psychic,
+                damage: 10,
+            },
+        })],
         0,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3270><icon=3070><icon=3430>Electrify, System Shock, and Panic Charge restore 2 Health after a 15 second delay",
+        vec![3270, 3070, 3430],
         vec![],
-        vec![Effect::FlatDamage(50_000)],
-        0,
+        1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=2147>Moo of Calm restores +6 armor",
-        vec![],
-        vec![Effect::FlatDamage(50_000)],
+        vec![2147],
+        vec![Effect::RestoreArmor(6)],
         0,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3800>Galvanize restores 6 additional Power after a 6-second delay",
+        vec![3800],
         vec![],
-        vec![Effect::FlatDamage(50_000)],
-        0,
+        1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=2150>Chew Cud increases your mitigation versus Crushing, Slashing, and Piercing attacks +3 for 10 seconds",
+        vec![2150],
         vec![],
-        vec![Effect::FlatDamage(50_000)],
-        0,
+        1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3491>Ice Nova restores 10 Armor to you",
-        vec![],
-        vec![Effect::FlatDamage(50_000)],
+        vec![3491],
+        vec![Effect::RestoreArmor(10)],
         0,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3485>Cloud Sight causes target's attacks to have +5% more chance of missing, but Power cost is +15%",
+        vec![3485],
         vec![],
-        vec![Effect::FlatDamage(50_000)],
-        0,
+        1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=2147>For 30 seconds after you use Moo of Calm, any internal (Poison/Trauma/Psychic) attacks that hit you are reduced by 2. This absorbed damage is added to your next Stampede attack at a 200% rate.",
+        vec![2147],
         vec![],
-        vec![Effect::FlatDamage(50_000)],
-        0,
+        1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3597>Gut deals +4% damage and reuse timer is -1 second",
-        vec![],
-        vec![Effect::FlatDamage(50_000)],
-        0,
+        vec![3597],
+        vec![Effect::DamageMod(0.04)],
+        1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=2184><icon=2178><icon=2171>All bomb attacks ignite the target, causing them to take 35 fire damage over 10 seconds",
-        vec![],
-        vec![Effect::FlatDamage(50_000)],
+        vec![2184, 2178, 2171],
+        vec![Effect::DotDamage(35)],
         0,
     );
 }
