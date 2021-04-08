@@ -125,6 +125,7 @@
 
 <main>
 	<h1>pgsim</h1>
+	<p>This is an open source project: <a href="https://github.com/orakulam/pgsim" target="_blank">https://github.com/orakulam/pgsim</a></p>
 	<div>
 		<h3>Skill 1</h3>
 		<select bind:value={state.skill1} on:change={() =>{ skillChanged(); updateHash() }}>
