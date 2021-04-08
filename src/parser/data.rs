@@ -42,6 +42,7 @@ pub struct Ability {
     pub damage_type: Option<DamageType>,
     #[serde(rename = "PvE")]
     pub pve: AbilityPvE,
+    pub special_info: Option<String>,
     pub reset_time: f32,
 }
 

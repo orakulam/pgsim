@@ -7,7 +7,7 @@ use data::DamageType;
 use data::Data;
 
 #[derive(Debug, PartialEq, PartialOrd, Clone)]
-pub enum ItemEffect {
+pub enum Effect {
     FlatDamage(i32),
     ProcFlatDamage {
         damage: i32,
@@ -66,8 +66,8 @@ pub enum ItemEffect {
 
 #[derive(Debug, Clone)]
 pub struct ItemMods {
-    pub icon_id_effects: HashMap<i32, Vec<ItemEffect>>,
-    pub attribute_effects: HashMap<String, Vec<ItemEffect>>,
+    pub icon_id_effects: HashMap<i32, Vec<Effect>>,
+    pub attribute_effects: HashMap<String, Vec<Effect>>,
     pub warnings: Vec<String>,
     pub not_implemented: Vec<String>,
 }
@@ -241,7 +241,35 @@ impl Parser {
         item_mods
     }
 
+    pub fn get_effects_from_special_info(&self, warnings: &mut Vec<String>, special_info: &str) -> Option<Vec<Effect>> {
+        let effects = self.get_effects_and_add_warnings_from_desc(warnings, special_info);
+        if !effects.is_empty() {
+            Some(effects)
+        } else {
+            None
+        }
+    }
+
     fn calculate_icon_id_effect_desc(&self, item_mods: &mut ItemMods, effect_desc: &str) {
+        let new_effects = self.get_effects_and_add_warnings_from_desc(&mut item_mods.warnings, effect_desc);
+        // This is an Icon ID style effect desc
+        for caps in self.regex.icon_ids.captures_iter(effect_desc) {
+            let icon_id = caps.get(1).unwrap().as_str().parse::<i32>().unwrap();
+            // Specifically ignore icon_id 108s for now (generic mods of some flavor)
+            if icon_id == 108 {
+                item_mods
+                    .warnings
+                    .push(format!("Ignored generic mod: {}", effect_desc));
+                return;
+            }
+            // Get current effects, or insert an empty vec
+            let effects = item_mods.icon_id_effects.entry(icon_id).or_insert(vec![]);
+            // Extend current effects vec with our new list of effects
+            effects.extend(new_effects.clone());
+        }
+    }
+
+    fn get_effects_and_add_warnings_from_desc(&self, warnings: &mut Vec<String>, effect_desc: &str) -> Vec<Effect> {
         // Add warnings
         if effect_desc.contains("taunt as if they did")
             || effect_desc
@@ -290,19 +318,17 @@ impl Parser {
             || effect_desc.contains("Evasion")
             || effect_desc.contains("Max Armor")
         {
-            item_mods
-                .warnings
-                .push(format!("Not fully supported: {}", effect_desc));
+            warnings.push(format!("Not fully supported: {}", effect_desc));
         }
         if effect_desc.contains("armor damage") {
-            item_mods.warnings.push(format!("pgsim doesn't differentiate between regular damage, 'armor damage', and 'health damage': {}", effect_desc));
+            warnings.push(format!("pgsim doesn't differentiate between regular damage, 'armor damage', and 'health damage': {}", effect_desc));
         }
         // Collect all item effects
-        let mut new_effects = vec![];
+        let mut effects = vec![];
         if let Some(caps) = self.regex.flat_damage.captures(effect_desc) {
             // Specifically block this from applying to "next attack" buffs as well
             if !effect_desc.contains("your next attack to") {
-                new_effects.push(ItemEffect::FlatDamage(
+                effects.push(Effect::FlatDamage(
                     caps.name("damage")
                         .unwrap()
                         .as_str()
@@ -312,7 +338,7 @@ impl Parser {
             }
         }
         if let Some(caps) = self.regex.damage_mod.captures(effect_desc) {
-            new_effects.push(ItemEffect::DamageMod(
+            effects.push(Effect::DamageMod(
                 caps.name("damage")
                     .unwrap()
                     .as_str()
@@ -322,7 +348,7 @@ impl Parser {
             ));
         }
         if let Some(caps) = self.regex.dot_damage.captures(effect_desc) {
-            new_effects.push(ItemEffect::DotDamage(
+            effects.push(Effect::DotDamage(
                 caps.name("damage")
                     .unwrap()
                     .as_str()
@@ -331,7 +357,7 @@ impl Parser {
             ));
         }
         if let Some(caps) = self.regex.restore_health.captures(effect_desc) {
-            new_effects.push(ItemEffect::RestoreHealth(
+            effects.push(Effect::RestoreHealth(
                 caps.name("restore")
                     .unwrap()
                     .as_str()
@@ -340,7 +366,7 @@ impl Parser {
             ));
         }
         if let Some(caps) = self.regex.restore_armor.captures(effect_desc) {
-            new_effects.push(ItemEffect::RestoreArmor(
+            effects.push(Effect::RestoreArmor(
                 caps.name("restore")
                     .unwrap()
                     .as_str()
@@ -349,7 +375,7 @@ impl Parser {
             ));
         }
         if let Some(caps) = self.regex.restore_power.captures(effect_desc) {
-            new_effects.push(ItemEffect::RestorePower(
+            effects.push(Effect::RestorePower(
                 caps.name("restore")
                     .unwrap()
                     .as_str()
@@ -358,7 +384,7 @@ impl Parser {
             ));
         }
         if let Some(caps) = self.regex.proc_flat_damage.captures(effect_desc) {
-            new_effects.push(ItemEffect::ProcFlatDamage {
+            effects.push(Effect::ProcFlatDamage {
                 damage: caps
                     .name("damage")
                     .unwrap()
@@ -375,7 +401,7 @@ impl Parser {
             });
         }
         if let Some(caps) = self.regex.proc_damage_mod.captures(effect_desc) {
-            new_effects.push(ItemEffect::ProcDamageMod {
+            effects.push(Effect::ProcDamageMod {
                 damage_mod: caps
                     .name("damage")
                     .unwrap()
@@ -393,7 +419,7 @@ impl Parser {
             });
         }
         if let Some(caps) = self.regex.range_flat_damage.captures(effect_desc) {
-            new_effects.push(ItemEffect::RangeFlatDamage {
+            effects.push(Effect::RangeFlatDamage {
                 min_damage: caps
                     .name("min_damage")
                     .unwrap()
@@ -409,13 +435,13 @@ impl Parser {
             });
         }
         if let Some(caps) = self.regex.damage_type.captures(effect_desc) {
-            new_effects.push(ItemEffect::DamageType(
+            effects.push(Effect::DamageType(
                 DamageType::from_str(caps.name("damage_type").unwrap().as_str())
                     .expect("Failed to parse damage type string as enum"),
             ));
         }
         if let Some(caps) = self.regex.damage_type_damage_mod_buff.captures(effect_desc) {
-            new_effects.push(ItemEffect::DamageTypeDamageModBuff {
+            effects.push(Effect::DamageTypeDamageModBuff {
                 damage_type: DamageType::from_str(caps.name("damage_type").unwrap().as_str())
                     .expect("Failed to parse damage type string as enum"),
                 damage_mod: caps
@@ -438,7 +464,7 @@ impl Parser {
             .damage_type_next_attack_buff
             .captures(effect_desc)
         {
-            new_effects.push(ItemEffect::DamageTypeFlatDamageBuff {
+            effects.push(Effect::DamageTypeFlatDamageBuff {
                 damage_type: DamageType::from_str(caps.name("damage_type").unwrap().as_str())
                     .expect("Failed to parse damage type string as enum"),
                 damage: caps
@@ -451,7 +477,7 @@ impl Parser {
             });
         }
         if let Some(caps) = self.regex.keyword_next_attack_buff.captures(effect_desc) {
-            new_effects.push(ItemEffect::KeywordFlatDamageBuff {
+            effects.push(Effect::KeywordFlatDamageBuff {
                 keyword: caps.name("keyword").unwrap().as_str().to_string(),
                 damage: caps
                     .name("damage")
@@ -463,7 +489,7 @@ impl Parser {
             });
         }
         if let Some(caps) = self.regex.keyword_core_attack_buff.captures(effect_desc) {
-            new_effects.push(ItemEffect::KeywordFlatDamageBuff {
+            effects.push(Effect::KeywordFlatDamageBuff {
                 keyword: "CoreAttack".to_string(),
                 damage: caps
                     .name("damage")
@@ -492,17 +518,17 @@ impl Parser {
                 .as_str()
                 .parse::<i32>()
                 .unwrap();
-            new_effects.push(ItemEffect::KeywordFlatDamageBuff {
+            effects.push(Effect::KeywordFlatDamageBuff {
                 keyword: "BasicAttack".to_string(),
                 damage,
                 duration,
             });
-            new_effects.push(ItemEffect::KeywordFlatDamageBuff {
+            effects.push(Effect::KeywordFlatDamageBuff {
                 keyword: "CoreAttack".to_string(),
                 damage,
                 duration,
             });
-            new_effects.push(ItemEffect::KeywordFlatDamageBuff {
+            effects.push(Effect::KeywordFlatDamageBuff {
                 keyword: "NiceAttack".to_string(),
                 damage,
                 duration,
@@ -513,7 +539,7 @@ impl Parser {
             .vulnerability_damage_mod_debuff
             .captures(effect_desc)
         {
-            new_effects.push(ItemEffect::VulnerabilityDamageModDebuff {
+            effects.push(Effect::VulnerabilityDamageModDebuff {
                 damage_type: DamageType::from_str(caps.name("damage_type").unwrap().as_str())
                     .expect("Failed to parse damage type string as enum"),
                 damage_mod: caps
@@ -536,7 +562,7 @@ impl Parser {
             .vulnerability_flat_damage_debuff
             .captures(effect_desc)
         {
-            new_effects.push(ItemEffect::VulnerabilityFlatDamageDebuff {
+            effects.push(Effect::VulnerabilityFlatDamageDebuff {
                 damage_type: DamageType::from_str(caps.name("damage_type").unwrap().as_str())
                     .expect("Failed to parse damage type string as enum"),
                 damage: caps
@@ -553,22 +579,7 @@ impl Parser {
                     .unwrap(),
             });
         }
-
-        // This is an Icon ID style effect desc
-        for caps in self.regex.icon_ids.captures_iter(effect_desc) {
-            let icon_id = caps.get(1).unwrap().as_str().parse::<i32>().unwrap();
-            // Specifically ignore icon_id 108s for now (generic mods of some flavor)
-            if icon_id == 108 {
-                item_mods
-                    .warnings
-                    .push(format!("Ignored generic mod: {}", effect_desc));
-                return;
-            }
-            // Get current effects, or insert an empty vec
-            let effects = item_mods.icon_id_effects.entry(icon_id).or_insert(vec![]);
-            // Extend current effects vec with our new list of effects
-            effects.extend(new_effects.clone());
-        }
+        effects
     }
 
     fn calculate_attribute_effect_desc(&self, item_mods: &mut ItemMods, effect_desc: &str) {
@@ -634,10 +645,10 @@ impl Parser {
         let effect;
         if attribute.starts_with("BOOST") {
             effect =
-                ItemEffect::FlatDamage(caps.name("mod").unwrap().as_str().parse::<i32>().unwrap());
+                Effect::FlatDamage(caps.name("mod").unwrap().as_str().parse::<i32>().unwrap());
         } else if attribute.starts_with("MOD") {
             effect =
-                ItemEffect::DamageMod(caps.name("mod").unwrap().as_str().parse::<f32>().unwrap());
+                Effect::DamageMod(caps.name("mod").unwrap().as_str().parse::<f32>().unwrap());
         } else {
             item_mods
                 .not_implemented

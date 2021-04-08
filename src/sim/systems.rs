@@ -6,7 +6,7 @@ use super::{
     Activity, ActivitySource, Buff, BuffEffect, Buffs, Debuff, DebuffEffect, Debuffs, Enemy,
     Player, PlayerAbilities, PlayerAbility, Report, TICK_LENGTH_IN_SECONDS,
 };
-use crate::parser::{data::DamageType, ItemEffect, ItemMods};
+use crate::parser::{data::DamageType, Effect, ItemMods};
 
 pub fn build_schedule() -> Schedule {
     Schedule::builder()
@@ -329,20 +329,20 @@ fn calculate_ability(
     if let Some(effects) = item_mods.icon_id_effects.get(&player_ability.icon_id) {
         for effect in effects {
             match effect {
-                ItemEffect::FlatDamage(value) => flat_damage += value,
-                ItemEffect::DamageMod(value) => damage_mod += value,
-                ItemEffect::DotDamage(value) => dot_flat_damage += value,
-                ItemEffect::DamageType(damage_type) => calculated_damage_type = *damage_type,
-                ItemEffect::RestoreHealth(_) => (),
-                ItemEffect::RestoreArmor(_) => (),
-                ItemEffect::RestorePower(_) => (),
-                ItemEffect::ProcFlatDamage { damage, chance } => {
+                Effect::FlatDamage(value) => flat_damage += value,
+                Effect::DamageMod(value) => damage_mod += value,
+                Effect::DotDamage(value) => dot_flat_damage += value,
+                Effect::DamageType(damage_type) => calculated_damage_type = *damage_type,
+                Effect::RestoreHealth(_) => (),
+                Effect::RestoreArmor(_) => (),
+                Effect::RestorePower(_) => (),
+                Effect::ProcFlatDamage { damage, chance } => {
                     // Roll proc and add damage if we succeeded
                     if thread_rng().gen::<f32>() > *chance {
                         flat_damage += damage;
                     }
                 }
-                ItemEffect::RangeFlatDamage {
+                Effect::RangeFlatDamage {
                     min_damage,
                     max_damage,
                 } => {
@@ -350,7 +350,7 @@ fn calculate_ability(
                     // Max value for gen_range() is exclusive, so add one to make it inclusive
                     flat_damage += thread_rng().gen_range(*min_damage, *max_damage + 1);
                 }
-                ItemEffect::ProcDamageMod {
+                Effect::ProcDamageMod {
                     damage_mod: proc_damage_mod,
                     chance,
                 } => {
@@ -359,7 +359,7 @@ fn calculate_ability(
                         damage_mod += proc_damage_mod;
                     }
                 }
-                ItemEffect::DamageTypeDamageModBuff {
+                Effect::DamageTypeDamageModBuff {
                     damage_type,
                     damage_mod,
                     duration,
@@ -372,7 +372,7 @@ fn calculate_ability(
                         },
                     });
                 }
-                ItemEffect::DamageTypeFlatDamageBuff {
+                Effect::DamageTypeFlatDamageBuff {
                     damage_type,
                     damage,
                     duration,
@@ -385,7 +385,7 @@ fn calculate_ability(
                         },
                     });
                 }
-                ItemEffect::DamageTypePerTickDamageBuff {
+                Effect::DamageTypePerTickDamageBuff {
                     damage_type,
                     damage,
                     duration,
@@ -398,7 +398,7 @@ fn calculate_ability(
                         },
                     });
                 }
-                ItemEffect::KeywordFlatDamageBuff {
+                Effect::KeywordFlatDamageBuff {
                     keyword,
                     damage,
                     duration,
@@ -411,7 +411,7 @@ fn calculate_ability(
                         },
                     });
                 }
-                ItemEffect::KeywordDamageModBuff {
+                Effect::KeywordDamageModBuff {
                     keyword,
                     damage_mod,
                     duration,
@@ -424,7 +424,7 @@ fn calculate_ability(
                         },
                     });
                 }
-                ItemEffect::VulnerabilityDamageModDebuff {
+                Effect::VulnerabilityDamageModDebuff {
                     damage_type,
                     damage_mod,
                     duration,
@@ -437,7 +437,7 @@ fn calculate_ability(
                         },
                     });
                 }
-                ItemEffect::VulnerabilityFlatDamageDebuff {
+                Effect::VulnerabilityFlatDamageDebuff {
                     damage_type,
                     damage,
                     duration,
@@ -458,7 +458,7 @@ fn calculate_ability(
         if let Some(effects) = item_mods.attribute_effects.get(attribute) {
             for effect in effects {
                 match effect {
-                    ItemEffect::DamageMod(value) => base_damage_mod += value,
+                    Effect::DamageMod(value) => base_damage_mod += value,
                     _ => panic!("Found non-DamageMod effect in base_damage_attributes, this shouldn't happen"),
                 }
             }
@@ -469,8 +469,8 @@ fn calculate_ability(
         if let Some(effects) = item_mods.attribute_effects.get(attribute) {
             for effect in effects {
                 match effect {
-                    ItemEffect::FlatDamage(value) => flat_damage += value,
-                    ItemEffect::DamageMod(value) => damage_mod += value,
+                    Effect::FlatDamage(value) => flat_damage += value,
+                    Effect::DamageMod(value) => damage_mod += value,
                     _ => panic!("Found non-FlatDamage or DamageMod effect in damage_attributes, this shouldn't happen"),
                 }
             }
@@ -483,7 +483,7 @@ fn calculate_ability(
     {
         for effect in effects {
             match effect {
-                ItemEffect::FlatDamage(value) => flat_damage += value,
+                Effect::FlatDamage(value) => flat_damage += value,
                 _ => panic!(
                     "Found non-FlatDamage effect in damage type boost, this shouldn't happen"
                 ),
@@ -496,7 +496,7 @@ fn calculate_ability(
     {
         for effect in effects {
             match effect {
-                ItemEffect::DamageMod(value) => damage_mod += value,
+                Effect::DamageMod(value) => damage_mod += value,
                 _ => panic!("Found non-DamageMod effect in damage type mod, this shouldn't happen"),
             }
         }
@@ -517,7 +517,7 @@ fn calculate_ability(
                 {
                     for effect in effects {
                         match effect {
-                            ItemEffect::DamageMod(value) => dot_damage_mod += value,
+                            Effect::DamageMod(value) => dot_damage_mod += value,
                             _ => panic!("Found non-DamageMod effect in indirect damage type mod, this shouldn't happen"),
                         }
                     }

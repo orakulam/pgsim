@@ -228,6 +228,20 @@ impl Sim {
                                 },
                             },
                         };
+                        // Collect buffs
+                        if let Some(special_info) = &ability.special_info {
+                            println!("special info: {}", special_info);
+                            if let Some(effects) = parser.get_effects_from_special_info(warnings, special_info) {
+
+                            } else {
+                                warnings.push(format!(
+                                    "Ignored ability SpecialInfo: {}, {}",
+                                    ability_name,
+                                    special_info,
+                                ));
+                            }
+                        }
+                        // Collect debuffs
                         let mut debuffs = vec![];
                         if let Some(ability_dots) = &ability.pve.dots {
                             for dot in ability_dots {
