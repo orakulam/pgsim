@@ -2378,57 +2378,57 @@ fn calculate_icon_id_effect_desc() {
     test_icon_id_effect(
         &parser,
         "<icon=3771>Conditioning Shock deals +6 damage and reuse time is 1 second sooner",
-        vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
-        0,
+        vec![3771],
+        vec![ItemEffect::FlatDamage(6)],
+        1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3586>Frostbite deals +5 damage and raises the target's Max Rage by 22%, preventing them from using their Rage attacks as often",
-        vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
-        0,
+        vec![3586],
+        vec![ItemEffect::FlatDamage(5)],
+        1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3496>Your Cold Sphere gains 12 Armor",
+        vec![3496],
         vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
-        0,
+        1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=2230>Pig Punt deals +3% damage and taunts -15",
-        vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
-        0,
+        vec![2230],
+        vec![ItemEffect::DamageMod(0.03)],
+        1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3774>Lethal Force Damage +10 and Power Cost -2",
-        vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
-        0,
+        vec![3774],
+        vec![ItemEffect::FlatDamage(10)],
+        1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=2102>Barrage costs -1 Power and restores 3 Armor to you",
-        vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
+        vec![2102],
+        vec![ItemEffect::RestoreArmor(3)],
         0,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3505>Freeze Solid resets the timer on Ice Spear (so it can be used again immediately)",
+        vec![3505],
         vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
-        0,
+        1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=2205><icon=2206>Defensive Burst and Defensive Chill restore 10 Armor to you",
-        vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
+        vec![2205, 2206],
+        vec![ItemEffect::RestoreArmor(10)],
         0,
     );
     test_icon_id_effect(
@@ -2441,169 +2441,198 @@ fn calculate_icon_id_effect_desc() {
     test_icon_id_effect(
         &parser,
         "<icon=3424>Mindreave deals +2 damage and deals Electricity damage instead of Psychic",
-        vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
+        vec![3424],
+        vec![
+            ItemEffect::FlatDamage(2),
+            ItemEffect::DamageType(DamageType::Electricity),
+        ],
         0,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3697>Carrot Power boosts your Crushing Damage +6% for 10 seconds",
-        vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
+        vec![3697],
+        vec![ItemEffect::DamageTypeDamageModBuff {
+            damage_type: DamageType::Crushing,
+            damage_mod: 0.06,
+            duration: 10,
+        }],
         0,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3000>Cosmic Strike deals +10 damage and reuse timer is -1 second",
-        vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
-        0,
+        vec![3000],
+        vec![ItemEffect::FlatDamage(10)],
+        1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=2205><icon=2208>Scintillating Frost and Defensive Chill restore 5 Armor",
-        vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
+        vec![2205, 2208],
+        vec![ItemEffect::RestoreArmor(5)],
         0,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3640>When you are hit, Finish It damage is +4 for 20 seconds (stacks up to 10 times)",
+        vec![3640],
         vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
-        0,
+        1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3403>Toxinball deals +36 Poison damage to health over 12 seconds",
-        vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
+        vec![3403],
+        vec![ItemEffect::DotDamage(36)],
         0,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3673>Blast of Defiance reaps 5% of the Armor damage done (up to a max of 15), returning it to you as armor",
+        vec![3673],
         vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
-        0,
+        1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=2258><icon=2238>Fireball and Frostball Damage +6%",
-        vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
+        vec![2258, 2238],
+        vec![ItemEffect::DamageMod(0.06)],
         0,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3694>Play Dead restores 15 Health",
-        vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
+        vec![3694],
+        vec![ItemEffect::RestoreHealth(15)],
         0,
     );
     test_icon_id_effect(
         &parser,
-        "<icon=3469>Wild Endurance heals your pet for 15 Health (or Armor if Health is full)<icon=3483>Brambleskin increases your Max Armor by +20 for 30 seconds and restores 20 Armor",
+        "<icon=3469>Wild Endurance heals your pet for 15 Health (or Armor if Health is full)",
+        vec![3469],
         vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
+        1,
+    );
+    test_icon_id_effect(
+        &parser,
+        "<icon=3483>Brambleskin increases your Max Armor by +20 for 30 seconds and restores 20 Armor",
+        vec![3483],
+        vec![ItemEffect::RestoreArmor(20)],
+        1,
+    );
+    test_icon_id_effect(
+        &parser,
+        "<icon=2208><icon=3436>Scintillating Flame and Scintillating Frost Damage +14%",
+        vec![2208, 3436],
+        vec![ItemEffect::DamageMod(0.14)],
         0,
     );
     test_icon_id_effect(
         &parser,
-        "<icon=2208><icon=3436>Scintillating Flame and Scintillating Frost Damage +14%<icon=2200><icon=2199><icon=2201>Summoned Skeletons deal +4% direct damage, but take +100% more damage from any cold attacks",
+        "<icon=2200><icon=2199><icon=2201>Summoned Skeletons deal +4% direct damage, but take +100% more damage from any cold attacks",
+        vec![2200, 2199, 2201],
         vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
-        0,
+        1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3473>After using Look At My Hammer, all other Hammer attacks cost -3 Power for 8 seconds",
+        vec![3473],
         vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
-        0,
+        1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=2195>Raised Zombies deal +6% damage",
-        vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
+        vec![2195],
+        vec![ItemEffect::DamageMod(0.06)],
         0,
     );
     test_icon_id_effect(
         &parser,
         "<icon=2174>Your golem minion's Doom Admixture deals +15 damage",
-        vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
+        vec![2174],
+        vec![ItemEffect::FlatDamage(15)],
         0,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3784>Pixie Flare's attack range is +5, and it deals +15 damage to targets that are covered in Fairy Fire",
+        vec![3784],
         vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
-        0,
+        1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=2222>Positive Attitude increases your Poison Mitigation +1 for 30 seconds",
+        vec![2222],
         vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
-        0,
+        1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3423><icon=3413>Combo: Suppress+Any Melee+Any Melee+Headcracker: final step stuns the target while dealing +10 damage.",
+        vec![3423, 3413],
         vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
-        0,
+        1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3738>Give Warmth restores 3 Health and +2 Body Heat",
-        vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
+        vec![3738],
+        vec![ItemEffect::RestoreHealth(3)],
+        1,
+    );
+    test_icon_id_effect(
+        &parser,
+        "<icon=3447>Disrupting Bash deals +10% damage and taunts +25",
+        vec![3447],
+        vec![ItemEffect::DamageMod(0.1)],
         0,
     );
     test_icon_id_effect(
         &parser,
-        "<icon=3447>Disrupting Bash deals +10% damage and taunts +25<icon=2175>Healing Mist heals +7 Health",
-        vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
+        "<icon=2175>Healing Mist heals +7 Health",
+        vec![2175],
+        vec![ItemEffect::RestoreHealth(7)],
         0,
     );
     test_icon_id_effect(
         &parser,
         "<icon=2205><icon=2208><icon=2258>Frostball, Scintillating Frost, and Defensive Chill boost your Nice Attack Damage +16 for 7 seconds",
-        vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
-        0,
-    );
-    test_icon_id_effect(
-        &parser,
-        "Fairies gain +1 Max Hydration",
-        vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
+        vec![2205, 2208, 2258],
+        vec![ItemEffect::KeywordFlatDamageBuff {
+            keyword: "NiceAttack".to_string(),
+            damage: 16,
+            duration: 7,
+        }],
         0,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3497>While in Cryogenic Freeze, you are 30% resistant to Fire damage",
+        vec![3497],
         vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
-        0,
+        1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=2141>Get It Off Me heals you for 25 Health after a 15 second delay",
+        vec![2141],
         vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
-        0,
+        1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3802>Dimensional Snare causes target to take +5% damage from Poison for 15 seconds",
-        vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
+        vec![3802],
+        vec![ItemEffect::VulnerabilityDamageModDebuff {
+            damage_type: DamageType::Poison,
+            damage_mod: 0.05,
+            duration: 15,
+        }],
         0,
     );
     test_icon_id_effect(
@@ -2616,36 +2645,46 @@ fn calculate_icon_id_effect_desc() {
     test_icon_id_effect(
         &parser,
         "<icon=3446>Stunning Bash causes the target to take 30 Trauma damage over 12 seconds",
-        vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
+        vec![3446],
+        vec![ItemEffect::DotDamage(30)],
         0,
     );
     test_icon_id_effect(
         &parser,
-        "<icon=2253>Tough Hoof has a 66% chance to deal +15% damage and taunt +50Elves earn +1% Combat XP when feeling Clean, but earn NO Combat XP when Dirty",
-        vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
-        0,
+        "<icon=2253>Tough Hoof has a 66% chance to deal +15% damage and taunt +50",
+        vec![2253],
+        vec![ItemEffect::ProcDamageMod {
+            damage_mod: 0.15,
+            chance: 0.66,
+        }],
+        1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3573>Seismic Impact restores 10 Armor to you",
-        vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
+        vec![3573],
+        vec![ItemEffect::RestoreArmor(10)],
         0,
     );
     test_icon_id_effect(
         &parser,
         "<icon=2155>Cow's Front Kick has a 66% chance to deal +12 damage",
-        vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
+        vec![2155],
+        vec![ItemEffect::ProcFlatDamage {
+            damage: 12,
+            chance: 0.66,
+        }],
         0,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3251>Spit Acid causes your Signature Debuff abilities to deal +12 damage for 8 seconds",
-        vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
+        vec![3251],
+        vec![ItemEffect::KeywordFlatDamageBuff {
+            keyword: "SignatureDebuff".to_string(),
+            damage: 12,
+            duration: 8,
+        }],
         0,
     );
     test_icon_id_effect(
@@ -2658,36 +2697,40 @@ fn calculate_icon_id_effect_desc() {
     test_icon_id_effect(
         &parser,
         "<icon=2176>Freezing Mist restores 13 Armor to you",
-        vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
+        vec![2176],
+        vec![ItemEffect::RestoreArmor(13)],
         0,
     );
     test_icon_id_effect(
         &parser,
         "<icon=2205><icon=2208><icon=2258>Frostball, Scintillating Frost, and Defensive Chill grant +3 Direct and Indirect Cold Protection for 10 seconds",
+        vec![2205, 2208, 2258],
         vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
-        0,
+        1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3423>After using Headcracker, you take half damage from Psychic attacks for 5 seconds",
+        vec![3423],
         vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
-        0,
+        1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=2205><icon=2206><icon=2120>You regain 2 Power when using Ring of Fire, Defensive Burst, or Defensive Chill",
-        vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
+        vec![2205, 2206, 2120],
+        vec![ItemEffect::RestorePower(2)],
         0,
     );
     test_icon_id_effect(
         &parser,
         "<icon=2140>Monstrous Rage boosts your Slashing attack damage +1% for 8 seconds",
-        vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
+        vec![2140],
+        vec![ItemEffect::DamageTypeDamageModBuff {
+            damage_type: DamageType::Slashing,
+            damage_mod: 0.01,
+            duration: 8,
+        }],
         0,
     );
     test_icon_id_effect(
@@ -2700,22 +2743,22 @@ fn calculate_icon_id_effect_desc() {
     test_icon_id_effect(
         &parser,
         "<icon=3431>Revitalize restores +1 Health and removes ongoing Trauma effects (up to 1 dmg/sec)",
-        vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
-        0,
+        vec![3431],
+        vec![ItemEffect::RestoreHealth(1)],
+        1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3784>Pixie Flare restores 3 Health to you",
-        vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
+        vec![3784],
+        vec![ItemEffect::RestoreHealth(3)],
         0,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3322>Bodyslam heals you for 10 health",
-        vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
+        vec![3322],
+        vec![ItemEffect::RestoreHealth(10)],
         0,
     );
     test_icon_id_effect(
@@ -2742,79 +2785,79 @@ fn calculate_icon_id_effect_desc() {
     test_icon_id_effect(
         &parser,
         "<icon=3735>Remedy costs -1 Power to cast, its reuse timer is -1 second, and it has a 10% chance to mend a broken bone in the target",
+        vec![3735],
         vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
-        0,
+        3,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3557>While you are near your Web Trap, you recover 4 Health per second",
+        vec![3557],
         vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
-        0,
+        1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3327>Pain Bubble increases the damage of your ranged attacks by 1% for 10 seconds",
+        vec![3327],
         vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
-        0,
+        1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3477>Discharging Strike deals +1% damage plus 8% more damage if target's Rage meter is at least 66% full",
-        vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
-        0,
+        vec![3477],
+        vec![ItemEffect::DamageMod(0.01)],
+        1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=2175>Healing Mist hastens the remaining reset timer of Reconstruct by 10 seconds (if Reconstruct is not already ready to use)",
+        vec![2175],
         vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
-        0,
+        1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3734>Triage gives the target +3% Burst Evasion for 10 seconds",
+        vec![3734],
         vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
-        0,
+        1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3505>Freeze Solid restores 10 armor to you after a 15 second delay",
+        vec![3505],
         vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
-        0,
+        1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3463>Shield Team grants all allies 3% evasion of burst attacks for 10 seconds",
+        vec![3463],
         vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
-        0,
+        1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3418><icon=2140>Monstrous Rage and Unnatural Wrath boost your pet's next attack damage +8",
+        vec![3418],
         vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
-        0,
+        1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3630>Mangling Shot deals +5% damage and causes target's attacks to deal -1 damage for 20 seconds",
-        vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
-        0,
+        vec![3630],
+        vec![ItemEffect::DamageMod(0.05)],
+        1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3650><icon=3649><icon=3648><icon=3647>Crossbow abilities restore 15 health after a 15 second delay",
+        vec![3650, 3649, 3648, 3647],
         vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
-        0,
+        1,
     );
     test_icon_id_effect(
         &parser,
@@ -2826,100 +2869,112 @@ fn calculate_icon_id_effect_desc() {
     test_icon_id_effect(
         &parser,
         "<icon=2136>Sic Em boosts your pet's Crushing attacks (if any) +10 damage for 10 seconds",
+        vec![2136],
         vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
-        0,
+        1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3045>Decapitate deals +10 damage and briefly terrifies the target",
-        vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
-        0,
+        vec![3045],
+        vec![ItemEffect::FlatDamage(10)],
+        1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3628>Phoenix Strike costs -1 Power and boosts your Direct Fire Damage +5% for 30 seconds",
-        vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
+        vec![3628],
+        vec![ItemEffect::DamageTypeDamageModBuff {
+            damage_type: DamageType::Fire,
+            damage_mod: 0.05,
+            duration: 30,
+        }],
         0,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3455><icon=3642><icon=3449><icon=3448><icon=3447><icon=3446>All Shield Bash Abilities deal +5 damage and hasten the current reuse timer of Fight Me You Fools by 1 second",
-        vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
-        0,
+        vec![3455, 3642, 3449, 3448, 3447, 3446],
+        vec![ItemEffect::FlatDamage(5)],
+        1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3726>Admonish boosts your Priest Damage +1 for 10 seconds (this effect does not stack with itself)",
-        vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
+        vec![3726],
+        vec![ItemEffect::KeywordFlatDamageBuff {
+            keyword: "Priest".to_string(),
+            damage: 1,
+            duration: 10,
+        }],
         0,
     );
     test_icon_id_effect(
         &parser,
         "<icon=2129>Werewolf Bite hits all enemies within 5 meters, but reuse timer is +2 seconds",
+        vec![2129],
         vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
-        0,
+        2,
     );
     test_icon_id_effect(
         &parser,
         "<icon=2256>When you teleport via Shadow Feint, you recover 10 Health",
+        vec![2256],
         vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
-        0,
+        1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3444>Heart Piercer deals +3% piercing damage and heals you for 4 health",
-        vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
+        vec![3444],
+        vec![ItemEffect::DamageMod(0.03), ItemEffect::RestoreHealth(4)],
         0,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3695>Rabbit's Foot restores 10 Health to you and nearby allies after a 15 second delay",
+        vec![3695],
         vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
-        0,
+        1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=2110>Hip Throw hits all enemies within 8 meters, but Power cost is +20",
+        vec![2110],
         vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
-        0,
+        2,
     );
     test_icon_id_effect(
         &parser,
         "<icon=2114>Future Pack Attacks to the same target deal +10 damage",
+        vec![2114],
         vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
-        0,
+        1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3597>Gut deals an additional 10 Trauma damage over 10 seconds if the target is not focused on you",
-        vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
-        0,
+        vec![3597],
+        vec![ItemEffect::DotDamage(10)],
+        1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3667>Anthem of Avoidance gives all targets +8% Burst Evasion for 8 seconds",
+        vec![3667],
         vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
-        0,
+        1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=2123>Tell Me About Your Mother boosts your Epic Attack Damage +10 and reduces the Power cost of your Epic Attacks -4 for 15 seconds",
-        vec![],
-        vec![ItemEffect::FlatDamage(50_000)],
-        0,
+        vec![2123],
+        vec![ItemEffect::KeywordFlatDamageBuff {
+            keyword: "EpicAttack".to_string(),
+            damage: 10,
+            duration: 15,
+        }],
+        1,
     );
     test_icon_id_effect(
         &parser,

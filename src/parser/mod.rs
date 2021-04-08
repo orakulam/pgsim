@@ -614,7 +614,8 @@ impl Parser {
             || effect_desc.starts_with("{NONCOMBAT_SPRINT_BOOST}")
             || effect_desc.starts_with("{JUMP_BURST}")
             || effect_desc.starts_with("{SWIM_FASTSPEED_BOOST}")
-            || effect_desc.starts_with("{SPRINT_BOOST}") {
+            || effect_desc.starts_with("{SPRINT_BOOST}")
+        {
             item_mods
                 .warnings
                 .push(format!("Ignored attribute mod: {}", effect_desc));
