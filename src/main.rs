@@ -13,6 +13,7 @@ TODO
 
 Add in item mods
     Work through and make each one pass
+    Make sure all implemented passes too
 Review all TODOs, any that need to be addressed before alpha? Reviewed once, do one last pass
 Run more tests with my current test build
     Is it using all abilities? If not, why?

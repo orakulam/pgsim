@@ -4,23 +4,27 @@ use super::*;
 fn calculate_item_mods_all_implemented() {
     // This test ensures all mods are implemented (handled, handled with warnings, or specifically ignored)
     // It's intended to run with new versions of game data to easily implement new mods (as well as check for regressions)
-    // To work on implementing new mods, run like this: cargo test calculate_item_mods_all_implemented -- --nocapture
     let parser = Parser::new();
-    // Accumulate all item mod IDs and tier IDs to test against
-    let mut equipped_mods = vec![];
+    let mut not_implemented = vec![];
     for (item_mod_id, item_mod) in &parser.data.item_mods {
-        for (tier_id, _) in &item_mod.tiers {
-            equipped_mods.push((item_mod_id.clone(), tier_id.clone()));
+        for (tier_id, tier) in &item_mod.tiers {
+            let item_mods = parser.calculate_item_mods(&vec![], &vec![(item_mod_id.clone(), tier_id.clone())]);
+            let mut total_things_parsed = 0;
+            for (_, effects) in &item_mods.icon_id_effects {
+                total_things_parsed += effects.len();
+            }
+            for (_, effects) in &item_mods.attribute_effects {
+                total_things_parsed += effects.len();
+            }
+            total_things_parsed += item_mods.warnings.len();
+            total_things_parsed += item_mods.not_implemented.len();
+            if total_things_parsed == 0 {
+                not_implemented.push(format!("Failed to parse anything from item mod: {:#?}, {:#?}", tier.effect_descs, item_mods));
+            }
         }
     }
-    let mut item_mods = parser.calculate_item_mods(&vec![], &equipped_mods);
-    if item_mods.not_implemented.len() > 0 {
-        item_mods.not_implemented.sort();
-        for not_implemented in &item_mods.not_implemented {
-            println!("{}", not_implemented);
-        }
-    }
-    assert_eq!(item_mods.not_implemented.len(), 0);
+    not_implemented.sort();
+    assert_eq!(not_implemented.len(), 0, "{}", not_implemented[0]);
 }
 
 #[test]
