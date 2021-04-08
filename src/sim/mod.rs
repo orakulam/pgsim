@@ -2,7 +2,7 @@ use legion::*;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-use crate::parser::{data::DamageType, Parser};
+use crate::parser::{data::DamageType, Buff, BuffEffect, Debuff, DebuffEffect, Effect, Parser};
 
 mod systems;
 
@@ -42,61 +42,8 @@ struct Report {
 #[derive(Debug)]
 struct Buffs(HashMap<String, Vec<Buff>>);
 
-#[derive(Debug, Clone)]
-struct Buff {
-    remaining_duration: i32,
-    effect: BuffEffect,
-}
-
-#[derive(Debug, Clone)]
-enum BuffEffect {
-    DamageTypeDamageModBuff {
-        damage_type: DamageType,
-        damage_mod: f32,
-    },
-    DamageTypeFlatDamageBuff {
-        damage_type: DamageType,
-        damage: i32,
-    },
-    DamageTypePerTickDamageBuff {
-        damage_type: DamageType,
-        damage: i32,
-    },
-    KeywordFlatDamageBuff {
-        keyword: String,
-        damage: i32,
-    },
-    KeywordDamageModBuff {
-        keyword: String,
-        damage_mod: f32,
-    },
-}
-
 #[derive(Debug)]
 struct Debuffs(HashMap<String, Vec<Debuff>>);
-
-#[derive(Debug, Clone)]
-struct Debuff {
-    remaining_duration: i32,
-    effect: DebuffEffect,
-}
-
-#[derive(Debug, Clone)]
-enum DebuffEffect {
-    Dot {
-        damage_per_tick: i32,
-        damage_type: DamageType,
-        tick_per: i32,
-    },
-    VulnerabilityDamageModDebuff {
-        damage_type: DamageType,
-        damage_mod: f32,
-    },
-    VulnerabilityFlatDamageDebuff {
-        damage_type: DamageType,
-        damage: i32,
-    },
-}
 
 #[derive(Debug)]
 struct Activity {
@@ -229,15 +176,22 @@ impl Sim {
                             },
                         };
                         // Collect buffs
+                        let mut buffs = vec![];
                         if let Some(special_info) = &ability.special_info {
-                            println!("special info: {}", special_info);
-                            if let Some(effects) = parser.get_effects_from_special_info(warnings, special_info) {
-
+                            if let Some(effects) =
+                                parser.get_effects_from_special_info(warnings, special_info)
+                            {
+                                for effect in effects {
+                                    // TODO: This is very rudimentary (some of these special infos are debuffs or other effects)
+                                    match effect {
+                                        Effect::Buff(buff) => buffs.push(buff.clone()),
+                                        _ => (),
+                                    }
+                                }
                             } else {
                                 warnings.push(format!(
                                     "Ignored ability SpecialInfo: {}, {}",
-                                    ability_name,
-                                    special_info,
+                                    ability_name, special_info,
                                 ));
                             }
                         }

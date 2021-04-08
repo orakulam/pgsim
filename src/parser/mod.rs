@@ -9,58 +9,69 @@ use data::Data;
 #[derive(Debug, PartialEq, PartialOrd, Clone)]
 pub enum Effect {
     FlatDamage(i32),
-    ProcFlatDamage {
-        damage: i32,
-        chance: f32,
-    },
-    RangeFlatDamage {
-        min_damage: i32,
-        max_damage: i32,
-    },
+    ProcFlatDamage { damage: i32, chance: f32 },
+    RangeFlatDamage { min_damage: i32, max_damage: i32 },
     DamageMod(f32),
-    ProcDamageMod {
-        damage_mod: f32,
-        chance: f32,
-    },
+    ProcDamageMod { damage_mod: f32, chance: f32 },
     DotDamage(i32),
     RestoreHealth(i32),
     RestoreArmor(i32),
     RestorePower(i32),
     DamageType(DamageType),
+    Buff(Buff),
+    Debuff(Debuff),
+}
+
+#[derive(Debug, PartialEq, PartialOrd, Clone)]
+pub struct Buff {
+    pub remaining_duration: i32,
+    pub effect: BuffEffect,
+}
+
+#[derive(Debug, PartialEq, PartialOrd, Clone)]
+pub enum BuffEffect {
+    DamageTypeDamageModBuff {
+        damage_type: DamageType,
+        damage_mod: f32,
+    },
     DamageTypeFlatDamageBuff {
         damage_type: DamageType,
         damage: i32,
-        duration: i32,
     },
     DamageTypePerTickDamageBuff {
         damage_type: DamageType,
         damage: i32,
-        duration: i32,
-    },
-    DamageTypeDamageModBuff {
-        damage_type: DamageType,
-        damage_mod: f32,
-        duration: i32,
     },
     KeywordFlatDamageBuff {
         keyword: String,
         damage: i32,
-        duration: i32,
     },
     KeywordDamageModBuff {
         keyword: String,
         damage_mod: f32,
-        duration: i32,
+    },
+}
+
+#[derive(Debug, PartialEq, PartialOrd, Clone)]
+pub struct Debuff {
+    pub remaining_duration: i32,
+    pub effect: DebuffEffect,
+}
+
+#[derive(Debug, PartialEq, PartialOrd, Clone)]
+pub enum DebuffEffect {
+    Dot {
+        damage_per_tick: i32,
+        damage_type: DamageType,
+        tick_per: i32,
     },
     VulnerabilityDamageModDebuff {
         damage_type: DamageType,
         damage_mod: f32,
-        duration: i32,
     },
     VulnerabilityFlatDamageDebuff {
         damage_type: DamageType,
         damage: i32,
-        duration: i32,
     },
 }
 
@@ -241,7 +252,11 @@ impl Parser {
         item_mods
     }
 
-    pub fn get_effects_from_special_info(&self, warnings: &mut Vec<String>, special_info: &str) -> Option<Vec<Effect>> {
+    pub fn get_effects_from_special_info(
+        &self,
+        warnings: &mut Vec<String>,
+        special_info: &str,
+    ) -> Option<Vec<Effect>> {
         let effects = self.get_effects_and_add_warnings_from_desc(warnings, special_info);
         if !effects.is_empty() {
             Some(effects)
@@ -251,7 +266,8 @@ impl Parser {
     }
 
     fn calculate_icon_id_effect_desc(&self, item_mods: &mut ItemMods, effect_desc: &str) {
-        let new_effects = self.get_effects_and_add_warnings_from_desc(&mut item_mods.warnings, effect_desc);
+        let new_effects =
+            self.get_effects_and_add_warnings_from_desc(&mut item_mods.warnings, effect_desc);
         // This is an Icon ID style effect desc
         for caps in self.regex.icon_ids.captures_iter(effect_desc) {
             let icon_id = caps.get(1).unwrap().as_str().parse::<i32>().unwrap();
@@ -269,7 +285,11 @@ impl Parser {
         }
     }
 
-    fn get_effects_and_add_warnings_from_desc(&self, warnings: &mut Vec<String>, effect_desc: &str) -> Vec<Effect> {
+    fn get_effects_and_add_warnings_from_desc(
+        &self,
+        warnings: &mut Vec<String>,
+        effect_desc: &str,
+    ) -> Vec<Effect> {
         // Add warnings
         if effect_desc.contains("taunt as if they did")
             || effect_desc
@@ -441,69 +461,77 @@ impl Parser {
             ));
         }
         if let Some(caps) = self.regex.damage_type_damage_mod_buff.captures(effect_desc) {
-            effects.push(Effect::DamageTypeDamageModBuff {
-                damage_type: DamageType::from_str(caps.name("damage_type").unwrap().as_str())
-                    .expect("Failed to parse damage type string as enum"),
-                damage_mod: caps
-                    .name("damage_mod")
-                    .unwrap()
-                    .as_str()
-                    .parse::<f32>()
-                    .unwrap()
-                    / 100.0,
-                duration: caps
+            effects.push(Effect::Buff(Buff {
+                remaining_duration: caps
                     .name("duration")
                     .unwrap()
                     .as_str()
                     .parse::<i32>()
                     .unwrap(),
-            });
+                effect: BuffEffect::DamageTypeDamageModBuff {
+                    damage_type: DamageType::from_str(caps.name("damage_type").unwrap().as_str())
+                        .expect("Failed to parse damage type string as enum"),
+                    damage_mod: caps
+                        .name("damage_mod")
+                        .unwrap()
+                        .as_str()
+                        .parse::<f32>()
+                        .unwrap()
+                        / 100.0,
+                },
+            }));
         }
         if let Some(caps) = self
             .regex
             .damage_type_next_attack_buff
             .captures(effect_desc)
         {
-            effects.push(Effect::DamageTypeFlatDamageBuff {
-                damage_type: DamageType::from_str(caps.name("damage_type").unwrap().as_str())
-                    .expect("Failed to parse damage type string as enum"),
-                damage: caps
-                    .name("damage")
-                    .unwrap()
-                    .as_str()
-                    .parse::<i32>()
-                    .unwrap(),
-                duration: 1,
-            });
+            effects.push(Effect::Buff(Buff {
+                remaining_duration: 1,
+                effect: BuffEffect::DamageTypeFlatDamageBuff {
+                    damage_type: DamageType::from_str(caps.name("damage_type").unwrap().as_str())
+                        .expect("Failed to parse damage type string as enum"),
+                    damage: caps
+                        .name("damage")
+                        .unwrap()
+                        .as_str()
+                        .parse::<i32>()
+                        .unwrap(),
+                },
+            }));
         }
         if let Some(caps) = self.regex.keyword_next_attack_buff.captures(effect_desc) {
-            effects.push(Effect::KeywordFlatDamageBuff {
-                keyword: caps.name("keyword").unwrap().as_str().to_string(),
-                damage: caps
-                    .name("damage")
-                    .unwrap()
-                    .as_str()
-                    .parse::<i32>()
-                    .unwrap(),
-                duration: 1,
-            });
+            effects.push(Effect::Buff(Buff {
+                remaining_duration: 1,
+                effect: BuffEffect::KeywordFlatDamageBuff {
+                    keyword: caps.name("keyword").unwrap().as_str().to_string(),
+                    damage: caps
+                        .name("damage")
+                        .unwrap()
+                        .as_str()
+                        .parse::<i32>()
+                        .unwrap(),
+                },
+            }));
         }
         if let Some(caps) = self.regex.keyword_core_attack_buff.captures(effect_desc) {
-            effects.push(Effect::KeywordFlatDamageBuff {
-                keyword: "CoreAttack".to_string(),
-                damage: caps
-                    .name("damage")
-                    .unwrap()
-                    .as_str()
-                    .parse::<i32>()
-                    .unwrap(),
-                duration: caps
+            effects.push(Effect::Buff(Buff {
+                remaining_duration: caps
                     .name("duration")
                     .unwrap()
                     .as_str()
                     .parse::<i32>()
                     .unwrap(),
-            });
+                effect: BuffEffect::KeywordFlatDamageBuff {
+                    keyword: "CoreAttack".to_string(),
+                    damage: caps
+                        .name("damage")
+                        .unwrap()
+                        .as_str()
+                        .parse::<i32>()
+                        .unwrap(),
+                },
+            }));
         }
         if let Some(caps) = self.regex.keyword_nip_buff.captures(effect_desc) {
             let damage = caps
@@ -518,66 +546,76 @@ impl Parser {
                 .as_str()
                 .parse::<i32>()
                 .unwrap();
-            effects.push(Effect::KeywordFlatDamageBuff {
-                keyword: "BasicAttack".to_string(),
-                damage,
-                duration,
-            });
-            effects.push(Effect::KeywordFlatDamageBuff {
-                keyword: "CoreAttack".to_string(),
-                damage,
-                duration,
-            });
-            effects.push(Effect::KeywordFlatDamageBuff {
-                keyword: "NiceAttack".to_string(),
-                damage,
-                duration,
-            });
+            effects.push(Effect::Buff(Buff {
+                remaining_duration: duration,
+                effect: BuffEffect::KeywordFlatDamageBuff {
+                    keyword: "BasicAttack".to_string(),
+                    damage,
+                },
+            }));
+            effects.push(Effect::Buff(Buff {
+                remaining_duration: duration,
+                effect: BuffEffect::KeywordFlatDamageBuff {
+                    keyword: "CoreAttack".to_string(),
+                    damage,
+                },
+            }));
+            effects.push(Effect::Buff(Buff {
+                remaining_duration: duration,
+                effect: BuffEffect::KeywordFlatDamageBuff {
+                    keyword: "NiceAttack".to_string(),
+                    damage,
+                },
+            }));
         }
         if let Some(caps) = self
             .regex
             .vulnerability_damage_mod_debuff
             .captures(effect_desc)
         {
-            effects.push(Effect::VulnerabilityDamageModDebuff {
-                damage_type: DamageType::from_str(caps.name("damage_type").unwrap().as_str())
-                    .expect("Failed to parse damage type string as enum"),
-                damage_mod: caps
-                    .name("damage_mod")
-                    .unwrap()
-                    .as_str()
-                    .parse::<f32>()
-                    .unwrap()
-                    / 100.0,
-                duration: caps
+            effects.push(Effect::Debuff(Debuff {
+                remaining_duration: caps
                     .name("duration")
                     .unwrap()
                     .as_str()
                     .parse::<i32>()
                     .unwrap(),
-            });
+                effect: DebuffEffect::VulnerabilityDamageModDebuff {
+                    damage_type: DamageType::from_str(caps.name("damage_type").unwrap().as_str())
+                        .expect("Failed to parse damage type string as enum"),
+                    damage_mod: caps
+                        .name("damage_mod")
+                        .unwrap()
+                        .as_str()
+                        .parse::<f32>()
+                        .unwrap()
+                        / 100.0,
+                },
+            }));
         }
         if let Some(caps) = self
             .regex
             .vulnerability_flat_damage_debuff
             .captures(effect_desc)
         {
-            effects.push(Effect::VulnerabilityFlatDamageDebuff {
-                damage_type: DamageType::from_str(caps.name("damage_type").unwrap().as_str())
-                    .expect("Failed to parse damage type string as enum"),
-                damage: caps
-                    .name("damage")
-                    .unwrap()
-                    .as_str()
-                    .parse::<i32>()
-                    .unwrap(),
-                duration: caps
+            effects.push(Effect::Debuff(Debuff {
+                remaining_duration: caps
                     .name("duration")
                     .unwrap()
                     .as_str()
                     .parse::<i32>()
                     .unwrap(),
-            });
+                effect: DebuffEffect::VulnerabilityFlatDamageDebuff {
+                    damage_type: DamageType::from_str(caps.name("damage_type").unwrap().as_str())
+                        .expect("Failed to parse damage type string as enum"),
+                    damage: caps
+                        .name("damage")
+                        .unwrap()
+                        .as_str()
+                        .parse::<i32>()
+                        .unwrap(),
+                },
+            }));
         }
         effects
     }
@@ -644,11 +682,9 @@ impl Parser {
         }
         let effect;
         if attribute.starts_with("BOOST") {
-            effect =
-                Effect::FlatDamage(caps.name("mod").unwrap().as_str().parse::<i32>().unwrap());
+            effect = Effect::FlatDamage(caps.name("mod").unwrap().as_str().parse::<i32>().unwrap());
         } else if attribute.starts_with("MOD") {
-            effect =
-                Effect::DamageMod(caps.name("mod").unwrap().as_str().parse::<f32>().unwrap());
+            effect = Effect::DamageMod(caps.name("mod").unwrap().as_str().parse::<f32>().unwrap());
         } else {
             item_mods
                 .not_implemented
