@@ -527,7 +527,9 @@ impl Parser {
             let icon_id = caps.get(1).unwrap().as_str().parse::<i32>().unwrap();
             // Specifically ignore icon_id 108s for now (generic mods of some flavor)
             if icon_id == 108 {
-                item_mods.ignored.push(format!("Ignored mod: {}", effect_desc));
+                item_mods
+                    .ignored
+                    .push(format!("Ignored mod: {}", effect_desc));
                 return;
             }
             // Get current effects, or insert an empty vec

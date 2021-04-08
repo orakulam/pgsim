@@ -507,7 +507,7 @@ fn calculate_ability(
             DebuffEffect::Dot {
                 ref mut damage_per_tick,
                 damage_type,
-                tick_per: _,
+                tick_per,
             } => {
                 // Find dot damage modifiers based on the damage type of the dot
                 let mut dot_damage_mod = 0.0;
@@ -522,8 +522,13 @@ fn calculate_ability(
                         }
                     }
                 }
-                *damage_per_tick =
-                    ((*damage_per_tick + current_buff_per_tick_damage + (dot_flat_damage / debuff.remaining_duration)) as f32 * (1.0 + dot_damage_mod)) as i32;
+                *damage_per_tick = ((*damage_per_tick as f32
+                    + current_buff_per_tick_damage as f32
+                    + (dot_flat_damage as f32
+                        / (debuff.remaining_duration as f32 / tick_per as f32)))
+                    * (1.0 + dot_damage_mod)
+                    * (1.0 + current_vulnerability_damage_mod))
+                    as i32;
             }
             // We only care about damaging dot debuffs
             _ => (),
@@ -602,7 +607,47 @@ mod tests {
                 damage_type,
                 tick_per,
             } => {
-                assert_eq!(damage_per_tick, 115);
+                // In-game tooltip says 115 over 10 seconds
+                // 5 ticks, so we should have about 23 per tick
+                // Because we calculate damage_per_tick as an i32, this gets truncated
+                // TODO: Is PG calculating these things as floats internally? Should we?
+                assert_eq!(damage_per_tick, 23);
+                assert_eq!(damage_type, DamageType::Poison);
+                assert_eq!(tick_per, 2);
+            }
+            _ => (),
+        };
+    }
+
+    #[test]
+    fn calculate_ability_per_tick_damage() {
+        let parser = Parser::new();
+        let player_ability = Sim::get_player_ability(&parser, &mut vec![], "Slice6").unwrap();
+
+        let item_mods = parser.calculate_item_mods(
+            &vec![],
+            &vec![
+                // Slice deals 85 Poison damage over 10 seconds
+                ("power_16061".to_string(), "id_9".to_string()),
+                // Indirect Poison/Trauma Damage +36%
+                ("power_16003".to_string(), "id_12".to_string()),
+            ],
+        );
+        let (_, _, _, calculated_debuffs) =
+            calculate_ability(&player_ability, &item_mods, 0.0, 0, 3, 0.0, 0);
+        match calculated_debuffs[0].effect {
+            DebuffEffect::Dot {
+                damage_per_tick,
+                damage_type,
+                tick_per,
+            } => {
+                // PG seems to calculate per-tick buffs before overall damage mod buffs
+                // Tooltip for Slice before applying +3 per-tick buff: 115 over 10 seconds
+                // After: 135 over 10 seconds
+                // Given that's 5 ticks, an unmodified increase would be 15 (3*5)
+                // So an increase of 20 means it must be applying the "Indirect Poison/Trauma Damage +36%" mod afterwards
+                // 135 over 5 ticks = 27
+                assert_eq!(damage_per_tick, 27);
                 assert_eq!(damage_type, DamageType::Poison);
                 assert_eq!(tick_per, 2);
             }
