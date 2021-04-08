@@ -137,16 +137,16 @@ impl Parser {
                 r"\{(?P<attribute>[_A-Z]*)\}\{(?P<mod>[+-]?[0-9]*[.]?[0-9]+)\}(?P<extra>$|\{[a-zA-Z]*\})",
             )
             .unwrap(),
-            flat_damage: Regex::new(r"(?:deal|deals|[dD]amage) \+?(?P<damage>[0-9]+) ?(?:$|\.|and|damage|armor damage|direct damage|direct health damage)").unwrap(),
+            flat_damage: Regex::new(r"(?:deal|deals|[dD]amage|damage is) \+?(?P<damage>[0-9]+) ?(?:$|\.|and|damage|[aA]rmor damage|direct damage|direct health damage)").unwrap(),
             proc_flat_damage:  Regex::new(r"(?P<chance>[0-9]+)% chance to deal \+(?P<damage>[0-9]+) damage").unwrap(),
             range_flat_damage: Regex::new(r"between \+?(?P<min_damage>[0-9]+) and \+?(?P<max_damage>[0-9]+) extra damage").unwrap(),
             damage_mod: Regex::new(r"(?:deals|[dD]amage) \+?(?P<damage>[0-9]+)% ?(?:$|damage|and|Crushing damage)").unwrap(),
-            proc_damage_mod:  Regex::new(r"(?P<chance>[0-9]+)% chance to deal \+(?P<damage>[0-9]+)% damage").unwrap(),
+            proc_damage_mod:  Regex::new(r"(?P<chance>[0-9]+)% (?:chance to deal|chance it deals) \+(?P<damage>[0-9]+)% damage").unwrap(),
             dot_damage:
-                Regex::new(r"(?:deal|deals|Deals|deals an additional|causes) \+?(?P<damage>[0-9]+).*(?:damage over|damage to melee attackers|Nature damage)")
+                Regex::new(r"(?:deal|deals|Deals|deals an additional|causes|dealing) \+?(?P<damage>[0-9]+).*(?:damage over|damage to melee attackers|Nature damage over)")
                     .unwrap(),
             restore_health:
-                Regex::new(r"(?:restore|restores|regain|heals|heals you for) \+?(?P<restore>[0-9]+) [hH]ealth")
+                Regex::new(r"(?:restore|restores|regain|heals|heals you for|recover) \+?(?P<restore>[0-9]+) [hH]ealth")
                     .unwrap(),
             restore_armor:
                 Regex::new(r"(?:restore|restores|and|heals you for) \+?(?P<restore>[0-9]+) [aA]rmor").unwrap(),
@@ -289,6 +289,30 @@ impl Parser {
         warnings: &mut Vec<String>,
         effect_desc: &str,
     ) -> Vec<Effect> {
+        // Add warnings that prevent further parsing of the effect desc
+        if effect_desc.contains("Power every")
+            || effect_desc.contains("Power over")
+            || effect_desc.contains("Health every")
+            || effect_desc.contains("Health over")
+            || effect_desc.contains("after a 5 second delay")
+            || effect_desc.contains("after a 6-second delay")
+            || effect_desc.contains("after a 10-second delay")
+            || effect_desc.contains("after a 15 second delay")
+            || effect_desc.contains("after a 20 second delay")
+            || effect_desc.contains("after a 25 second delay")
+            || effect_desc.contains("Combo: ")
+            || effect_desc.contains("Provoke Undead")
+            || effect_desc
+                .contains("Shield Team causes all targets' Survival Utility abilities to restore")
+            || effect_desc.contains("Frenzy boosts targets'")
+            || effect_desc.contains("After using Doe Eyes, your next attack deals")
+            || effect_desc.contains("damage to undead")
+            || effect_desc.contains("Strategic Preparation boosts your in-combat Armor regeneration")
+            || effect_desc.contains("damage from indirect Fire")
+        {
+            warnings.push(format!("Not supported: {}", effect_desc));
+            return vec![];
+        }
         // Add warnings
         if effect_desc.contains("taunt as if they did")
             || effect_desc
@@ -325,26 +349,10 @@ impl Parser {
             || effect_desc.contains("doesn't cause the target to yell for help")
             || effect_desc.contains("Evasion")
             || effect_desc.contains("Max Armor")
+            || effect_desc.contains("Max Health")
+            || effect_desc.contains("Accuracy")
         {
             warnings.push(format!("Not fully supported: {}", effect_desc));
-        }
-        // Add warnings that prevent further parsing of the effect desc
-        if effect_desc.contains("Power every")
-            || effect_desc.contains("Power over")
-            || effect_desc.contains("Health every")
-            || effect_desc.contains("Health over")
-            || effect_desc.contains("after a 20 second delay")
-            || effect_desc.contains("Combo: ")
-            || effect_desc.contains("Provoke Undead")
-            || effect_desc
-                .contains("Shield Team causes all targets' Survival Utility abilities to restore")
-            || effect_desc.contains("Frenzy boosts targets'")
-            || effect_desc.contains("After using Doe Eyes, your next attack deals")
-            || effect_desc.contains("damage to undead")
-            || effect_desc.contains("Strategic Preparation boosts your in-combat Armor regeneration")
-        {
-            warnings.push(format!("Not fully supported: {}", effect_desc));
-            return vec![];
         }
         // Collect all item effects
         let mut effects = vec![];
@@ -360,7 +368,25 @@ impl Parser {
                 ));
             }
         }
-        if let Some(caps) = self.regex.damage_mod.captures(effect_desc) {
+        if let Some(caps) = self.regex.proc_damage_mod.captures(effect_desc) {
+            effects.push(Effect::ProcDamageMod {
+                damage_mod: caps
+                    .name("damage")
+                    .unwrap()
+                    .as_str()
+                    .parse::<f32>()
+                    .unwrap()
+                    / 100.0,
+                chance: caps
+                    .name("chance")
+                    .unwrap()
+                    .as_str()
+                    .parse::<f32>()
+                    .unwrap()
+                    / 100.0,
+            });
+        // Hard to differentiate between these two, so we use an else if here since they never seem to coexist
+        } else if let Some(caps) = self.regex.damage_mod.captures(effect_desc) {
             effects.push(Effect::DamageMod(
                 caps.name("damage")
                     .unwrap()
@@ -414,24 +440,6 @@ impl Parser {
                     .as_str()
                     .parse::<i32>()
                     .unwrap(),
-                chance: caps
-                    .name("chance")
-                    .unwrap()
-                    .as_str()
-                    .parse::<f32>()
-                    .unwrap()
-                    / 100.0,
-            });
-        }
-        if let Some(caps) = self.regex.proc_damage_mod.captures(effect_desc) {
-            effects.push(Effect::ProcDamageMod {
-                damage_mod: caps
-                    .name("damage")
-                    .unwrap()
-                    .as_str()
-                    .parse::<f32>()
-                    .unwrap()
-                    / 100.0,
                 chance: caps
                     .name("chance")
                     .unwrap()

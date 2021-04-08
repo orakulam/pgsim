@@ -814,7 +814,7 @@ fn calculate_icon_id_effect_desc() {
         "<icon=3803>Spirit Bolt deals +6 damage and there's a 50% chance it deals +10% damage",
         vec![3803],
         vec![
-            Effect::FlatDamage(1),
+            Effect::FlatDamage(6),
             Effect::ProcDamageMod {
                 damage_mod: 0.1,
                 chance: 0.5,
@@ -840,7 +840,7 @@ fn calculate_icon_id_effect_desc() {
         &parser,
         "<icon=3479>Your Healing Sanctuary heals +5 health and buffs Melee Accuracy +5",
         vec![3479],
-        vec![],
+        vec![Effect::RestoreHealth(5)],
         1,
     );
     test_icon_id_effect(
@@ -932,7 +932,7 @@ fn calculate_icon_id_effect_desc() {
         "<icon=3500>Tundra Spikes deals +5% damage, gains +1 Accuracy, and lowers targets' Evasion by -2 for 20 seconds",
         vec![3500],
         vec![Effect::DamageMod(0.05)],
-        2,
+        1,
     );
     test_icon_id_effect(
         &parser,
@@ -953,7 +953,7 @@ fn calculate_icon_id_effect_desc() {
         "<icon=3734>Triage costs no Power to cast and restores +5 Health, but takes +1 second to channel",
         vec![3734],
         vec![Effect::RestoreHealth(5)],
-        2,
+        1,
     );
     test_icon_id_effect(
         &parser,
@@ -1608,7 +1608,7 @@ fn calculate_icon_id_effect_desc() {
         "<icon=3525>Blizzard deals +1% damage, generates -90 Rage and taunts -80",
         vec![3525],
         vec![Effect::DamageMod(0.01)],
-        2,
+        1,
     );
     test_icon_id_effect(
         &parser,
@@ -1949,7 +1949,7 @@ fn calculate_icon_id_effect_desc() {
         "<icon=3312>Bow Bash deals +40 damage and knocks the target backwards, but ability's reuse timer is +3 seconds",
         vec![3312],
         vec![Effect::FlatDamage(40)],
-        2,
+        1,
     );
     test_icon_id_effect(
         &parser,
@@ -2180,7 +2180,7 @@ fn calculate_icon_id_effect_desc() {
         "<icon=3423>Headcracker deals +5 damage, generates no Rage, and reduces Rage by 12",
         vec![3423],
         vec![Effect::FlatDamage(5)],
-        2,
+        1,
     );
     test_icon_id_effect(
         &parser,
@@ -2874,7 +2874,7 @@ fn calculate_icon_id_effect_desc() {
         "<icon=3735>Remedy costs -1 Power to cast, its reuse timer is -1 second, and it has a 10% chance to mend a broken bone in the target",
         vec![3735],
         vec![],
-        3,
+        1,
     );
     test_icon_id_effect(
         &parser,
@@ -3005,7 +3005,7 @@ fn calculate_icon_id_effect_desc() {
         "<icon=2129>Werewolf Bite hits all enemies within 5 meters, but reuse timer is +2 seconds",
         vec![2129],
         vec![],
-        2,
+        1,
     );
     test_icon_id_effect(
         &parser,
@@ -3033,7 +3033,7 @@ fn calculate_icon_id_effect_desc() {
         "<icon=2110>Hip Throw hits all enemies within 8 meters, but Power cost is +20",
         vec![2110],
         vec![],
-        2,
+        1,
     );
     test_icon_id_effect(
         &parser,
@@ -3081,7 +3081,7 @@ fn calculate_icon_id_effect_desc() {
         "<icon=3626>Agonize deals +10% damage and reuse timer is -6 seconds, but the ability deals 15 health damage to YOU",
         vec![3626],
         vec![Effect::DamageMod(0.1)],
-        2,
+        1,
     );
     test_icon_id_effect(
         &parser,
@@ -3095,7 +3095,7 @@ fn calculate_icon_id_effect_desc() {
         "<icon=3671>Blast of Fury deals +10% damage and knocks the target back, but the ability's reuse timer is +2 seconds",
         vec![3671],
         vec![Effect::DamageMod(0.1)],
-        2,
+        1,
     );
     test_icon_id_effect(
         &parser,
@@ -3253,7 +3253,7 @@ fn calculate_icon_id_effect_desc() {
         "<icon=3482>Rotskin hits all targets within 10 meters and further debuffs their mitigation -3",
         vec![3482],
         vec![],
-        2,
+        1,
     );
     test_icon_id_effect(
         &parser,
@@ -3277,7 +3277,7 @@ fn calculate_icon_id_effect_desc() {
         "<icon=3542>Deathscream deals +15% damage and Power cost is -2, but the ability's range is reduced to 12m",
         vec![3542],
         vec![Effect::DamageMod(0.15)],
-        2,
+        1,
     );
     test_icon_id_effect(
         &parser,
@@ -3411,7 +3411,7 @@ fn calculate_icon_id_effect_desc() {
         "<icon=3000>Cosmic Strike deals +20 damage, generates no Rage, and removes 40 Rage",
         vec![3000],
         vec![Effect::FlatDamage(20)],
-        2,
+        1,
     );
     test_icon_id_effect(
         &parser,
@@ -3520,7 +3520,7 @@ fn calculate_icon_id_effect_desc() {
         "<icon=3782>Astral Strike's reuse timer is -1 secs, and damage is boosted +5% vs Elite enemies",
         vec![3782],
         vec![],
-        2,
+        1,
     );
     test_icon_id_effect(
         &parser,
