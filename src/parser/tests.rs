@@ -863,7 +863,7 @@ fn calculate_icon_id_effect_desc() {
         "<icon=3754>Deadly Emission Deals +30 Nature damage over 10 seconds and Taunts +25",
         vec![3754],
         vec![Effect::DotDamage(30)],
-        0,
+        1,
     );
     test_icon_id_effect(
         &parser,
@@ -2435,8 +2435,8 @@ fn calculate_icon_id_effect_desc() {
         &parser,
         "<icon=2160>Animal Handling pets' Clever Trick abilities deal +5% damage",
         vec![2160],
-        vec![Effect::DamageMod(0.05)],
-        0,
+        vec![],
+        1,
     );
     test_icon_id_effect(
         &parser,
@@ -4275,7 +4275,7 @@ fn calculate_icon_id_effect_desc() {
         "<icon=2113>Many Cuts knocks back targets that have less than a third of their Armor, also dealing +35 damage",
         vec![2113],
         vec![Effect::FlatDamage(35)],
-        0,
+        1,
     );
     test_icon_id_effect(
         &parser,
@@ -4323,7 +4323,7 @@ fn calculate_icon_id_effect_desc() {
                 damage: 2,
             }
         })],
-        0,
+        1,
     );
     test_icon_id_effect(
         &parser,
@@ -4650,7 +4650,7 @@ fn calculate_icon_id_effect_desc() {
     test_icon_id_effect(
         &parser,
         "<icon=3305>Long Shot boosts your Epic Attack Damage +20% for 15 seconds",
-        vec![],
+        vec![3305],
         vec![Effect::Buff(Buff {
             remaining_duration: 15,
             effect: BuffEffect::KeywordDamageModBuff {
@@ -4658,7 +4658,7 @@ fn calculate_icon_id_effect_desc() {
                 damage_mod: 0.2,
             }
         })],
-        1,
+        0,
     );
     test_icon_id_effect(
         &parser,
@@ -4691,7 +4691,7 @@ fn calculate_icon_id_effect_desc() {
     test_icon_id_effect(
         &parser,
         "<icon=3694>Play Dead boosts your Psychic attack damage +30 for 20 seconds",
-        vec![],
+        vec![3694],
         vec![Effect::Buff(Buff {
             remaining_duration: 20,
             effect: BuffEffect::DamageTypeFlatDamageBuff {
@@ -4802,6 +4802,20 @@ fn calculate_icon_id_effect_desc() {
         &parser,
         "<icon=3771>Conditioning Shock causes target's next ability to deal -6 damage",
         vec![3771],
+        vec![],
+        1,
+    );
+    test_icon_id_effect(
+        &parser,
+        "<icon=3500>Tundra Spikes stuns all targets after a 10 second delay",
+        vec![3500],
+        vec![],
+        1,
+    );
+    test_icon_id_effect(
+        &parser,
+        "<icon=3602>Fan of Blades knocks all targets backwards",
+        vec![3602],
         vec![],
         1,
     );

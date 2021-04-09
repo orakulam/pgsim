@@ -111,6 +111,7 @@ struct ParserRegex {
     keyword_melee_flat_damage_buff: Regex,
     keyword_signature_debuff_buff: Regex,
     vulnerability_damage_mod_debuff: Regex,
+    vulnerability_damage_mod_debuff2: Regex,
     vulnerability_flat_damage_debuff: Regex,
     nip_buff: Regex,
     pin_buff: Regex,
@@ -121,12 +122,16 @@ struct ParserRegex {
     admonish_buff: Regex,
     poisoners_cut_buff: Regex,
     poisoners_cut_item_buff: Regex,
+    premeditated_doom_buff: Regex,
     give_warmth_buff: Regex,
     fill_with_bile_buff: Regex,
     fill_with_bile_item_buff: Regex,
     privacy_field: Regex,
     drink_blood_buff: Regex,
     psi_wave_buff: Regex,
+    strategic_preparation_buff: Regex,
+    cobra_strike_mamba_strike_buff: Regex,
+    play_dead_buff: Regex,
 }
 
 pub struct Parser {
@@ -161,37 +166,38 @@ impl Parser {
                 r"\{(?P<attribute>[_A-Z]*)\}\{(?P<mod>[+-]?[0-9]*[.]?[0-9]+)\}(?P<extra>$|\{[a-zA-Z]*\})",
             )
             .unwrap(),
-            flat_damage: Regex::new(r"(?:deal|deals|[dD]amage|damage is|dealing an additional) \+?(?P<damage>[0-9]+) ?(?:$|\. Damage|and|damage|[aA]rmor damage|direct damage|direct health damage)").unwrap(),
+            flat_damage: Regex::new(r"(?:deal|deals|[dD]amage|damage is|dealing an additional|dealing) \+?(?P<damage>[0-9]+) ?(?:$|\. Damage|and|damage|[aA]rmor damage|direct damage|direct health damage|Piercing damage)").unwrap(),
             proc_flat_damage:  Regex::new(r"(?P<chance>[0-9]+)% chance to deal \+(?P<damage>[0-9]+) damage").unwrap(),
             range_flat_damage: Regex::new(r"between \+?(?P<min_damage>[0-9]+) and \+?(?P<max_damage>[0-9]+) extra damage").unwrap(),
             range_up_to_damage: Regex::new(r"up to \+?(?P<max_damage>[0-9]+) damage").unwrap(),
-            damage_mod: Regex::new(r"(?:deal|deals|[dD]amage|damage is) \+?(?P<damage_mod>[0-9]*[.]?[0-9]+)% ?(?:$|damage|direct damage|and|Crushing damage|piercing damage)").unwrap(),
-            proc_damage_mod:  Regex::new(r"(?P<chance>[0-9]+)% (?:chance to deal|chance it deals) \+(?P<damage_mod>[0-9]+)% (?:damage|immediate Piercing damage)").unwrap(),
+            damage_mod: Regex::new(r"(?:deal|deals|[dD]amage|damage is) \+?(?P<damage_mod>[0-9]*[.]?[0-9]+)% ?(?:$|[dD]amage|direct damage|and|Crushing damage|piercing damage)").unwrap(),
+            proc_damage_mod:  Regex::new(r"(?P<chance>[0-9]+)% (?:chance to deal|chance it deals) \+?(?P<damage_mod>[0-9]*[.]?[0-9]+)% (?:damage|immediate Piercing damage)").unwrap(),
             dot_damage:
-                Regex::new(r"(?:deal|deals|Deals|deals an additional|causes|dealing|target to take|causing them to take) \+?(?P<damage>[0-9]+).*(?:damage over|damage to melee attackers|Nature damage over|Trauma damage over|Trauma damage to health over|Poison damage to health over|fire damage over)")
+                Regex::new(r"(?:deal|deals|Deals|deals an additional|causes|dealing|target to take|causing|causing them to take) \+?(?P<damage>[0-9]+).*(?:damage over|damage to melee attackers|Nature damage over|Trauma damage over|Trauma damage to health over|Poison damage to health over|fire damage over|damage to all melee attackers)")
                     .unwrap(),
             restore_health:
-                Regex::new(r"(?:restore|[rR]estores|regain|heals|heals you for|recover|heal all targets for) \+?(?P<restore>[0-9]+) [hH]ealth")
+                Regex::new(r"(?:restore|[rR]estores|regain|heals|heals you for|heal you for|recover|heal all targets for) \+?(?P<restore>[0-9]+) [hH]ealth")
                     .unwrap(),
             restore_armor:
-                Regex::new(r"(?:restore|restores|and|heals you for) \+?(?P<restore>[0-9]+) [aA]rmor").unwrap(),
+                Regex::new(r"(?:restore|restores|and|heals|heals you for) \+?(?P<restore>[0-9]+) [aA]rmor").unwrap(),
             restore_power:
                 Regex::new(r"(?:restore|restores|regain) \+?(?P<restore>[0-9]+) [pP]ower").unwrap(),
             damage_type: Regex::new(&format!(r"(?:becomes|deals|changed to) {}", damage_type)).unwrap(),
             racials: Regex::new(r"(?:Humans|Orcs|Elves|Dwarves|Rakshasa) gain \+?(?:[0-9]+) Max (?:Health|Hydration|Metabolism|Power|Armor|Bodyheat)").unwrap(),
-            damage_type_damage_mod_buff: Regex::new(&format!(r"{}(?:| attack) [dD]amage \+(?P<damage_mod>[0-9]+)% for (?P<duration>[0-9]+) seconds", damage_type)).unwrap(),
-            damage_type_damage_mod_buff2: Regex::new(&format!(r"\+(?P<damage_mod>[0-9]+)% {} (?:for|damage from future attacks for|damage for) (?P<duration>[0-9]+) seconds", damage_type)).unwrap(),
-            damage_type_damage_mod_buff3: Regex::new(&format!(r"For (?P<duration>[0-9]+) seconds, all targets deal \+(?P<damage_mod>[0-9]+)% {} damage", damage_type)).unwrap(),
+            damage_type_damage_mod_buff: Regex::new(&format!(r"{}(?:| attack) [dD]amage \+?(?P<damage_mod>[0-9]*[.]?[0-9]+)% for (?P<duration>[0-9]+) seconds", damage_type)).unwrap(),
+            damage_type_damage_mod_buff2: Regex::new(&format!(r"\+?(?P<damage_mod>[0-9]*[.]?[0-9]+)% {} (?:for|damage from future attacks for|damage for) (?P<duration>[0-9]+) seconds", damage_type)).unwrap(),
+            damage_type_damage_mod_buff3: Regex::new(&format!(r"For (?P<duration>[0-9]+) seconds, all targets deal \+?(?P<damage_mod>[0-9]*[.]?[0-9]+)% {} damage", damage_type)).unwrap(),
             damage_type_next_attack_buff: Regex::new(&format!(r"next attack(?:| to deal) \+?(?P<damage>[0-9]+)(?:| damage) if it is a {} (?:ability|attack)", damage_type)).unwrap(),
             keyword_next_attack_buff: Regex::new(r"next attack(?:| to deal) \+?(?P<damage>[0-9]+)(?:| damage) if it is a (?P<keyword>Werewolf) (?:ability|attack)").unwrap(),
             keyword_kick_buff: Regex::new(r"all kicks \+?(?P<damage>[0-9]+) for (?P<duration>[0-9]+) seconds").unwrap(),
             keyword_core_attack_buff: Regex::new(r"Core Attack(?:s to deal| [dD]amage) \+?(?P<damage>[0-9]+) (?:for|damage for) (?P<duration>[0-9]+) seconds").unwrap(),
             keyword_nice_attack_buff: Regex::new(r"Nice Attack(?:s to deal| [dD]amage) \+?(?P<damage>[0-9]+) (?:for|damage for) (?P<duration>[0-9]+) seconds").unwrap(),
             keyword_epic_attack_buff: Regex::new(r"Epic [aA]ttack(?:s|s to deal| [dD]amage) \+?(?P<damage>[0-9]+) .*for (?P<duration>[0-9]+) seconds").unwrap(),
-            keyword_epic_attack_damage_mod_buff: Regex::new(r"boost your Epic Attack Damage \+(?P<damage_mod>[0-9]+)% for (?P<duration>[0-9]+) seconds").unwrap(),
+            keyword_epic_attack_damage_mod_buff: Regex::new(r"your Epic Attack Damage \+?(?P<damage_mod>[0-9]*[.]?[0-9]+)% for (?P<duration>[0-9]+) seconds").unwrap(),
             keyword_melee_flat_damage_buff: Regex::new(r"You and your allies' melee attacks deal \+?(?P<damage>[0-9]+) damage for (?P<duration>[0-9]+) seconds").unwrap(),
-            keyword_signature_debuff_buff: Regex::new(r"Signature Debuff abilities to deal \+?(?P<damage>[0-9]+) damage for (?P<duration>[0-9]+) seconds").unwrap(),
+            keyword_signature_debuff_buff: Regex::new(r"Signature Debuff(?:s by| abilities to deal) \+?(?P<damage>[0-9]+) (?:for|damage for) (?P<duration>[0-9]+) seconds").unwrap(),
             vulnerability_damage_mod_debuff: Regex::new(&format!(r"(?P<damage_mod>[0-9]+)% (?:more vulnerable to|damage from other|damage from) {} ?(?:|damage|attacks) for (?P<duration>[0-9]+) seconds", damage_type)).unwrap(),
+            vulnerability_damage_mod_debuff2: Regex::new(&format!(r"target takes from {} by (?P<damage_mod>[0-9]+)% for (?P<duration>[0-9]+) seconds", damage_type)).unwrap(),
             vulnerability_flat_damage_debuff: Regex::new(&format!(r"(?:suffer|take) \+?(?P<damage>[0-9]+) damage from(?:| direct) {} attacks for (?P<duration>[0-9]+) seconds", damage_type)).unwrap(),
             nip_buff: Regex::new(r"Nip boosts the damage of Basic, Core, and Nice attacks \+?(?P<damage>[0-9]+) for (?P<duration>[0-9]+) seconds").unwrap(),
             pin_buff: Regex::new(r"Pin boosts Core Attack and Nice Attack Damage \+?(?P<damage>[0-9]+) for (?P<duration>[0-9]+) seconds").unwrap(),
@@ -202,12 +208,16 @@ impl Parser {
             admonish_buff: Regex::new(r"Admonish boosts your Priest Damage \+?(?P<damage>[0-9]+) for (?P<duration>[0-9]+) seconds").unwrap(),
             poisoners_cut_buff: Regex::new(r"For (?P<duration>[0-9]+) seconds, you gain Direct Poison Damage \+?(?P<damage>[0-9]+) and Indirect Poison Damage \+?(?P<per_tick_damage>[0-9]+) per tick").unwrap(),
             poisoners_cut_item_buff: Regex::new(r"Poisoner's Cut boosts Indirect Poison Damage an additional \+?(?P<per_tick_damage>[0-9]+) per tick").unwrap(),
+            premeditated_doom_buff: Regex::new(r"Premeditated Doom channeling time is -1 second and boosts your Indirect Poison damage \+?(?P<per_tick_damage>[0-9]+) \(per tick\) for (?P<duration>[0-9]+) seconds").unwrap(),
             give_warmth_buff: Regex::new(r"Give Warmth boosts the target's fire damage-over-time by \+?(?P<per_tick_damage>[0-9]+) per tick for (?P<duration>[0-9]+) seconds").unwrap(),
             fill_with_bile_buff: Regex::new(r"Fill With Bile increases target's direct Poison damage \+?(?P<damage>[0-9]+)").unwrap(),
             fill_with_bile_item_buff: Regex::new(r"Target's Poison attacks deal \+?(?P<damage>[0-9]+) damage, and Poison damage-over-time attacks deal \+?(?P<per_tick_damage>[0-9]+) per tick.").unwrap(),
             privacy_field: Regex::new(r"Privacy Field also deals its damage when you are hit by burst attacks, and damage is \+?(?P<damage>[0-9]+)").unwrap(),
             drink_blood_buff: Regex::new(&format!(r"For (?P<duration>[0-9]+) seconds after using Drink Blood, all {} attacks deal \+(?P<damage>[0-9]+) damage", damage_type)).unwrap(),
             psi_wave_buff: Regex::new(&format!(r"Psi Health Wave, Armor Wave, and Power Wave grant all targets \+(?P<damage>[0-9]+) {} Damage for (?P<duration>[0-9]+) seconds", damage_type)).unwrap(),
+            strategic_preparation_buff: Regex::new(r"Strategic Preparation causes your next attack to deal \+(?P<damage>[0-9]+) damage if it is a Crushing, Slashing, or Piercing attack").unwrap(),
+            cobra_strike_mamba_strike_buff: Regex::new(r"Cobra Strike and Mamba Strike boost your Nice Attack and Signature Debuff ability damage \+(?P<damage>[0-9]+) for (?P<duration>[0-9]+) seconds").unwrap(),
+            play_dead_buff: Regex::new(r"Play Dead boosts your Psychic attack damage \+(?P<damage>[0-9]+) for (?P<duration>[0-9]+) seconds").unwrap(),
         }
     }
 
@@ -345,6 +355,7 @@ impl Parser {
             "after a 5 second delay",
             "after a 6-second delay",
             "after a 10-second delay",
+            "after a 12 second delay",
             "after a 15 second delay",
             "after a 20 second delay",
             "after a 25 second delay",
@@ -354,9 +365,13 @@ impl Parser {
             "every 4 seconds",
             "every 5 seconds",
             "every five seconds",
+            "Movement Speed",
             "boosts your movement speed",
+            "boosts movement speed",
             "fly speed",
             "swim speed",
+            "sprint speed",
+            "Sprint speed",
             "Sprint Speed",
             "Combo: ",
             "Provoke Undead",
@@ -379,14 +394,16 @@ impl Parser {
             "While Unarmed skill active",
             "damage to the target each time they attack and damage you",
             "After using Wild Endurance, your next",
-            "Nimble Limbs heals your pet",
             "more XP",
             "causes the next attack that hits you to deal",
             "golem minion",
             "your pet",
+            "Animal Handling pets",
             "evasion",
             "knocked down",
             "Summoned Skeletons",
+            "Summoned Skeletal Swordsmen",
+            "Summoned Skeletal Archers and Mages",
             "damage to targets that are covered in Fairy Fire",
             "Future Pack Attacks to the same target deal",
             "near your Web Trap",
@@ -397,7 +414,6 @@ impl Parser {
             "Controlled Burn costs",
             "while under the effect of Haste Concoction",
             "For 60 seconds after using Redirect",
-            "Summoned Skeletal Archers and Mages deal",
             "absorption",
             "Pig Punt causes the target to ignore you",
             "Lunge hits all enemies within 5 meters",
@@ -407,6 +423,59 @@ impl Parser {
             "chance to trigger the target",
             "Heal Undead and Rebuild Undead",
             "For 30 seconds after you use Moo of Calm",
+            "For 60 seconds after using Blocking Stance",
+            "Tell Me About Your Mother causes target's attacks to deal",
+            "chance to confuse the target about which enemy is which",
+            "Using Raise Zombie on an existing zombie",
+            "retired",
+            "Elemental Ward boosts your direct and indirect Electricity damage",
+            "Disharmony causes target to deal",
+            "Cow's Bash costs",
+            "Combat XP",
+            "Room-Temperature Ball and Defensive Burst cause the target's attacks to deal",
+            "chance to not actually consume the heart",
+            "Entrancing Lullaby and Anthem of Avoidance cost",
+            "Terrifying Bite causes the target to take",
+            "Summoned Deer",
+            "summon a deer ally",
+            "Inspire Confidence increases the damage of all targets' attacks",
+            "Wind Strike causes your next attack to deal",
+            "While Bulwark Mode is enabled you recover",
+            "The maximum Power restored by Admonish increases",
+            "All Bun-Fu moves cost",
+            "Mudbath causes the target to take",
+            "Moment of Resolve dispels any Stun effects",
+            "chance to slow target's movement",
+            "For 30 seconds after you use Moo of Determination",
+            "chance to cause all sentient targets to flee in terror",
+            "Drink Blood costs",
+            "Restorative Arrow heals YOU for",
+            "Long Shot boosts your Armor Regeneration",
+            "Frostbite debuffs target so that",
+            "Shadow Feint raises your Lycanthropy Base Damage",
+            "After using Pack Attack, your Lycanthropy Base Damage increases",
+            "Frostbite causes target's attacks to deal",
+            "Grappling Web causes the target to take",
+            "Wing Vortex causes targets' next attack to deal",
+            "Look At My Hammer reduces the damage you take from Slashing, Piercing, and Crushing attacks",
+            "chance to boost Spider Skill Base Damage",
+            "Nip causes target's next attack to deal",
+            "chance to ignore stuns",
+            "chance to ignore Stun effects",
+            "Your Bard Songs cost -20% Power",
+            "Apprehend costs",
+            "See Red increases the damage of your next attack",
+            "Fae Conduit also buffs targets' direct Cold, Fire, and Electricity damage",
+            "Your Stretchy Spine mutation randomly repairs broken bones twice as often",
+            "Regrowth and Pulse of Life Healing",
+            "Privacy Field causes you to recover",
+            "Blitz Shot and Basic Shot boost your healing from Combat Refreshes",
+            "aggro",
+            "seconds after using Clever Trick, pets' basic attacks have",
+            "Conditioning Shock causes target's next ability to deal",
+            "Poison Arrow makes target's attacks deal",
+            "Tundra Spikes stuns all targets after",
+            "Fan of Blades knocks all targets backwards",
         ];
         for test in not_supported_tests {
             if effect_desc.contains(test) {
@@ -420,6 +489,7 @@ impl Parser {
         // Add warnings
         let partially_supported_tests = vec![
             "taunt",
+            "Taunts",
             "If you use Premeditated Doom while standing near your Web Trap",
             "chance to avoid being hit by burst attacks",
             "For 12 seconds after using Infinite Legs",
@@ -428,7 +498,6 @@ impl Parser {
             "When Skulk is used, you recover",
             "Your Knee Spikes mutation causes kicks to deal an additional",
             "Coordinated Assault grants all allies",
-            "Squeal uniformly diminishes all targets' entire aggro lists",
             "Psi Health Wave grants all targets",
             "If Screech, Sonic Burst, or Deathscream deal Trauma damage",
             "Major Healing abilities",
@@ -436,6 +505,7 @@ impl Parser {
             "Mitigation",
             "Protection",
             "take half damage",
+            "mitigate",
             "mitigates",
             "target is not focused on you",
             "terrifies the target",
@@ -449,7 +519,6 @@ impl Parser {
             "total damage against Demons",
             "within 5 meters",
             "within 6 meters",
-            "deal -1 damage for",
             "8-second delay",
             "doesn't cause the target to yell for help",
             "takes +1 second to channel",
@@ -462,11 +531,12 @@ impl Parser {
             "Stacks",
             "slows",
             "gives you 50% resistance to Darkness damage",
-            "resistant to Fire damage",
+            "resistant to",
             "power cost",
             "Power cost",
             "Power Cost",
             "Power and",
+            "Power for",
             "Hammer attacks cost",
             "removes ongoing",
             "that hit a single target",
@@ -480,6 +550,10 @@ impl Parser {
             "Body Heat",
             "less damage from attacks",
             "and speed is",
+            "Many Cuts knocks back targets that have less than a third of their Armor",
+            "Premeditated Doom channeling time is -1 second",
+            "the first melee attacker is knocked away",
+            "damage and causes target's attacks to deal",
         ];
         for test in partially_supported_tests {
             if effect_desc.contains(test) {
@@ -743,6 +817,20 @@ impl Parser {
         }
         if let Some(caps) = self
             .regex
+            .vulnerability_damage_mod_debuff2
+            .captures(effect_desc)
+        {
+            effects.push(Effect::Debuff(Debuff {
+                remaining_duration: Parser::get_cap_number(&caps, "duration"),
+                effect: DebuffEffect::VulnerabilityDamageModDebuff {
+                    damage_type: DamageType::from_str(Parser::get_cap_string(&caps, "damage_type"))
+                        .expect("Failed to parse damage type string as enum"),
+                    damage_mod: Parser::get_cap_damage_mod(&caps, "damage_mod"),
+                },
+            }));
+        }
+        if let Some(caps) = self
+            .regex
             .vulnerability_flat_damage_debuff
             .captures(effect_desc)
         {
@@ -902,6 +990,15 @@ impl Parser {
                 },
             }));
         }
+        if let Some(caps) = self.regex.premeditated_doom_buff.captures(effect_desc) {
+            effects.push(Effect::Buff(Buff {
+                remaining_duration: Parser::get_cap_number(&caps, "duration"),
+                effect: BuffEffect::DamageTypePerTickDamageBuff {
+                    damage_type: DamageType::Poison,
+                    damage: Parser::get_cap_number(&caps, "per_tick_damage"),
+                },
+            }));
+        }
         if let Some(caps) = self.regex.give_warmth_buff.captures(effect_desc) {
             effects.push(Effect::Buff(Buff {
                 remaining_duration: Parser::get_cap_number(&caps, "duration"),
@@ -955,6 +1052,57 @@ impl Parser {
                 effect: BuffEffect::DamageTypeFlatDamageBuff {
                     damage_type: DamageType::from_str(Parser::get_cap_string(&caps, "damage_type"))
                         .expect("Failed to parse damage type string as enum"),
+                    damage: Parser::get_cap_number(&caps, "damage"),
+                },
+            }));
+        }
+        if let Some(caps) = self.regex.strategic_preparation_buff.captures(effect_desc) {
+            let damage = Parser::get_cap_number(&caps, "damage");
+            effects.push(Effect::Buff(Buff {
+                remaining_duration: 1,
+                effect: BuffEffect::DamageTypeFlatDamageBuff {
+                    damage_type: DamageType::Crushing,
+                    damage,
+                },
+            }));
+            effects.push(Effect::Buff(Buff {
+                remaining_duration: 1,
+                effect: BuffEffect::DamageTypeFlatDamageBuff {
+                    damage_type: DamageType::Slashing,
+                    damage,
+                },
+            }));
+            effects.push(Effect::Buff(Buff {
+                remaining_duration: 1,
+                effect: BuffEffect::DamageTypeFlatDamageBuff {
+                    damage_type: DamageType::Piercing,
+                    damage,
+                },
+            }));
+        }
+        if let Some(caps) = self.regex.cobra_strike_mamba_strike_buff.captures(effect_desc) {
+            let duration = Parser::get_cap_number(&caps, "duration");
+            let damage = Parser::get_cap_number(&caps, "damage");
+            effects.push(Effect::Buff(Buff {
+                remaining_duration: duration,
+                effect: BuffEffect::KeywordFlatDamageBuff {
+                    keyword: "NiceAttack".to_string(),
+                    damage,
+                },
+            }));
+            effects.push(Effect::Buff(Buff {
+                remaining_duration: duration,
+                effect: BuffEffect::KeywordFlatDamageBuff {
+                    keyword: "SignatureDebuff".to_string(),
+                    damage,
+                },
+            }));
+        }
+        if let Some(caps) = self.regex.play_dead_buff.captures(effect_desc) {
+            effects.push(Effect::Buff(Buff {
+                remaining_duration: Parser::get_cap_number(&caps, "duration"),
+                effect: BuffEffect::DamageTypeFlatDamageBuff {
+                    damage_type: DamageType::Psychic,
                     damage: Parser::get_cap_number(&caps, "damage"),
                 },
             }));
