@@ -18,6 +18,9 @@ Add in item mods
         Elemental Ward boosts your direct and indirect Electricity damage +14 for 30 seconds
         Terrifying Bite causes the target to take +16% damage from Poison attacks
             for how long?
+        Grappling Web causes the target to take +12% damage from Poison (both direct and indirect)
+            for how long?
+        Fae Conduit also buffs targets' direct Cold, Fire, and Electricity damage +12 for 30 seconds (stacking up to 6 times)
 Review all TODOs, any that need to be addressed before alpha? Reviewed once, do one last pass
 Review all warnings from rust compiler
 Run more tests with my current test build

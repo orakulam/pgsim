@@ -4510,140 +4510,140 @@ fn calculate_icon_id_effect_desc() {
     test_icon_id_effect(
         &parser,
         "<icon=3305>Long Shot boosts your Armor Regeneration (in-combat) +1 for 15 seconds",
-        vec![],
+        vec![3305],
         vec![],
         1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3464>Clobbering Hoof infects the target, causing 220 Nature damage over 10 seconds",
-        vec![],
-        vec![],
-        1,
+        vec![3464],
+        vec![Effect::DotDamage(220)],
+        0,
     );
     test_icon_id_effect(
         &parser,
         "<icon=2156>Graze boosts your out-of-combat sprint speed by 8.5 for 30 seconds",
-        vec![],
+        vec![2156],
         vec![],
         1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3627><icon=2203><icon=2119>While Unarmed skill is active: 28.5% of all Darkness and Psychic damage you take is mitigated and added to the damage done by your next Punch, Jab, or Infuriating Fist at a 380% rate",
-        vec![],
+        vec![3627, 2203, 2119],
         vec![],
         1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=2160>Animal Handling pets' healing abilities, if any, restore +41% health",
-        vec![],
+        vec![2160],
         vec![],
         1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3586>Frostbite debuffs target so that 10.5% of their attacks miss and have no effect",
-        vec![],
+        vec![3586],
         vec![],
         1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=2256>Shadow Feint raises your Lycanthropy Base Damage +43% until you trigger the teleport",
-        vec![],
+        vec![2256],
         vec![],
         1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=2114>After using Pack Attack, your Lycanthropy Base Damage increases +25% for 7 seconds or until you are attacked",
-        vec![],
+        vec![2114],
         vec![],
         1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=2201>Summoned Skeletal Swordsmen have +76 armor",
-        vec![],
+        vec![2201],
         vec![],
         1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3627><icon=2203><icon=2119>While Unarmed skill is active: 19% of all Slashing, Piercing, and Crushing damage you take is mitigated and added to the damage done by your next Punch, Jab, or Infuriating Fist at a 260% rate",
-        vec![],
+        vec![3627, 2203, 2119],
         vec![],
         1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3586>Frostbite causes target's attacks to deal -17 damage",
-        vec![],
+        vec![3586],
         vec![],
         1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3254>Grappling Web causes the target to take +12% damage from Poison (both direct and indirect)",
-        vec![],
+        vec![3254],
         vec![],
         1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3550>Wing Vortex causes targets' next attack to deal -74 damage",
-        vec![],
+        vec![3550],
         vec![],
         1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=2154>Deer Bash has a 5% chance to summon a deer ally for 30 seconds",
-        vec![],
+        vec![2154],
         vec![],
         1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3473>Look At My Hammer reduces the damage you take from Slashing, Piercing, and Crushing attacks by 15 for 5 seconds",
-        vec![],
+        vec![3473],
         vec![],
         1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3442>Infinite Legs has a 20% chance to boost Spider Skill Base Damage +10% for 30 seconds",
-        vec![],
+        vec![3442],
         vec![],
         1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3670>Moment of Resolve boosts targets' Movement Speed +4 for 8 seconds",
-        vec![],
+        vec![3670],
         vec![],
         1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3795>Nip causes target's next attack to deal -14 damage",
-        vec![],
+        vec![3795],
         vec![],
         1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3592>Blur Cut grants a 10% chance to ignore stuns for 8 seconds",
-        vec![],
+        vec![3592],
         vec![],
         1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=2251>Summoned Deer have +73 armor",
-        vec![],
+        vec![2251],
         vec![],
         1,
     );
@@ -4651,139 +4651,157 @@ fn calculate_icon_id_effect_desc() {
         &parser,
         "<icon=3305>Long Shot boosts your Epic Attack Damage +20% for 15 seconds",
         vec![],
-        vec![],
+        vec![Effect::Buff(Buff {
+            remaining_duration: 15,
+            effect: BuffEffect::KeywordDamageModBuff {
+                keyword: "EpicAttack".to_string(),
+                damage_mod: 0.2,
+            }
+        })],
         1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3451>While Bulwark Mode is enabled you recover 7 Armor per second",
-        vec![],
+        vec![3451],
         vec![],
         1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3669><icon=3665><icon=3664><icon=3663>Your Bard Songs cost -20% Power. In addition, you can use the ability Hymn of Resurrection. (Equipping this item will teach you the ability if needed.)",
-        vec![],
+        vec![3669, 3665, 3664, 3663],
         vec![],
         1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3768>Apprehend costs -22 Power",
-        vec![],
+        vec![3768],
         vec![],
         1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3315><icon=3310>Basic Shot and Aimed Shot heal you for 8 health",
-        vec![],
-        vec![],
-        1,
+        vec![3315, 3310],
+        vec![Effect::RestoreHealth(8)],
+        0,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3694>Play Dead boosts your Psychic attack damage +30 for 20 seconds",
         vec![],
-        vec![],
-        1,
+        vec![Effect::Buff(Buff {
+            remaining_duration: 20,
+            effect: BuffEffect::DamageTypeFlatDamageBuff {
+                damage_type: DamageType::Psychic,
+                damage: 30,
+            },
+        })],
+        0,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3032>Terrifying Bite boosts sprint speed +1 for 10 seconds",
-        vec![],
+        vec![3032],
         vec![],
         1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=2192>Blocking Stance boosts your Cold Damage +6.25% for 30 seconds",
-        vec![],
-        vec![],
-        1,
+        vec![2192],
+        vec![Effect::Buff(Buff {
+            remaining_duration: 30,
+            effect: BuffEffect::DamageTypeDamageModBuff {
+                damage_type: DamageType::Cold,
+                damage_mod: 0.0625,
+            },
+        })],
+        0,
     );
     test_icon_id_effect(
         &parser,
         "<icon=2255>Porcine Alertness gives all targets +30% chance to ignore Stun effects for 20 seconds",
-        vec![],
+        vec![2255],
         vec![],
         1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=2140>See Red increases the damage of your next attack by +47",
-        vec![],
+        vec![2140],
         vec![],
         1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3785>Fae Conduit also buffs targets' direct Cold, Fire, and Electricity damage +12 for 30 seconds (stacking up to 6 times)",
-        vec![],
+        vec![3785],
         vec![],
         1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=2187>Your Stretchy Spine mutation randomly repairs broken bones twice as often",
-        vec![],
+        vec![2187],
         vec![],
         1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3632><icon=3480>Regrowth and Pulse of Life Healing +32%",
-        vec![],
+        vec![3632, 3480],
         vec![],
         1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3775>Privacy Field causes you to recover 13 Power when a melee attack deals damage to you",
-        vec![],
+        vec![3775],
         vec![],
         1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3775>Privacy Field deals +41 damage to all melee attackers, and the first melee attacker is knocked away",
-        vec![],
-        vec![],
+        vec![3775],
+        vec![Effect::DotDamage(41)],
         1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3321>Blitz Shot and Basic Shot boost your healing from Combat Refreshes +4 for 30 seconds",
-        vec![],
+        vec![3321],
         vec![],
         1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3751>Love Tap lowers target's aggro toward you by 450",
-        vec![],
+        vec![3751],
         vec![],
         1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3497>While in Cryogenic Freeze, you are 100% resistant to Poison damage",
-        vec![],
+        vec![3497],
         vec![],
         1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=2160>For 13 seconds after using Clever Trick, pets' basic attacks have a 15% chance to deal double damage",
-        vec![],
+        vec![2160],
         vec![],
         1,
     );
     test_icon_id_effect(
         &parser,
         "<icon=3771>Conditioning Shock causes target's next ability to deal -6 damage",
-        vec![],
+        vec![3771],
         vec![],
         1,
     );
