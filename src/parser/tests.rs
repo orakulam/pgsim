@@ -1317,9 +1317,9 @@ fn calculate_icon_id_effect_desc() {
         &parser,
         "<icon=3630>Mangling Shot causes target to take +4% damage from Piercing for 10 seconds",
         vec![3630],
-        vec![Effect::Buff(Buff {
+        vec![Effect::Debuff(Debuff {
             remaining_duration: 10,
-            effect: BuffEffect::DamageTypeDamageModBuff {
+            effect: DebuffEffect::VulnerabilityDamageModDebuff {
                 damage_type: DamageType::Piercing,
                 damage_mod: 0.04,
             },
@@ -3264,6 +3264,20 @@ fn calculate_icon_id_effect_desc() {
     );
     test_icon_id_effect(
         &parser,
+        "<icon=3482>Rotskin hits all targets within 10 meters and further debuffs their mitigation -3",
+        vec![3482],
+        vec![],
+        1,
+    );
+    test_icon_id_effect(
+        &parser,
+        "<icon=3482>Rotskin deals 24 Trauma damage to health over 12 seconds",
+        vec![3482],
+        vec![Effect::DotDamage(24)],
+        0,
+    );
+    test_icon_id_effect(
+        &parser,
         "<icon=3432>Reconstruct restores +4 Health and causes the target to take 4 less damage from attacks for 10 seconds",
         vec![3432],
         vec![Effect::RestoreHealth(4)],
@@ -3369,13 +3383,6 @@ fn calculate_icon_id_effect_desc() {
         &parser,
         "<icon=3628>For 30 seconds after using Phoenix Strike, your Survival Utility and Major Heal abilities restore 20 Health to you",
         vec![3628],
-        vec![],
-        1,
-    );
-    test_icon_id_effect(
-        &parser,
-        "<icon=3482>Rotskin hits all targets within 10 meters and further debuffs their mitigation -3",
-        vec![3482],
         vec![],
         1,
     );
@@ -3671,7 +3678,7 @@ fn calculate_icon_id_effect_desc() {
         "<icon=3772>Warning Jolt restores 1 Armor and taunts +25",
         vec![3772],
         vec![Effect::RestoreArmor(1)],
-        0,
+        1,
     );
     test_icon_id_effect(
         &parser,
@@ -3739,7 +3746,7 @@ fn calculate_icon_id_effect_desc() {
         &parser,
         "<icon=2189>Lunge hits all enemies within 5 meters, but deals -50% damage and reuse timer is +2 seconds",
         vec![2189],
-        vec![Effect::DamageMod(-0.5)],
+        vec![],
         1,
     );
     test_icon_id_effect(
@@ -3981,8 +3988,8 @@ fn calculate_icon_id_effect_desc() {
         &parser,
         "<icon=2174>Your golem minion's Self Destruct deals +30 damage",
         vec![2174],
-        vec![Effect::FlatDamage(30)],
-        0,
+        vec![],
+        1,
     );
     test_icon_id_effect(
         &parser,

@@ -113,6 +113,8 @@ struct ParserRegex {
     vulnerability_damage_mod_debuff: Regex,
     vulnerability_flat_damage_debuff: Regex,
     nip_buff: Regex,
+    pin_buff: Regex,
+    restorative_arrow_buff: Regex,
     fairy_fire_buff: Regex,
     skulk_buff: Regex,
     infinite_legs_buff: Regex,
@@ -123,6 +125,8 @@ struct ParserRegex {
     fill_with_bile_buff: Regex,
     fill_with_bile_item_buff: Regex,
     privacy_field: Regex,
+    drink_blood_buff: Regex,
+    psi_wave_buff: Regex,
 }
 
 pub struct Parser {
@@ -150,6 +154,7 @@ impl Parser {
 
     fn get_parser_regex() -> ParserRegex {
         // Regexes (it's important to declare these once for performance, so we do it when the parser is loaded)
+        let damage_type = r"(?P<damage_type>Slashing|Crushing|Piercing|Trauma|Nothingness|Nature|Potion|Fire|Cold|Poison|Regeneration|Darkness|Acid|Electricity|Psychic|Smiting)";
         ParserRegex {
             icon_ids: Regex::new(r"<icon=([0-9]+)>").unwrap(),
             attribute_effects: Regex::new(
@@ -160,35 +165,37 @@ impl Parser {
             proc_flat_damage:  Regex::new(r"(?P<chance>[0-9]+)% chance to deal \+(?P<damage>[0-9]+) damage").unwrap(),
             range_flat_damage: Regex::new(r"between \+?(?P<min_damage>[0-9]+) and \+?(?P<max_damage>[0-9]+) extra damage").unwrap(),
             range_up_to_damage: Regex::new(r"up to \+?(?P<max_damage>[0-9]+) damage").unwrap(),
-            damage_mod: Regex::new(r"(?:deal|deals|[dD]amage) \+?(?P<damage_mod>[0-9]*[.]?[0-9]+)% ?(?:$|damage|direct damage|and|Crushing damage|piercing damage)").unwrap(),
-            proc_damage_mod:  Regex::new(r"(?P<chance>[0-9]+)% (?:chance to deal|chance it deals) \+(?P<damage_mod>[0-9]+)% damage").unwrap(),
+            damage_mod: Regex::new(r"(?:deal|deals|[dD]amage|damage is) \+?(?P<damage_mod>[0-9]*[.]?[0-9]+)% ?(?:$|damage|direct damage|and|Crushing damage|piercing damage)").unwrap(),
+            proc_damage_mod:  Regex::new(r"(?P<chance>[0-9]+)% (?:chance to deal|chance it deals) \+(?P<damage_mod>[0-9]+)% (?:damage|immediate Piercing damage)").unwrap(),
             dot_damage:
-                Regex::new(r"(?:deal|deals|Deals|deals an additional|causes|dealing|target to take) \+?(?P<damage>[0-9]+).*(?:damage over|damage to melee attackers|Nature damage over|Trauma damage over|Poison damage to health over)")
+                Regex::new(r"(?:deal|deals|Deals|deals an additional|causes|dealing|target to take|causing them to take) \+?(?P<damage>[0-9]+).*(?:damage over|damage to melee attackers|Nature damage over|Trauma damage over|Trauma damage to health over|Poison damage to health over|fire damage over)")
                     .unwrap(),
             restore_health:
-                Regex::new(r"(?:restore|[rR]estores|regain|heals|heals you for|recover) \+?(?P<restore>[0-9]+) [hH]ealth")
+                Regex::new(r"(?:restore|[rR]estores|regain|heals|heals you for|recover|heal all targets for) \+?(?P<restore>[0-9]+) [hH]ealth")
                     .unwrap(),
             restore_armor:
                 Regex::new(r"(?:restore|restores|and|heals you for) \+?(?P<restore>[0-9]+) [aA]rmor").unwrap(),
             restore_power:
                 Regex::new(r"(?:restore|restores|regain) \+?(?P<restore>[0-9]+) [pP]ower").unwrap(),
-            damage_type: Regex::new(r"(?:becomes|deals|changed to) (?P<damage_type>Trauma|Fire|Darkness|Electricity)").unwrap(),
+            damage_type: Regex::new(&format!(r"(?:becomes|deals|changed to) {}", damage_type)).unwrap(),
             racials: Regex::new(r"(?:Humans|Orcs|Elves|Dwarves|Rakshasa) gain \+?(?:[0-9]+) Max (?:Health|Hydration|Metabolism|Power|Armor|Bodyheat)").unwrap(),
-            damage_type_damage_mod_buff: Regex::new(r"(?P<damage_type>Slashing|Electricity|Cold|Crushing|Slashing|Fire)(?:| attack) [dD]amage \+(?P<damage_mod>[0-9]+)% for (?P<duration>[0-9]+) seconds").unwrap(),
-            damage_type_damage_mod_buff2: Regex::new(r"\+(?P<damage_mod>[0-9]+)% ?(?:|damage from) (?P<damage_type>Piercing|Electricity|Trauma) (?:for|damage from future attacks for|damage for) (?P<duration>[0-9]+) seconds").unwrap(),
-            damage_type_damage_mod_buff3: Regex::new(r"For (?P<duration>[0-9]+) seconds, all targets deal \+(?P<damage_mod>[0-9]+)% (?P<damage_type>Crushing) damage").unwrap(),
-            damage_type_next_attack_buff: Regex::new(r"next attack(?:| to deal) \+?(?P<damage>[0-9]+)(?:| damage) if it is a (?P<damage_type>Crushing|Darkness) (?:ability|attack)").unwrap(),
+            damage_type_damage_mod_buff: Regex::new(&format!(r"{}(?:| attack) [dD]amage \+(?P<damage_mod>[0-9]+)% for (?P<duration>[0-9]+) seconds", damage_type)).unwrap(),
+            damage_type_damage_mod_buff2: Regex::new(&format!(r"\+(?P<damage_mod>[0-9]+)% {} (?:for|damage from future attacks for|damage for) (?P<duration>[0-9]+) seconds", damage_type)).unwrap(),
+            damage_type_damage_mod_buff3: Regex::new(&format!(r"For (?P<duration>[0-9]+) seconds, all targets deal \+(?P<damage_mod>[0-9]+)% {} damage", damage_type)).unwrap(),
+            damage_type_next_attack_buff: Regex::new(&format!(r"next attack(?:| to deal) \+?(?P<damage>[0-9]+)(?:| damage) if it is a {} (?:ability|attack)", damage_type)).unwrap(),
             keyword_next_attack_buff: Regex::new(r"next attack(?:| to deal) \+?(?P<damage>[0-9]+)(?:| damage) if it is a (?P<keyword>Werewolf) (?:ability|attack)").unwrap(),
             keyword_kick_buff: Regex::new(r"all kicks \+?(?P<damage>[0-9]+) for (?P<duration>[0-9]+) seconds").unwrap(),
             keyword_core_attack_buff: Regex::new(r"Core Attack(?:s to deal| [dD]amage) \+?(?P<damage>[0-9]+) (?:for|damage for) (?P<duration>[0-9]+) seconds").unwrap(),
             keyword_nice_attack_buff: Regex::new(r"Nice Attack(?:s to deal| [dD]amage) \+?(?P<damage>[0-9]+) (?:for|damage for) (?P<duration>[0-9]+) seconds").unwrap(),
-            keyword_epic_attack_buff: Regex::new(r"Epic Attack(?:s to deal| [dD]amage) \+?(?P<damage>[0-9]+) .*for (?P<duration>[0-9]+) seconds").unwrap(),
+            keyword_epic_attack_buff: Regex::new(r"Epic [aA]ttack(?:s|s to deal| [dD]amage) \+?(?P<damage>[0-9]+) .*for (?P<duration>[0-9]+) seconds").unwrap(),
             keyword_epic_attack_damage_mod_buff: Regex::new(r"boost your Epic Attack Damage \+(?P<damage_mod>[0-9]+)% for (?P<duration>[0-9]+) seconds").unwrap(),
             keyword_melee_flat_damage_buff: Regex::new(r"You and your allies' melee attacks deal \+?(?P<damage>[0-9]+) damage for (?P<duration>[0-9]+) seconds").unwrap(),
             keyword_signature_debuff_buff: Regex::new(r"Signature Debuff abilities to deal \+?(?P<damage>[0-9]+) damage for (?P<duration>[0-9]+) seconds").unwrap(),
-            vulnerability_damage_mod_debuff: Regex::new(r"(?P<damage_mod>[0-9]+)% (?:more vulnerable to|damage from other|damage from) (?P<damage_type>Electricity|Trauma|Darkness|Crushing|Slashing|Poison) ?(?:|damage|attacks) for (?P<duration>[0-9]+) seconds").unwrap(),
-            vulnerability_flat_damage_debuff: Regex::new(r"(?:suffer|take) \+?(?P<damage>[0-9]+) damage from(?:| direct) (?P<damage_type>Cold|Psychic) attacks for (?P<duration>[0-9]+) seconds").unwrap(),
+            vulnerability_damage_mod_debuff: Regex::new(&format!(r"(?P<damage_mod>[0-9]+)% (?:more vulnerable to|damage from other|damage from) {} ?(?:|damage|attacks) for (?P<duration>[0-9]+) seconds", damage_type)).unwrap(),
+            vulnerability_flat_damage_debuff: Regex::new(&format!(r"(?:suffer|take) \+?(?P<damage>[0-9]+) damage from(?:| direct) {} attacks for (?P<duration>[0-9]+) seconds", damage_type)).unwrap(),
             nip_buff: Regex::new(r"Nip boosts the damage of Basic, Core, and Nice attacks \+?(?P<damage>[0-9]+) for (?P<duration>[0-9]+) seconds").unwrap(),
+            pin_buff: Regex::new(r"Pin boosts Core Attack and Nice Attack Damage \+?(?P<damage>[0-9]+) for (?P<duration>[0-9]+) seconds").unwrap(),
+            restorative_arrow_buff: Regex::new(r"Restorative Arrow boosts target's Nice Attack and Epic Attack Damage \+?(?P<damage>[0-9]+) for (?P<duration>[0-9]+) seconds").unwrap(),
             fairy_fire_buff: Regex::new(r"Fairy Fire causes your next attack to deal \+?(?P<damage>[0-9]+) damage if it's a Psychic, Electricity, or Fire attack").unwrap(),
             skulk_buff: Regex::new(r"Skulk boosts the damage of your Core and Nice Attacks \+?(?P<damage>[0-9]+) for (?P<duration>[0-9]+) seconds").unwrap(),
             infinite_legs_buff: Regex::new(r"For (?P<duration>[0-9]+) seconds, additional Infinite Legs attacks deal \+?(?P<damage>[0-9]+) damage").unwrap(),
@@ -199,6 +206,8 @@ impl Parser {
             fill_with_bile_buff: Regex::new(r"Fill With Bile increases target's direct Poison damage \+?(?P<damage>[0-9]+)").unwrap(),
             fill_with_bile_item_buff: Regex::new(r"Target's Poison attacks deal \+?(?P<damage>[0-9]+) damage, and Poison damage-over-time attacks deal \+?(?P<per_tick_damage>[0-9]+) per tick.").unwrap(),
             privacy_field: Regex::new(r"Privacy Field also deals its damage when you are hit by burst attacks, and damage is \+?(?P<damage>[0-9]+)").unwrap(),
+            drink_blood_buff: Regex::new(&format!(r"For (?P<duration>[0-9]+) seconds after using Drink Blood, all {} attacks deal \+(?P<damage>[0-9]+) damage", damage_type)).unwrap(),
+            psi_wave_buff: Regex::new(&format!(r"Psi Health Wave, Armor Wave, and Power Wave grant all targets \+(?P<damage>[0-9]+) {} Damage for (?P<duration>[0-9]+) seconds", damage_type)).unwrap(),
         }
     }
 
@@ -346,6 +355,8 @@ impl Parser {
             "every 5 seconds",
             "every five seconds",
             "boosts your movement speed",
+            "fly speed",
+            "swim speed",
             "Sprint Speed",
             "Combo: ",
             "Provoke Undead",
@@ -379,6 +390,23 @@ impl Parser {
             "damage to targets that are covered in Fairy Fire",
             "Future Pack Attacks to the same target deal",
             "near your Web Trap",
+            "after using Mindreave, your Major Healing abilities",
+            "Fire Wall",
+            "For 30 seconds after using Phoenix Strike",
+            "Moment of Resolve dispels any Slow or Root effects",
+            "Controlled Burn costs",
+            "while under the effect of Haste Concoction",
+            "For 60 seconds after using Redirect",
+            "Summoned Skeletal Archers and Mages deal",
+            "absorption",
+            "Pig Punt causes the target to ignore you",
+            "Lunge hits all enemies within 5 meters",
+            "Coordinated Assault causes all allies' melee attacks",
+            "Chew Cud's chance to consume grass",
+            "Incubated Spiders have",
+            "chance to trigger the target",
+            "Heal Undead and Rebuild Undead",
+            "For 30 seconds after you use Moo of Calm",
         ];
         for test in not_supported_tests {
             if effect_desc.contains(test) {
@@ -445,10 +473,13 @@ impl Parser {
             "damage to Aberrations",
             "resistance",
             "stuns the target if they are not focused on you",
+            "chance target is Stunned",
             "raises Basic Attack Damage",
             "Pin causes target's attacks to deal",
             "Your Cold Sphere gains",
             "Body Heat",
+            "less damage from attacks",
+            "and speed is",
         ];
         for test in partially_supported_tests {
             if effect_desc.contains(test) {
@@ -486,6 +517,8 @@ impl Parser {
                 && !effect_desc.contains("Spit Acid causes your Signature Debuff abilities to deal")
                 && !effect_desc.contains("additional Infinite Legs attacks")
                 && !effect_desc.contains("Fill With Bile increases target's direct Poison damage")
+                && !effect_desc.contains("For 30 seconds after using Drink Blood")
+                && !effect_desc.contains("Give Warmth causes the target's next attack")
             {
                 // Specifically block this from applying to "next attack" buffs as well
                 if !effect_desc.contains("your next attack to") {
@@ -632,22 +665,28 @@ impl Parser {
             }));
         }
         if let Some(caps) = self.regex.keyword_nice_attack_buff.captures(effect_desc) {
-            effects.push(Effect::Buff(Buff {
-                remaining_duration: Parser::get_cap_number(&caps, "duration"),
-                effect: BuffEffect::KeywordFlatDamageBuff {
-                    keyword: "NiceAttack".to_string(),
-                    damage: Parser::get_cap_number(&caps, "damage"),
-                },
-            }));
+            // Specific exclusions
+            if !effect_desc.contains("Pin boosts Core Attack and Nice Attack Damage") {
+                effects.push(Effect::Buff(Buff {
+                    remaining_duration: Parser::get_cap_number(&caps, "duration"),
+                    effect: BuffEffect::KeywordFlatDamageBuff {
+                        keyword: "NiceAttack".to_string(),
+                        damage: Parser::get_cap_number(&caps, "damage"),
+                    },
+                }));
+            }
         }
         if let Some(caps) = self.regex.keyword_epic_attack_buff.captures(effect_desc) {
-            effects.push(Effect::Buff(Buff {
-                remaining_duration: Parser::get_cap_number(&caps, "duration"),
-                effect: BuffEffect::KeywordFlatDamageBuff {
-                    keyword: "EpicAttack".to_string(),
-                    damage: Parser::get_cap_number(&caps, "damage"),
-                },
-            }));
+            // Specific exclusions
+            if !effect_desc.contains("Restorative Arrow boosts target's Nice Attack and Epic Attack Damage") {
+                effects.push(Effect::Buff(Buff {
+                    remaining_duration: Parser::get_cap_number(&caps, "duration"),
+                    effect: BuffEffect::KeywordFlatDamageBuff {
+                        keyword: "EpicAttack".to_string(),
+                        damage: Parser::get_cap_number(&caps, "damage"),
+                    },
+                }));
+            }
         }
         if let Some(caps) = self
             .regex
@@ -737,6 +776,42 @@ impl Parser {
                 remaining_duration: duration,
                 effect: BuffEffect::KeywordFlatDamageBuff {
                     keyword: "NiceAttack".to_string(),
+                    damage,
+                },
+            }));
+        }
+        if let Some(caps) = self.regex.pin_buff.captures(effect_desc) {
+            let damage = Parser::get_cap_number(&caps, "damage");
+            let duration = Parser::get_cap_number(&caps, "duration");
+            effects.push(Effect::Buff(Buff {
+                remaining_duration: duration,
+                effect: BuffEffect::KeywordFlatDamageBuff {
+                    keyword: "CoreAttack".to_string(),
+                    damage,
+                },
+            }));
+            effects.push(Effect::Buff(Buff {
+                remaining_duration: duration,
+                effect: BuffEffect::KeywordFlatDamageBuff {
+                    keyword: "NiceAttack".to_string(),
+                    damage,
+                },
+            }));
+        }
+        if let Some(caps) = self.regex.restorative_arrow_buff.captures(effect_desc) {
+            let damage = Parser::get_cap_number(&caps, "damage");
+            let duration = Parser::get_cap_number(&caps, "duration");
+            effects.push(Effect::Buff(Buff {
+                remaining_duration: duration,
+                effect: BuffEffect::KeywordFlatDamageBuff {
+                    keyword: "NiceAttack".to_string(),
+                    damage,
+                },
+            }));
+            effects.push(Effect::Buff(Buff {
+                remaining_duration: duration,
+                effect: BuffEffect::KeywordFlatDamageBuff {
+                    keyword: "EpicAttack".to_string(),
                     damage,
                 },
             }));
@@ -863,6 +938,26 @@ impl Parser {
         }
         if let Some(caps) = self.regex.privacy_field.captures(effect_desc) {
             effects.push(Effect::DotDamage(Parser::get_cap_number(&caps, "damage")));
+        }
+        if let Some(caps) = self.regex.drink_blood_buff.captures(effect_desc) {
+            effects.push(Effect::Buff(Buff {
+                remaining_duration: Parser::get_cap_number(&caps, "duration"),
+                effect: BuffEffect::DamageTypeFlatDamageBuff {
+                    damage_type: DamageType::from_str(Parser::get_cap_string(&caps, "damage_type"))
+                        .expect("Failed to parse damage type string as enum"),
+                    damage: Parser::get_cap_number(&caps, "damage"),
+                },
+            }));
+        }
+        if let Some(caps) = self.regex.psi_wave_buff.captures(effect_desc) {
+            effects.push(Effect::Buff(Buff {
+                remaining_duration: Parser::get_cap_number(&caps, "duration"),
+                effect: BuffEffect::DamageTypeFlatDamageBuff {
+                    damage_type: DamageType::from_str(Parser::get_cap_string(&caps, "damage_type"))
+                        .expect("Failed to parse damage type string as enum"),
+                    damage: Parser::get_cap_number(&caps, "damage"),
+                },
+            }));
         }
         effects
     }

@@ -361,7 +361,10 @@ mod tests {
     fn rotskin_sim() {
         let parser = Parser::new();
         let mut world = World::default();
-        let item_mods = parser.calculate_item_mods(&vec![], &vec![]);
+        let item_mods = parser.calculate_item_mods(
+            &vec![],
+            &vec![("power_14052".to_string(), "id_16".to_string())],
+        );
         world.push((
             Player,
             PlayerAbilities {
@@ -377,14 +380,18 @@ mod tests {
 
         let mut schedule = systems::build_schedule();
 
-        schedule.execute(&mut world, &mut resources);
+        for _ in 0..3 {
+            schedule.execute(&mut world, &mut resources);
+        }
 
         let entry = world.entry(enemy).unwrap();
         let report = entry.get_component::<Report>().unwrap();
 
-        assert_eq!(report.activity.len(), 1);
+        assert_eq!(report.activity.len(), 2);
         assert_eq!(report.activity[0].damage, 339);
         assert_eq!(report.activity[0].damage_type, DamageType::Nature);
+        assert_eq!(report.activity[1].damage, 47);
+        assert_eq!(report.activity[1].damage_type, DamageType::Trauma);
     }
 
     #[test]
