@@ -28,6 +28,81 @@ fn calculate_item_mods_all_implemented() {
 }
 
 #[test]
+fn test_important_special_infos() {
+    let parser = Parser::new();
+    let effects = parser.get_effects_from_special_info(&mut vec![], "Target takes +20% Electricity damage from future attacks for 30 seconds");
+    assert_eq!(effects.unwrap()[0], Effect::Buff(Buff {
+        remaining_duration: 30,
+        effect: BuffEffect::DamageTypeDamageModBuff {
+            damage_type: DamageType::Electricity,
+            damage_mod: 0.2,
+        }
+    }));
+    let effects = parser.get_effects_from_special_info(&mut vec![], "For 15 seconds, additional Infinite Legs attacks deal +18 damage");
+    assert_eq!(effects.unwrap()[0], Effect::Buff(Buff {
+        remaining_duration: 15,
+        effect: BuffEffect::KeywordFlatDamageBuff {
+            keyword: "InfiniteLegs".to_string(),
+            damage: 18,
+        }
+    }));
+    let effects = parser.get_effects_from_special_info(&mut vec![], "You and your allies' melee attacks deal +10 damage for 10 seconds");
+    assert_eq!(effects.unwrap()[0], Effect::Buff(Buff {
+        remaining_duration: 10,
+        effect: BuffEffect::KeywordFlatDamageBuff {
+            keyword: "Melee".to_string(),
+            damage: 10,
+        }
+    }));
+    let effects = parser.get_effects_from_special_info(&mut vec![], "For 10 seconds, all targets deal +35% Crushing damage");
+    assert_eq!(effects.unwrap()[0], Effect::Buff(Buff {
+        remaining_duration: 10,
+        effect: BuffEffect::DamageTypeDamageModBuff {
+            damage_type: DamageType::Crushing,
+            damage_mod: 0.35,
+        }
+    }));
+    let effects = parser.get_effects_from_special_info(&mut vec![], "You and nearby allies deal +22% Trauma damage for 10 seconds");
+    assert_eq!(effects.unwrap()[0], Effect::Buff(Buff {
+        remaining_duration: 10,
+        effect: BuffEffect::DamageTypeDamageModBuff {
+            damage_type: DamageType::Trauma,
+            damage_mod: 0.22,
+        }
+    }));
+    let effects = parser.get_effects_from_special_info(&mut vec![], "For 5 seconds, you gain Direct Poison Damage +30 and Indirect Poison Damage +6 per tick");
+    assert_eq!(effects.clone().unwrap()[0], Effect::Buff(Buff {
+        remaining_duration: 5,
+        effect: BuffEffect::DamageTypeFlatDamageBuff {
+            damage_type: DamageType::Poison,
+            damage: 30,
+        }
+    }));
+    assert_eq!(effects.unwrap()[1], Effect::Buff(Buff {
+        remaining_duration: 5,
+        effect: BuffEffect::DamageTypePerTickDamageBuff {
+            damage_type: DamageType::Poison,
+            damage: 6,
+        }
+    }));
+    let effects = parser.get_effects_from_special_info(&mut vec![], "Target's Poison attacks deal +12 damage, and Poison damage-over-time attacks deal +1 per tick.");
+    assert_eq!(effects.clone().unwrap()[0], Effect::Buff(Buff {
+        remaining_duration: 60,
+        effect: BuffEffect::DamageTypeFlatDamageBuff {
+            damage_type: DamageType::Poison,
+            damage: 12,
+        }
+    }));
+    assert_eq!(effects.unwrap()[1], Effect::Buff(Buff {
+        remaining_duration: 60,
+        effect: BuffEffect::DamageTypePerTickDamageBuff {
+            damage_type: DamageType::Poison,
+            damage: 1,
+        }
+    }));
+}
+
+#[test]
 fn calculate_attribute_effect_desc() {
     let parser = Parser::new();
     let mut item_mods = ItemMods {
