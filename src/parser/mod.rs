@@ -108,6 +108,7 @@ struct ParserRegex {
     keyword_nice_attack_buff: Regex,
     keyword_epic_attack_damage_mod_buff: Regex,
     keyword_melee_flat_damage_buff: Regex,
+    keyword_signature_debuff_buff: Regex,
     vulnerability_damage_mod_debuff: Regex,
     vulnerability_flat_damage_debuff: Regex,
     nip_buff: Regex,
@@ -159,10 +160,10 @@ impl Parser {
             damage_mod: Regex::new(r"(?:deal|deals|[dD]amage) \+?(?P<damage_mod>[0-9]*[.]?[0-9]+)% ?(?:$|damage|direct damage|and|Crushing damage)").unwrap(),
             proc_damage_mod:  Regex::new(r"(?P<chance>[0-9]+)% (?:chance to deal|chance it deals) \+(?P<damage_mod>[0-9]+)% damage").unwrap(),
             dot_damage:
-                Regex::new(r"(?:deal|deals|Deals|deals an additional|causes|dealing) \+?(?P<damage>[0-9]+).*(?:damage over|damage to melee attackers|Nature damage over)")
+                Regex::new(r"(?:deal|deals|Deals|deals an additional|causes|dealing|target to take) \+?(?P<damage>[0-9]+).*(?:damage over|damage to melee attackers|Nature damage over|Trauma damage over|Poison damage to health over)")
                     .unwrap(),
             restore_health:
-                Regex::new(r"(?:restore|restores|regain|heals|heals you for|recover) \+?(?P<restore>[0-9]+) [hH]ealth")
+                Regex::new(r"(?:restore|[rR]estores|regain|heals|heals you for|recover) \+?(?P<restore>[0-9]+) [hH]ealth")
                     .unwrap(),
             restore_armor:
                 Regex::new(r"(?:restore|restores|and|heals you for) \+?(?P<restore>[0-9]+) [aA]rmor").unwrap(),
@@ -170,7 +171,7 @@ impl Parser {
                 Regex::new(r"(?:restore|restores|regain) \+?(?P<restore>[0-9]+) [pP]ower").unwrap(),
             damage_type: Regex::new(r"(?:becomes|deals|changed to) (?P<damage_type>Trauma|Fire|Darkness|Electricity)").unwrap(),
             racials: Regex::new(r"(?:Humans|Orcs|Elves|Dwarves|Rakshasa) gain \+?(?:[0-9]+) Max (?:Health|Hydration|Metabolism|Power|Armor|Bodyheat)").unwrap(),
-            damage_type_damage_mod_buff: Regex::new(r"(?P<damage_type>Slashing|Electricity|Cold) [dD]amage \+(?P<damage_mod>[0-9]+)% for (?P<duration>[0-9]+) seconds").unwrap(),
+            damage_type_damage_mod_buff: Regex::new(r"(?P<damage_type>Slashing|Electricity|Cold|Crushing|Slashing|Fire)(?:| attack) [dD]amage \+(?P<damage_mod>[0-9]+)% for (?P<duration>[0-9]+) seconds").unwrap(),
             damage_type_damage_mod_buff2: Regex::new(r"\+(?P<damage_mod>[0-9]+)% ?(?:|damage from) (?P<damage_type>Piercing|Electricity|Trauma) (?:for|damage from future attacks for|damage for) (?P<duration>[0-9]+) seconds").unwrap(),
             damage_type_damage_mod_buff3: Regex::new(r"For (?P<duration>[0-9]+) seconds, all targets deal \+(?P<damage_mod>[0-9]+)% (?P<damage_type>Crushing) damage").unwrap(),
             damage_type_next_attack_buff: Regex::new(r"next attack(?:| to deal) \+?(?P<damage>[0-9]+)(?:| damage) if it is a (?P<damage_type>Crushing|Darkness) (?:ability|attack)").unwrap(),
@@ -180,7 +181,8 @@ impl Parser {
             keyword_nice_attack_buff: Regex::new(r"Nice Attack(?:s to deal| [dD]amage) \+?(?P<damage>[0-9]+) (?:for|damage for) (?P<duration>[0-9]+) seconds").unwrap(),
             keyword_epic_attack_damage_mod_buff: Regex::new(r"boost your Epic Attack Damage \+(?P<damage_mod>[0-9]+)% for (?P<duration>[0-9]+) seconds").unwrap(),
             keyword_melee_flat_damage_buff: Regex::new(r"You and your allies' melee attacks deal \+?(?P<damage>[0-9]+) damage for (?P<duration>[0-9]+) seconds").unwrap(),
-            vulnerability_damage_mod_debuff: Regex::new(r"(?P<damage_mod>[0-9]+)% (?:more vulnerable to|damage from other|damage from) (?P<damage_type>Electricity|Trauma|Darkness|Crushing|Slashing) ?(?:|damage|attacks) for (?P<duration>[0-9]+) seconds").unwrap(),
+            keyword_signature_debuff_buff: Regex::new(r"Signature Debuff abilities to deal \+?(?P<damage>[0-9]+) damage for (?P<duration>[0-9]+) seconds").unwrap(),
+            vulnerability_damage_mod_debuff: Regex::new(r"(?P<damage_mod>[0-9]+)% (?:more vulnerable to|damage from other|damage from) (?P<damage_type>Electricity|Trauma|Darkness|Crushing|Slashing|Poison) ?(?:|damage|attacks) for (?P<duration>[0-9]+) seconds").unwrap(),
             vulnerability_flat_damage_debuff: Regex::new(r"(?:suffer|take) \+?(?P<damage>[0-9]+) damage from(?:| direct) (?P<damage_type>Cold|Psychic) attacks for (?P<duration>[0-9]+) seconds").unwrap(),
             nip_buff: Regex::new(r"Nip boosts the damage of Basic, Core, and Nice attacks \+?(?P<damage>[0-9]+) for (?P<duration>[0-9]+) seconds").unwrap(),
             fairy_fire_buff: Regex::new(r"Fairy Fire causes your next attack to deal \+?(?P<damage>[0-9]+) damage if it's a Psychic, Electricity, or Fire attack").unwrap(),
@@ -320,109 +322,145 @@ impl Parser {
         effect_desc: &str,
     ) -> Vec<Effect> {
         // Add warnings that prevent further parsing of the effect desc
-        if effect_desc.contains("Power every")
-            || effect_desc.contains("Power over")
-            || effect_desc.contains("Health every")
-            || effect_desc.contains("Health over")
-            || effect_desc.contains("after a 5 second delay")
-            || effect_desc.contains("after a 6-second delay")
-            || effect_desc.contains("after a 10-second delay")
-            || effect_desc.contains("after a 15 second delay")
-            || effect_desc.contains("after a 20 second delay")
-            || effect_desc.contains("after a 25 second delay")
-            || effect_desc.contains("every 2 seconds")
-            || effect_desc.contains("every other seconds")
-            || effect_desc.contains("every few seconds")
-            || effect_desc.contains("every 4 seconds")
-            || effect_desc.contains("every 5 seconds")
-            || effect_desc.contains("every five seconds")
-            || effect_desc.contains("boosts your movement speed")
-            || effect_desc.contains("Sprint Speed")
-            || effect_desc.contains("Combo: ")
-            || effect_desc.contains("Provoke Undead")
-            || effect_desc
-                .contains("Shield Team causes all targets' Survival Utility abilities to restore")
-            || effect_desc.contains("Frenzy boosts targets'")
-            || effect_desc.contains("After using Doe Eyes, your next attack deals")
-            || effect_desc.contains("damage to undead")
-            || effect_desc.contains("Strategic Preparation boosts your in-combat Armor regeneration")
-            || effect_desc.contains("damage from indirect Fire")
-            || effect_desc.contains("Rage Attacks")
-            || effect_desc.contains("Blood of the Pack causes you and your allies' attacks to deal")
-            || effect_desc.contains("Knockback")
-            || effect_desc.contains("Future Deer Kicks")
-            || effect_desc.contains("undead")
-            || effect_desc.contains("Arthropods")
-            || effect_desc.contains("Harmlessness confuses the target")
-            || effect_desc.contains("Panic Charge boosts the damage of all your attacks")
-            || effect_desc.contains("steals")
-            || effect_desc.contains("reaps")
-            || effect_desc.contains("While Unarmed skill active")
-            || effect_desc.contains("damage to the target each time they attack and damage you")
-            || effect_desc.contains("After using Wild Endurance, your next")
-            || effect_desc.contains("Nimble Limbs heals your pet")
-            || effect_desc.contains("more XP")
-            || effect_desc.contains("causes the next attack that hits you to deal")
-            || effect_desc.contains("golem minion")
-            || effect_desc.contains("your pet's")
-        {
-            warnings.push(format!("Not supported: {}", effect_desc));
-            return vec![];
+        let not_supported_tests = vec![
+            "Power over",
+            "Power every",
+            "Health every",
+            "Health over",
+            "after a 5 second delay",
+            "after a 6-second delay",
+            "after a 10-second delay",
+            "after a 15 second delay",
+            "after a 20 second delay",
+            "after a 25 second delay",
+            "every 2 seconds",
+            "every other seconds",
+            "every few seconds",
+            "every 4 seconds",
+            "every 5 seconds",
+            "every five seconds",
+            "boosts your movement speed",
+            "Sprint Speed",
+            "Combo: ",
+            "Provoke Undead",
+            "Shield Team causes all targets' Survival Utility abilities to restore",
+            "Frenzy boosts targets'",
+            "After using Doe Eyes, your next attack deals",
+            "damage to undead",
+            "Strategic Preparation boosts your in-combat Armor regeneration",
+            "damage from indirect Fire",
+            "Rage Attacks",
+            "Blood of the Pack causes you and your allies' attacks to deal",
+            "Knockback",
+            "Future Deer Kicks",
+            "undead",
+            "Arthropods",
+            "Harmlessness confuses the target",
+            "Panic Charge boosts the damage of all your attacks",
+            "steals",
+            "reaps",
+            "While Unarmed skill active",
+            "damage to the target each time they attack and damage you",
+            "After using Wild Endurance, your next",
+            "Nimble Limbs heals your pet",
+            "more XP",
+            "causes the next attack that hits you to deal",
+            "golem minion",
+            "your pet",
+            "evasion",
+            "knocked down",
+            "Summoned Skeletons",
+            "damage to targets that are covered in Fairy Fire",
+            "near your Web Trap",
+        ];
+        for test in not_supported_tests {
+            if effect_desc.contains(test) {
+                warnings.push(format!(
+                    "Not supported, matched against \"{}\": {}",
+                    test, effect_desc
+                ));
+                return vec![];
+            }
         }
         // Add warnings
-        if effect_desc.contains("taunt")
-            || effect_desc
-                .contains("If you use Premeditated Doom while standing near your Web Trap")
-            || effect_desc.contains("chance to avoid being hit by burst attacks")
-            || effect_desc.contains("For 12 seconds after using Infinite Legs")
-            || effect_desc
-                .contains("Chew Cud increases your mitigation versus all attacks by Elites")
-            || effect_desc.contains("When you are hit, Finish It damage is")
-            || effect_desc.contains("When Skulk is used, you recover")
-            || effect_desc.contains("Your Knee Spikes mutation causes kicks to deal an additional")
-            || effect_desc.contains("Coordinated Assault grants all allies")
-            || effect_desc.contains("Squeal uniformly diminishes all targets' entire aggro lists")
-            || effect_desc.contains("Psi Health Wave grants all targets")
-            || effect_desc.contains("If Screech, Sonic Burst, or Deathscream deal Trauma damage")
-            || effect_desc.contains("Major Healing abilities")
-            || effect_desc.contains("mitigation")
-            || effect_desc.contains("Mitigation")
-            || effect_desc.contains("mitigates")
-            || effect_desc.contains("if the target is not focused on you")
-            || effect_desc.contains("terrifies the target")
-            || effect_desc.contains("to non-Elite targets")
-            || effect_desc.contains("reset timer")
-            || effect_desc.contains("reset the timer")
-            || effect_desc.contains("reuse time")
-            || effect_desc.contains("Reuse Time")
-            || effect_desc.contains("Rage")
-            || effect_desc.contains("rage")
-            || effect_desc.contains("total damage against Demons")
-            || effect_desc.contains("within 5 meters")
-            || effect_desc.contains("within 6 meters")
-            || effect_desc.contains("deal -1 damage for")
-            || effect_desc.contains("8-second delay")
-            || effect_desc.contains("doesn't cause the target to yell for help")
-            || effect_desc.contains("takes +1 second to channel")
-            || effect_desc.contains("Evasion")
-            || effect_desc.contains("Max Armor")
-            || effect_desc.contains("Max Health")
-            || effect_desc.contains("Accuracy")
-            || effect_desc.contains("range")
-            || effect_desc.contains("stacks")
-            || effect_desc.contains("Stacks")
-            || effect_desc.contains("slows")
-            || effect_desc.contains("gives you 50% resistance to Darkness damage")
-            || effect_desc.contains("power cost")
-            || effect_desc.contains("Power cost")
-            || effect_desc.contains("Power Cost")
-            || effect_desc.contains("removes ongoing")
-            || effect_desc.contains("that hit a single target")
-            || effect_desc.contains("damage to Aberrations")
-            || effect_desc.contains("resistance")
-            || effect_desc.contains("stuns the target if they are not focused on you")
+        let partially_supported_tests = vec![
+            "taunt",
+            "If you use Premeditated Doom while standing near your Web Trap",
+            "chance to avoid being hit by burst attacks",
+            "For 12 seconds after using Infinite Legs",
+            "Chew Cud increases your mitigation versus all attacks by Elites",
+            "When you are hit, Finish It damage is",
+            "When Skulk is used, you recover",
+            "Your Knee Spikes mutation causes kicks to deal an additional",
+            "Coordinated Assault grants all allies",
+            "Squeal uniformly diminishes all targets' entire aggro lists",
+            "Psi Health Wave grants all targets",
+            "If Screech, Sonic Burst, or Deathscream deal Trauma damage",
+            "Major Healing abilities",
+            "mitigation",
+            "Mitigation",
+            "Protection",
+            "take half damage",
+            "mitigates",
+            "target is not focused on you",
+            "terrifies the target",
+            "to non-Elite targets",
+            "reset timer",
+            "reset the timer",
+            "reuse time",
+            "Reuse Time",
+            "resets the timer",
+            " rage",
+            "total damage against Demons",
+            "within 5 meters",
+            "within 6 meters",
+            "deal -1 damage for",
+            "8-second delay",
+            "doesn't cause the target to yell for help",
+            "takes +1 second to channel",
+            "Evasion",
+            "Max Armor",
+            "Max Health",
+            "Accuracy",
+            "range",
+            "stacks",
+            "Stacks",
+            "slows",
+            "gives you 50% resistance to Darkness damage",
+            "resistant to Fire damage",
+            "power cost",
+            "Power cost",
+            "Power Cost",
+            "Power and",
+            "Hammer attacks cost",
+            "removes ongoing",
+            "that hit a single target",
+            "damage to Aberrations",
+            "resistance",
+            "stuns the target if they are not focused on you",
+            "raises Basic Attack Damage",
+            "Pin causes target's attacks to deal",
+            "Your Cold Sphere gains",
+            "Body Heat",
+        ];
+        for test in partially_supported_tests {
+            if effect_desc.contains(test) {
+                warnings.push(format!(
+                    "Partially supported, matched against \"{}\": {}",
+                    test, effect_desc
+                ));
+                // We only care about the first warning, otherwise it gets spammy
+                // TODO: Could refine this a bit in the future
+                break;
+            }
+        }
+        // Special logic warnings
+        if warnings.len() == 0 && !effect_desc.contains("Monstrous") && effect_desc.contains("Rage")
         {
-            warnings.push(format!("Not fully supported: {}", effect_desc));
+            warnings.push(format!(
+                "Partially supported, matched against \"Rage\": {}",
+                effect_desc
+            ));
         }
         // Collect all item effects
         let mut effects = vec![];
@@ -431,15 +469,18 @@ impl Parser {
             if !effect_desc.contains("<icon=3672>")
                 && !effect_desc.contains("<icon=2224>")
                 && !effect_desc.contains("<icon=3775>")
+                && !effect_desc.contains("<icon=2155>")
+                && !effect_desc.contains("Apprehend causes your Nice Attacks to deal")
+                && !effect_desc.contains("Fire Breath and Super Fireball deal")
                 && !effect_desc.contains("melee attacks deal")
                 && !effect_desc.contains("For 5 seconds, you gain Direct Poison Damage")
                 && !effect_desc.contains("Target's Poison attacks deal")
-                && !effect_desc.contains("additional Infinite Legs attacks") {
+                && !effect_desc.contains("Spit Acid causes your Signature Debuff abilities to deal")
+                && !effect_desc.contains("additional Infinite Legs attacks")
+            {
                 // Specifically block this from applying to "next attack" buffs as well
                 if !effect_desc.contains("your next attack to") {
-                    effects.push(Effect::FlatDamage(
-                        Parser::get_cap_number(&caps, "damage"),
-                    ));
+                    effects.push(Effect::FlatDamage(Parser::get_cap_number(&caps, "damage")));
                 }
             }
         }
@@ -452,31 +493,31 @@ impl Parser {
         } else if let Some(caps) = self.regex.damage_mod.captures(effect_desc) {
             // Specific exclusions
             if !effect_desc.contains("<icon=3727>")
-                && !effect_desc.contains("For 10 seconds, all targets deal") {
-                effects.push(Effect::DamageMod(
-                    Parser::get_cap_damage_mod(&caps, "damage_mod"),
-                ));
+                && !effect_desc.contains("For 10 seconds, all targets deal")
+            {
+                effects.push(Effect::DamageMod(Parser::get_cap_damage_mod(
+                    &caps,
+                    "damage_mod",
+                )));
             }
         }
         if let Some(caps) = self.regex.dot_damage.captures(effect_desc) {
-            effects.push(Effect::DotDamage(
-                Parser::get_cap_number(&caps, "damage"),
-            ));
+            effects.push(Effect::DotDamage(Parser::get_cap_number(&caps, "damage")));
         }
         if let Some(caps) = self.regex.restore_health.captures(effect_desc) {
-            effects.push(Effect::RestoreHealth(
-                Parser::get_cap_number(&caps, "restore"),
-            ));
+            effects.push(Effect::RestoreHealth(Parser::get_cap_number(
+                &caps, "restore",
+            )));
         }
         if let Some(caps) = self.regex.restore_armor.captures(effect_desc) {
-            effects.push(Effect::RestoreArmor(
-                Parser::get_cap_number(&caps, "restore"),
-            ));
+            effects.push(Effect::RestoreArmor(Parser::get_cap_number(
+                &caps, "restore",
+            )));
         }
         if let Some(caps) = self.regex.restore_power.captures(effect_desc) {
-            effects.push(Effect::RestorePower(
-                Parser::get_cap_number(&caps, "restore"),
-            ));
+            effects.push(Effect::RestorePower(Parser::get_cap_number(
+                &caps, "restore",
+            )));
         }
         if let Some(caps) = self.regex.proc_flat_damage.captures(effect_desc) {
             effects.push(Effect::ProcFlatDamage {
@@ -512,7 +553,11 @@ impl Parser {
                 },
             }));
         }
-        if let Some(caps) = self.regex.damage_type_damage_mod_buff2.captures(effect_desc) {
+        if let Some(caps) = self
+            .regex
+            .damage_type_damage_mod_buff2
+            .captures(effect_desc)
+        {
             effects.push(Effect::Buff(Buff {
                 remaining_duration: Parser::get_cap_number(&caps, "duration"),
                 effect: BuffEffect::DamageTypeDamageModBuff {
@@ -522,7 +567,11 @@ impl Parser {
                 },
             }));
         }
-        if let Some(caps) = self.regex.damage_type_damage_mod_buff3.captures(effect_desc) {
+        if let Some(caps) = self
+            .regex
+            .damage_type_damage_mod_buff3
+            .captures(effect_desc)
+        {
             effects.push(Effect::Buff(Buff {
                 remaining_duration: Parser::get_cap_number(&caps, "duration"),
                 effect: BuffEffect::DamageTypeDamageModBuff {
@@ -582,7 +631,11 @@ impl Parser {
                 },
             }));
         }
-        if let Some(caps) = self.regex.keyword_epic_attack_damage_mod_buff.captures(effect_desc) {
+        if let Some(caps) = self
+            .regex
+            .keyword_epic_attack_damage_mod_buff
+            .captures(effect_desc)
+        {
             effects.push(Effect::Buff(Buff {
                 remaining_duration: Parser::get_cap_number(&caps, "duration"),
                 effect: BuffEffect::KeywordDamageModBuff {
@@ -591,11 +644,28 @@ impl Parser {
                 },
             }));
         }
-        if let Some(caps) = self.regex.keyword_melee_flat_damage_buff.captures(effect_desc) {
+        if let Some(caps) = self
+            .regex
+            .keyword_melee_flat_damage_buff
+            .captures(effect_desc)
+        {
             effects.push(Effect::Buff(Buff {
                 remaining_duration: Parser::get_cap_number(&caps, "duration"),
                 effect: BuffEffect::KeywordFlatDamageBuff {
                     keyword: "Melee".to_string(),
+                    damage: Parser::get_cap_number(&caps, "damage"),
+                },
+            }));
+        }
+        if let Some(caps) = self
+            .regex
+            .keyword_signature_debuff_buff
+            .captures(effect_desc)
+        {
+            effects.push(Effect::Buff(Buff {
+                remaining_duration: Parser::get_cap_number(&caps, "duration"),
+                effect: BuffEffect::KeywordFlatDamageBuff {
+                    keyword: "SignatureDebuff".to_string(),
                     damage: Parser::get_cap_number(&caps, "damage"),
                 },
             }));
@@ -756,37 +826,21 @@ impl Parser {
             }));
         }
         if let Some(caps) = self.regex.privacy_field.captures(effect_desc) {
-            effects.push(Effect::DotDamage(
-                Parser::get_cap_number(&caps, "damage"),
-            ));
+            effects.push(Effect::DotDamage(Parser::get_cap_number(&caps, "damage")));
         }
         effects
     }
 
     fn get_cap_string<'a>(caps: &'a regex::Captures, name: &str) -> &'a str {
-        caps
-            .name(name)
-            .unwrap()
-            .as_str()
+        caps.name(name).unwrap().as_str()
     }
 
     fn get_cap_number(caps: &regex::Captures, name: &str) -> i32 {
-        caps
-            .name(name)
-            .unwrap()
-            .as_str()
-            .parse::<i32>()
-            .unwrap()
+        caps.name(name).unwrap().as_str().parse::<i32>().unwrap()
     }
 
     fn get_cap_damage_mod(caps: &regex::Captures, name: &str) -> f32 {
-        caps
-            .name(name)
-            .unwrap()
-            .as_str()
-            .parse::<f32>()
-            .unwrap()
-            / 100.0
+        caps.name(name).unwrap().as_str().parse::<f32>().unwrap() / 100.0
     }
 
     fn calculate_attribute_effect_desc(&self, item_mods: &mut ItemMods, effect_desc: &str) {

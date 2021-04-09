@@ -8,7 +8,8 @@ fn calculate_item_mods_all_implemented() {
     let mut not_implemented = vec![];
     for (item_mod_id, item_mod) in &parser.data.item_mods {
         for (tier_id, tier) in &item_mod.tiers {
-            let item_mods = parser.calculate_item_mods(&vec![], &vec![(item_mod_id.clone(), tier_id.clone())]);
+            let item_mods =
+                parser.calculate_item_mods(&vec![], &vec![(item_mod_id.clone(), tier_id.clone())]);
             let mut total_things_parsed = 0;
             for (_, effects) in &item_mods.icon_id_effects {
                 total_things_parsed += effects.len();
@@ -18,8 +19,12 @@ fn calculate_item_mods_all_implemented() {
             }
             total_things_parsed += item_mods.warnings.len();
             total_things_parsed += item_mods.not_implemented.len();
+            assert_eq!(item_mods.not_implemented.len(), 0);
             if total_things_parsed == 0 {
-                not_implemented.push(format!("Failed to parse anything from item mod: {:#?}, {:#?}", tier.effect_descs, item_mods));
+                not_implemented.push(format!(
+                    "Failed to parse anything from item mod: {:#?}, {:#?}",
+                    tier.effect_descs, item_mods
+                ));
             }
         }
     }
@@ -30,76 +35,121 @@ fn calculate_item_mods_all_implemented() {
 #[test]
 fn test_important_special_infos() {
     let parser = Parser::new();
-    let effects = parser.get_effects_from_special_info(&mut vec![], "Target takes +20% Electricity damage from future attacks for 30 seconds");
-    assert_eq!(effects.unwrap()[0], Effect::Buff(Buff {
-        remaining_duration: 30,
-        effect: BuffEffect::DamageTypeDamageModBuff {
-            damage_type: DamageType::Electricity,
-            damage_mod: 0.2,
-        }
-    }));
-    let effects = parser.get_effects_from_special_info(&mut vec![], "For 15 seconds, additional Infinite Legs attacks deal +18 damage");
-    assert_eq!(effects.unwrap()[0], Effect::Buff(Buff {
-        remaining_duration: 15,
-        effect: BuffEffect::KeywordFlatDamageBuff {
-            keyword: "InfiniteLegs".to_string(),
-            damage: 18,
-        }
-    }));
-    let effects = parser.get_effects_from_special_info(&mut vec![], "You and your allies' melee attacks deal +10 damage for 10 seconds");
-    assert_eq!(effects.unwrap()[0], Effect::Buff(Buff {
-        remaining_duration: 10,
-        effect: BuffEffect::KeywordFlatDamageBuff {
-            keyword: "Melee".to_string(),
-            damage: 10,
-        }
-    }));
-    let effects = parser.get_effects_from_special_info(&mut vec![], "For 10 seconds, all targets deal +35% Crushing damage");
-    assert_eq!(effects.unwrap()[0], Effect::Buff(Buff {
-        remaining_duration: 10,
-        effect: BuffEffect::DamageTypeDamageModBuff {
-            damage_type: DamageType::Crushing,
-            damage_mod: 0.35,
-        }
-    }));
-    let effects = parser.get_effects_from_special_info(&mut vec![], "You and nearby allies deal +22% Trauma damage for 10 seconds");
-    assert_eq!(effects.unwrap()[0], Effect::Buff(Buff {
-        remaining_duration: 10,
-        effect: BuffEffect::DamageTypeDamageModBuff {
-            damage_type: DamageType::Trauma,
-            damage_mod: 0.22,
-        }
-    }));
-    let effects = parser.get_effects_from_special_info(&mut vec![], "For 5 seconds, you gain Direct Poison Damage +30 and Indirect Poison Damage +6 per tick");
-    assert_eq!(effects.clone().unwrap()[0], Effect::Buff(Buff {
-        remaining_duration: 5,
-        effect: BuffEffect::DamageTypeFlatDamageBuff {
-            damage_type: DamageType::Poison,
-            damage: 30,
-        }
-    }));
-    assert_eq!(effects.unwrap()[1], Effect::Buff(Buff {
-        remaining_duration: 5,
-        effect: BuffEffect::DamageTypePerTickDamageBuff {
-            damage_type: DamageType::Poison,
-            damage: 6,
-        }
-    }));
+    let effects = parser.get_effects_from_special_info(
+        &mut vec![],
+        "Target takes +20% Electricity damage from future attacks for 30 seconds",
+    );
+    assert_eq!(
+        effects.unwrap()[0],
+        Effect::Buff(Buff {
+            remaining_duration: 30,
+            effect: BuffEffect::DamageTypeDamageModBuff {
+                damage_type: DamageType::Electricity,
+                damage_mod: 0.2,
+            }
+        })
+    );
+    let effects = parser.get_effects_from_special_info(
+        &mut vec![],
+        "For 15 seconds, additional Infinite Legs attacks deal +18 damage",
+    );
+    assert_eq!(
+        effects.unwrap()[0],
+        Effect::Buff(Buff {
+            remaining_duration: 15,
+            effect: BuffEffect::KeywordFlatDamageBuff {
+                keyword: "InfiniteLegs".to_string(),
+                damage: 18,
+            }
+        })
+    );
+    let effects = parser.get_effects_from_special_info(
+        &mut vec![],
+        "You and your allies' melee attacks deal +10 damage for 10 seconds",
+    );
+    assert_eq!(
+        effects.unwrap()[0],
+        Effect::Buff(Buff {
+            remaining_duration: 10,
+            effect: BuffEffect::KeywordFlatDamageBuff {
+                keyword: "Melee".to_string(),
+                damage: 10,
+            }
+        })
+    );
+    let effects = parser.get_effects_from_special_info(
+        &mut vec![],
+        "For 10 seconds, all targets deal +35% Crushing damage",
+    );
+    assert_eq!(
+        effects.unwrap()[0],
+        Effect::Buff(Buff {
+            remaining_duration: 10,
+            effect: BuffEffect::DamageTypeDamageModBuff {
+                damage_type: DamageType::Crushing,
+                damage_mod: 0.35,
+            }
+        })
+    );
+    let effects = parser.get_effects_from_special_info(
+        &mut vec![],
+        "You and nearby allies deal +22% Trauma damage for 10 seconds",
+    );
+    assert_eq!(
+        effects.unwrap()[0],
+        Effect::Buff(Buff {
+            remaining_duration: 10,
+            effect: BuffEffect::DamageTypeDamageModBuff {
+                damage_type: DamageType::Trauma,
+                damage_mod: 0.22,
+            }
+        })
+    );
+    let effects = parser.get_effects_from_special_info(
+        &mut vec![],
+        "For 5 seconds, you gain Direct Poison Damage +30 and Indirect Poison Damage +6 per tick",
+    );
+    assert_eq!(
+        effects.clone().unwrap()[0],
+        Effect::Buff(Buff {
+            remaining_duration: 5,
+            effect: BuffEffect::DamageTypeFlatDamageBuff {
+                damage_type: DamageType::Poison,
+                damage: 30,
+            }
+        })
+    );
+    assert_eq!(
+        effects.unwrap()[1],
+        Effect::Buff(Buff {
+            remaining_duration: 5,
+            effect: BuffEffect::DamageTypePerTickDamageBuff {
+                damage_type: DamageType::Poison,
+                damage: 6,
+            }
+        })
+    );
     let effects = parser.get_effects_from_special_info(&mut vec![], "Target's Poison attacks deal +12 damage, and Poison damage-over-time attacks deal +1 per tick.");
-    assert_eq!(effects.clone().unwrap()[0], Effect::Buff(Buff {
-        remaining_duration: 60,
-        effect: BuffEffect::DamageTypeFlatDamageBuff {
-            damage_type: DamageType::Poison,
-            damage: 12,
-        }
-    }));
-    assert_eq!(effects.unwrap()[1], Effect::Buff(Buff {
-        remaining_duration: 60,
-        effect: BuffEffect::DamageTypePerTickDamageBuff {
-            damage_type: DamageType::Poison,
-            damage: 1,
-        }
-    }));
+    assert_eq!(
+        effects.clone().unwrap()[0],
+        Effect::Buff(Buff {
+            remaining_duration: 60,
+            effect: BuffEffect::DamageTypeFlatDamageBuff {
+                damage_type: DamageType::Poison,
+                damage: 12,
+            }
+        })
+    );
+    assert_eq!(
+        effects.unwrap()[1],
+        Effect::Buff(Buff {
+            remaining_duration: 60,
+            effect: BuffEffect::DamageTypePerTickDamageBuff {
+                damage_type: DamageType::Poison,
+                damage: 1,
+            }
+        })
+    );
 }
 
 #[test]
@@ -170,7 +220,7 @@ fn test_icon_id_effect(
             icon_ids,
         );
         let effects = item_mods.icon_id_effects.get_mut(&icon_id).unwrap();
-        assert_eq!(test_effects.len(), effects.len(), "item_mods had a different number of effects than it should: effect_desc = {}, test_effects = {:#?}, effects = {:#?}", effect_desc, test_effects, effects);
+        assert_eq!(test_effects.len(), effects.len(), "item_mods had a different number of effects than it should: effect_desc = {}, test_effects = {:#?}, effects = {:#?}, warnings = {:#?}", effect_desc, test_effects, effects, item_mods.warnings);
         // Sort both vectors in order to assert equality
         // There's probably a faster way to do this, but it's just a test
         effects.sort_by(|a, b| a.partial_cmp(b).unwrap());
@@ -2405,8 +2455,8 @@ fn calculate_icon_id_effect_desc() {
         &parser,
         "<icon=2136>Sic 'Em restores 5 Health to both you and your pet",
         vec![2136],
-        vec![Effect::RestoreHealth(5)],
-        0,
+        vec![],
+        1,
     );
     test_icon_id_effect(
         &parser,
@@ -2460,8 +2510,8 @@ fn calculate_icon_id_effect_desc() {
         &parser,
         "<icon=2138>That'll Do restores 12 Health to your pet and 2 Power to you",
         vec![2138],
-        vec![Effect::RestorePower(2)],
-        0,
+        vec![],
+        1,
     );
     test_icon_id_effect(
         &parser,
@@ -2566,7 +2616,7 @@ fn calculate_icon_id_effect_desc() {
         "<icon=2102>Barrage costs -1 Power and restores 3 Armor to you",
         vec![2102],
         vec![Effect::RestoreArmor(3)],
-        0,
+        1,
     );
     test_icon_id_effect(
         &parser,
@@ -2707,8 +2757,8 @@ fn calculate_icon_id_effect_desc() {
         &parser,
         "<icon=2174>Your golem minion's Doom Admixture deals +15 damage",
         vec![2174],
-        vec![Effect::FlatDamage(15)],
-        0,
+        vec![],
+        1,
     );
     test_icon_id_effect(
         &parser,
@@ -2743,7 +2793,7 @@ fn calculate_icon_id_effect_desc() {
         "<icon=3447>Disrupting Bash deals +10% damage and taunts +25",
         vec![3447],
         vec![Effect::DamageMod(0.1)],
-        0,
+        1,
     );
     test_icon_id_effect(
         &parser,
@@ -3052,7 +3102,7 @@ fn calculate_icon_id_effect_desc() {
                 damage_mod: 0.05,
             },
         })],
-        0,
+        1,
     );
     test_icon_id_effect(
         &parser,
@@ -3585,7 +3635,7 @@ fn calculate_icon_id_effect_desc() {
             effect: BuffEffect::DamageTypeFlatDamageBuff {
                 damage_type: DamageType::Nature,
                 damage: 3,
-            }
+            },
         })],
         0,
     );
