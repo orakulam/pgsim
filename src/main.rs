@@ -14,6 +14,10 @@ TODO
 Add in item mods
     Work through and make each one pass
     Make sure all implemented passes too
+    Known issues
+        Elemental Ward boosts your direct and indirect Electricity damage +14 for 30 seconds
+        Terrifying Bite causes the target to take +16% damage from Poison attacks
+            for how long?
 Review all TODOs, any that need to be addressed before alpha? Reviewed once, do one last pass
 Review all warnings from rust compiler
 Run more tests with my current test build
