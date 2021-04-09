@@ -89,6 +89,7 @@ struct ParserRegex {
     flat_damage: Regex,
     proc_flat_damage: Regex,
     range_flat_damage: Regex,
+    range_up_to_damage: Regex,
     damage_mod: Regex,
     proc_damage_mod: Regex,
     dot_damage: Regex,
@@ -98,12 +99,16 @@ struct ParserRegex {
     damage_type: Regex,
     racials: Regex,
     damage_type_damage_mod_buff: Regex,
+    damage_type_damage_mod_buff2: Regex,
     damage_type_next_attack_buff: Regex,
     keyword_next_attack_buff: Regex,
     keyword_core_attack_buff: Regex,
-    keyword_nip_buff: Regex,
+    keyword_nice_attack_buff: Regex,
+    keyword_epic_attack_damage_mod_buff: Regex,
     vulnerability_damage_mod_debuff: Regex,
     vulnerability_flat_damage_debuff: Regex,
+    nip_buff: Regex,
+    fairy_fire_buff: Regex,
 }
 
 pub struct Parser {
@@ -137,11 +142,12 @@ impl Parser {
                 r"\{(?P<attribute>[_A-Z]*)\}\{(?P<mod>[+-]?[0-9]*[.]?[0-9]+)\}(?P<extra>$|\{[a-zA-Z]*\})",
             )
             .unwrap(),
-            flat_damage: Regex::new(r"(?:deal|deals|[dD]amage|damage is) \+?(?P<damage>[0-9]+) ?(?:$|\.|and|damage|[aA]rmor damage|direct damage|direct health damage)").unwrap(),
+            flat_damage: Regex::new(r"(?:deal|deals|[dD]amage|damage is) \+?(?P<damage>[0-9]+) ?(?:$|\. Damage|and|damage|[aA]rmor damage|direct damage|direct health damage)").unwrap(),
             proc_flat_damage:  Regex::new(r"(?P<chance>[0-9]+)% chance to deal \+(?P<damage>[0-9]+) damage").unwrap(),
             range_flat_damage: Regex::new(r"between \+?(?P<min_damage>[0-9]+) and \+?(?P<max_damage>[0-9]+) extra damage").unwrap(),
-            damage_mod: Regex::new(r"(?:deals|[dD]amage) \+?(?P<damage>[0-9]+)% ?(?:$|damage|and|Crushing damage)").unwrap(),
-            proc_damage_mod:  Regex::new(r"(?P<chance>[0-9]+)% (?:chance to deal|chance it deals) \+(?P<damage>[0-9]+)% damage").unwrap(),
+            range_up_to_damage: Regex::new(r"up to \+?(?P<max_damage>[0-9]+) damage").unwrap(),
+            damage_mod: Regex::new(r"(?:deals|[dD]amage) \+?(?P<damage_mod>[+-]?[0-9]*[.]?[0-9]+)% ?(?:$|damage|and|Crushing damage)").unwrap(),
+            proc_damage_mod:  Regex::new(r"(?P<chance>[0-9]+)% (?:chance to deal|chance it deals) \+(?P<damage_mod>[0-9]+)% damage").unwrap(),
             dot_damage:
                 Regex::new(r"(?:deal|deals|Deals|deals an additional|causes|dealing) \+?(?P<damage>[0-9]+).*(?:damage over|damage to melee attackers|Nature damage over)")
                     .unwrap(),
@@ -155,12 +161,16 @@ impl Parser {
             damage_type: Regex::new(r"(?:becomes|deals) (?P<damage_type>Trauma|Fire|Darkness)").unwrap(),
             racials: Regex::new(r"(?:Humans|Orcs|Elves|Dwarves|Rakshasa) gain \+?(?:[0-9]+) Max (?:Health|Hydration|Metabolism|Power|Armor|Bodyheat)").unwrap(),
             damage_type_damage_mod_buff: Regex::new(r"(?P<damage_type>Slashing) damage \+(?P<damage_mod>[0-9]+)% for (?P<duration>[0-9]+) seconds").unwrap(),
+            damage_type_damage_mod_buff2: Regex::new(r"\+(?P<damage_mod>[0-9]+)% damage from (?P<damage_type>Piercing) for (?P<duration>[0-9]+) seconds").unwrap(),
             damage_type_next_attack_buff: Regex::new(r"next attack to deal \+?(?P<damage>[0-9]+) damage if it is a (?P<damage_type>Crushing) (?:ability|attack)").unwrap(),
             keyword_next_attack_buff: Regex::new(r"next attack to deal \+?(?P<damage>[0-9]+) damage if it is a (?P<keyword>Werewolf) (?:ability|attack)").unwrap(),
             keyword_core_attack_buff: Regex::new(r"Core Attack Damage \+?(?P<damage>[0-9]+) for (?P<duration>[0-9]+) seconds").unwrap(),
-            keyword_nip_buff: Regex::new(r"Nip boosts the damage of Basic, Core, and Nice attacks \+?(?P<damage>[0-9]+) for (?P<duration>[0-9]+) seconds").unwrap(),
+            keyword_nice_attack_buff: Regex::new(r"Nice Attacks to deal \+?(?P<damage>[0-9]+) damage for (?P<duration>[0-9]+) seconds").unwrap(),
+            keyword_epic_attack_damage_mod_buff: Regex::new(r"boost your Epic Attack Damage \+(?P<damage_mod>[0-9]+)% for (?P<duration>[0-9]+) seconds").unwrap(),
             vulnerability_damage_mod_debuff: Regex::new(r"(?P<damage_mod>[0-9]+)% more vulnerable to (?P<damage_type>Electricity) damage for (?P<duration>[0-9]+) seconds").unwrap(),
             vulnerability_flat_damage_debuff: Regex::new(r"(?:suffer|take) \+?(?P<damage>[0-9]+) damage from(?:| direct) (?P<damage_type>Cold|Psychic) attacks for (?P<duration>[0-9]+) seconds").unwrap(),
+            nip_buff: Regex::new(r"Nip boosts the damage of Basic, Core, and Nice attacks \+?(?P<damage>[0-9]+) for (?P<duration>[0-9]+) seconds").unwrap(),
+            fairy_fire_buff: Regex::new(r"Fairy Fire causes your next attack to deal \+?(?P<damage>[0-9]+) damage if it's a Psychic, Electricity, or Fire attack").unwrap(),
         }
     }
 
@@ -300,6 +310,13 @@ impl Parser {
             || effect_desc.contains("after a 15 second delay")
             || effect_desc.contains("after a 20 second delay")
             || effect_desc.contains("after a 25 second delay")
+            || effect_desc.contains("every 2 seconds")
+            || effect_desc.contains("every other seconds")
+            || effect_desc.contains("every few seconds")
+            || effect_desc.contains("every 4 seconds")
+            || effect_desc.contains("every 5 seconds")
+            || effect_desc.contains("every five seconds")
+            || effect_desc.contains("speed")
             || effect_desc.contains("Combo: ")
             || effect_desc.contains("Provoke Undead")
             || effect_desc
@@ -309,6 +326,9 @@ impl Parser {
             || effect_desc.contains("damage to undead")
             || effect_desc.contains("Strategic Preparation boosts your in-combat Armor regeneration")
             || effect_desc.contains("damage from indirect Fire")
+            || effect_desc.contains("Rage Attacks")
+            || effect_desc.contains("Blood of the Pack causes you and your allies' attacks to deal")
+            || effect_desc.contains("Knockback")
         {
             warnings.push(format!("Not supported: {}", effect_desc));
             return vec![];
@@ -322,7 +342,6 @@ impl Parser {
             || effect_desc
                 .contains("Chew Cud increases your mitigation versus all attacks by Elites")
             || effect_desc.contains("When you are hit, Finish It damage is")
-            || effect_desc.contains("sprint speed")
             || effect_desc.contains("When Skulk is used, you recover")
             || effect_desc.contains("Your Knee Spikes mutation causes kicks to deal an additional")
             || effect_desc.contains("Coordinated Assault grants all allies")
@@ -330,7 +349,6 @@ impl Parser {
             || effect_desc.contains("Squeal uniformly diminishes all targets' entire aggro lists")
             || effect_desc.contains("Psi Health Wave grants all targets")
             || effect_desc.contains("If Screech, Sonic Burst, or Deathscream deal Trauma damage")
-            || effect_desc.contains("Chance to Ignore Knockbacks")
             || effect_desc.contains("Major Healing abilities")
             || effect_desc.contains("mitigation")
             || effect_desc.contains("Mitigation")
@@ -347,148 +365,102 @@ impl Parser {
             || effect_desc.contains("deal -1 damage for")
             || effect_desc.contains("8-second delay")
             || effect_desc.contains("doesn't cause the target to yell for help")
+            || effect_desc.contains("takes +1 second to channel")
             || effect_desc.contains("Evasion")
             || effect_desc.contains("Max Armor")
             || effect_desc.contains("Max Health")
             || effect_desc.contains("Accuracy")
+            || effect_desc.contains("range")
+            || effect_desc.contains("stacks")
+            || effect_desc.contains("Stacks")
         {
             warnings.push(format!("Not fully supported: {}", effect_desc));
         }
         // Collect all item effects
         let mut effects = vec![];
         if let Some(caps) = self.regex.flat_damage.captures(effect_desc) {
-            // Specifically block this from applying to "next attack" buffs as well
-            if !effect_desc.contains("your next attack to") {
-                effects.push(Effect::FlatDamage(
-                    caps.name("damage")
-                        .unwrap()
-                        .as_str()
-                        .parse::<i32>()
-                        .unwrap(),
-                ));
+            // Specific exclusions
+            if !effect_desc.contains("<icon=3672>") {
+                // Specifically block this from applying to "next attack" buffs as well
+                if !effect_desc.contains("your next attack to") {
+                    effects.push(Effect::FlatDamage(
+                        Parser::get_cap_number(&caps, "damage"),
+                    ));
+                }
             }
         }
         if let Some(caps) = self.regex.proc_damage_mod.captures(effect_desc) {
             effects.push(Effect::ProcDamageMod {
-                damage_mod: caps
-                    .name("damage")
-                    .unwrap()
-                    .as_str()
-                    .parse::<f32>()
-                    .unwrap()
-                    / 100.0,
-                chance: caps
-                    .name("chance")
-                    .unwrap()
-                    .as_str()
-                    .parse::<f32>()
-                    .unwrap()
-                    / 100.0,
+                damage_mod: Parser::get_cap_damage_mod(&caps, "damage_mod"),
+                chance: Parser::get_cap_damage_mod(&caps, "chance"),
             });
         // Hard to differentiate between these two, so we use an else if here since they never seem to coexist
         } else if let Some(caps) = self.regex.damage_mod.captures(effect_desc) {
             effects.push(Effect::DamageMod(
-                caps.name("damage")
-                    .unwrap()
-                    .as_str()
-                    .parse::<f32>()
-                    .unwrap()
-                    / 100.0,
+                Parser::get_cap_damage_mod(&caps, "damage_mod"),
             ));
         }
         if let Some(caps) = self.regex.dot_damage.captures(effect_desc) {
             effects.push(Effect::DotDamage(
-                caps.name("damage")
-                    .unwrap()
-                    .as_str()
-                    .parse::<i32>()
-                    .unwrap(),
+                Parser::get_cap_number(&caps, "damage"),
             ));
         }
         if let Some(caps) = self.regex.restore_health.captures(effect_desc) {
             effects.push(Effect::RestoreHealth(
-                caps.name("restore")
-                    .unwrap()
-                    .as_str()
-                    .parse::<i32>()
-                    .unwrap(),
+                Parser::get_cap_number(&caps, "restore"),
             ));
         }
         if let Some(caps) = self.regex.restore_armor.captures(effect_desc) {
             effects.push(Effect::RestoreArmor(
-                caps.name("restore")
-                    .unwrap()
-                    .as_str()
-                    .parse::<i32>()
-                    .unwrap(),
+                Parser::get_cap_number(&caps, "restore"),
             ));
         }
         if let Some(caps) = self.regex.restore_power.captures(effect_desc) {
             effects.push(Effect::RestorePower(
-                caps.name("restore")
-                    .unwrap()
-                    .as_str()
-                    .parse::<i32>()
-                    .unwrap(),
+                Parser::get_cap_number(&caps, "restore"),
             ));
         }
         if let Some(caps) = self.regex.proc_flat_damage.captures(effect_desc) {
             effects.push(Effect::ProcFlatDamage {
-                damage: caps
-                    .name("damage")
-                    .unwrap()
-                    .as_str()
-                    .parse::<i32>()
-                    .unwrap(),
-                chance: caps
-                    .name("chance")
-                    .unwrap()
-                    .as_str()
-                    .parse::<f32>()
-                    .unwrap()
-                    / 100.0,
+                damage: Parser::get_cap_number(&caps, "damage"),
+                chance: Parser::get_cap_damage_mod(&caps, "chance"),
             });
         }
         if let Some(caps) = self.regex.range_flat_damage.captures(effect_desc) {
             effects.push(Effect::RangeFlatDamage {
-                min_damage: caps
-                    .name("min_damage")
-                    .unwrap()
-                    .as_str()
-                    .parse::<i32>()
-                    .unwrap(),
-                max_damage: caps
-                    .name("max_damage")
-                    .unwrap()
-                    .as_str()
-                    .parse::<i32>()
-                    .unwrap(),
+                min_damage: Parser::get_cap_number(&caps, "min_damage"),
+                max_damage: Parser::get_cap_number(&caps, "max_damage"),
+            });
+        }
+        if let Some(caps) = self.regex.range_up_to_damage.captures(effect_desc) {
+            effects.push(Effect::RangeFlatDamage {
+                min_damage: 0,
+                max_damage: Parser::get_cap_number(&caps, "max_damage"),
             });
         }
         if let Some(caps) = self.regex.damage_type.captures(effect_desc) {
             effects.push(Effect::DamageType(
-                DamageType::from_str(caps.name("damage_type").unwrap().as_str())
+                DamageType::from_str(Parser::get_cap_string(&caps, "damage_type"))
                     .expect("Failed to parse damage type string as enum"),
             ));
         }
         if let Some(caps) = self.regex.damage_type_damage_mod_buff.captures(effect_desc) {
             effects.push(Effect::Buff(Buff {
-                remaining_duration: caps
-                    .name("duration")
-                    .unwrap()
-                    .as_str()
-                    .parse::<i32>()
-                    .unwrap(),
+                remaining_duration: Parser::get_cap_number(&caps, "duration"),
                 effect: BuffEffect::DamageTypeDamageModBuff {
-                    damage_type: DamageType::from_str(caps.name("damage_type").unwrap().as_str())
+                    damage_type: DamageType::from_str(Parser::get_cap_string(&caps, "damage_type"))
                         .expect("Failed to parse damage type string as enum"),
-                    damage_mod: caps
-                        .name("damage_mod")
-                        .unwrap()
-                        .as_str()
-                        .parse::<f32>()
-                        .unwrap()
-                        / 100.0,
+                    damage_mod: Parser::get_cap_damage_mod(&caps, "damage_mod"),
+                },
+            }));
+        }
+        if let Some(caps) = self.regex.damage_type_damage_mod_buff2.captures(effect_desc) {
+            effects.push(Effect::Buff(Buff {
+                remaining_duration: Parser::get_cap_number(&caps, "duration"),
+                effect: BuffEffect::DamageTypeDamageModBuff {
+                    damage_type: DamageType::from_str(Parser::get_cap_string(&caps, "damage_type"))
+                        .expect("Failed to parse damage type string as enum"),
+                    damage_mod: Parser::get_cap_damage_mod(&caps, "damage_mod"),
                 },
             }));
         }
@@ -500,14 +472,9 @@ impl Parser {
             effects.push(Effect::Buff(Buff {
                 remaining_duration: 1,
                 effect: BuffEffect::DamageTypeFlatDamageBuff {
-                    damage_type: DamageType::from_str(caps.name("damage_type").unwrap().as_str())
+                    damage_type: DamageType::from_str(Parser::get_cap_string(&caps, "damage_type"))
                         .expect("Failed to parse damage type string as enum"),
-                    damage: caps
-                        .name("damage")
-                        .unwrap()
-                        .as_str()
-                        .parse::<i32>()
-                        .unwrap(),
+                    damage: Parser::get_cap_number(&caps, "damage"),
                 },
             }));
         }
@@ -515,48 +482,69 @@ impl Parser {
             effects.push(Effect::Buff(Buff {
                 remaining_duration: 1,
                 effect: BuffEffect::KeywordFlatDamageBuff {
-                    keyword: caps.name("keyword").unwrap().as_str().to_string(),
-                    damage: caps
-                        .name("damage")
-                        .unwrap()
-                        .as_str()
-                        .parse::<i32>()
-                        .unwrap(),
+                    keyword: Parser::get_cap_string(&caps, "keyword").to_string(),
+                    damage: Parser::get_cap_number(&caps, "damage"),
                 },
             }));
         }
         if let Some(caps) = self.regex.keyword_core_attack_buff.captures(effect_desc) {
             effects.push(Effect::Buff(Buff {
-                remaining_duration: caps
-                    .name("duration")
-                    .unwrap()
-                    .as_str()
-                    .parse::<i32>()
-                    .unwrap(),
+                remaining_duration: Parser::get_cap_number(&caps, "duration"),
                 effect: BuffEffect::KeywordFlatDamageBuff {
                     keyword: "CoreAttack".to_string(),
-                    damage: caps
-                        .name("damage")
-                        .unwrap()
-                        .as_str()
-                        .parse::<i32>()
-                        .unwrap(),
+                    damage: Parser::get_cap_number(&caps, "damage"),
                 },
             }));
         }
-        if let Some(caps) = self.regex.keyword_nip_buff.captures(effect_desc) {
-            let damage = caps
-                .name("damage")
-                .unwrap()
-                .as_str()
-                .parse::<i32>()
-                .unwrap();
-            let duration = caps
-                .name("duration")
-                .unwrap()
-                .as_str()
-                .parse::<i32>()
-                .unwrap();
+        if let Some(caps) = self.regex.keyword_nice_attack_buff.captures(effect_desc) {
+            effects.push(Effect::Buff(Buff {
+                remaining_duration: Parser::get_cap_number(&caps, "duration"),
+                effect: BuffEffect::KeywordFlatDamageBuff {
+                    keyword: "NiceAttack".to_string(),
+                    damage: Parser::get_cap_number(&caps, "damage"),
+                },
+            }));
+        }
+        if let Some(caps) = self.regex.keyword_epic_attack_damage_mod_buff.captures(effect_desc) {
+            effects.push(Effect::Buff(Buff {
+                remaining_duration: Parser::get_cap_number(&caps, "duration"),
+                effect: BuffEffect::KeywordDamageModBuff {
+                    keyword: "EpicAttack".to_string(),
+                    damage_mod: Parser::get_cap_damage_mod(&caps, "damage_mod"),
+                },
+            }));
+        }
+        if let Some(caps) = self
+            .regex
+            .vulnerability_damage_mod_debuff
+            .captures(effect_desc)
+        {
+            effects.push(Effect::Debuff(Debuff {
+                remaining_duration: Parser::get_cap_number(&caps, "duration"),
+                effect: DebuffEffect::VulnerabilityDamageModDebuff {
+                    damage_type: DamageType::from_str(Parser::get_cap_string(&caps, "damage_type"))
+                        .expect("Failed to parse damage type string as enum"),
+                    damage_mod: Parser::get_cap_damage_mod(&caps, "damage_mod"),
+                },
+            }));
+        }
+        if let Some(caps) = self
+            .regex
+            .vulnerability_flat_damage_debuff
+            .captures(effect_desc)
+        {
+            effects.push(Effect::Debuff(Debuff {
+                remaining_duration: Parser::get_cap_number(&caps, "duration"),
+                effect: DebuffEffect::VulnerabilityFlatDamageDebuff {
+                    damage_type: DamageType::from_str(Parser::get_cap_string(&caps, "damage_type"))
+                        .expect("Failed to parse damage type string as enum"),
+                    damage: Parser::get_cap_number(&caps, "damage"),
+                },
+            }));
+        }
+        if let Some(caps) = self.regex.nip_buff.captures(effect_desc) {
+            let damage = Parser::get_cap_number(&caps, "damage");
+            let duration = Parser::get_cap_number(&caps, "duration");
             effects.push(Effect::Buff(Buff {
                 remaining_duration: duration,
                 effect: BuffEffect::KeywordFlatDamageBuff {
@@ -579,56 +567,57 @@ impl Parser {
                 },
             }));
         }
-        if let Some(caps) = self
-            .regex
-            .vulnerability_damage_mod_debuff
-            .captures(effect_desc)
-        {
-            effects.push(Effect::Debuff(Debuff {
-                remaining_duration: caps
-                    .name("duration")
-                    .unwrap()
-                    .as_str()
-                    .parse::<i32>()
-                    .unwrap(),
-                effect: DebuffEffect::VulnerabilityDamageModDebuff {
-                    damage_type: DamageType::from_str(caps.name("damage_type").unwrap().as_str())
-                        .expect("Failed to parse damage type string as enum"),
-                    damage_mod: caps
-                        .name("damage_mod")
-                        .unwrap()
-                        .as_str()
-                        .parse::<f32>()
-                        .unwrap()
-                        / 100.0,
+        if let Some(caps) = self.regex.fairy_fire_buff.captures(effect_desc) {
+            let damage = Parser::get_cap_number(&caps, "damage");
+            effects.push(Effect::Buff(Buff {
+                remaining_duration: 1,
+                effect: BuffEffect::DamageTypeFlatDamageBuff {
+                    damage_type: DamageType::Psychic,
+                    damage,
                 },
             }));
-        }
-        if let Some(caps) = self
-            .regex
-            .vulnerability_flat_damage_debuff
-            .captures(effect_desc)
-        {
-            effects.push(Effect::Debuff(Debuff {
-                remaining_duration: caps
-                    .name("duration")
-                    .unwrap()
-                    .as_str()
-                    .parse::<i32>()
-                    .unwrap(),
-                effect: DebuffEffect::VulnerabilityFlatDamageDebuff {
-                    damage_type: DamageType::from_str(caps.name("damage_type").unwrap().as_str())
-                        .expect("Failed to parse damage type string as enum"),
-                    damage: caps
-                        .name("damage")
-                        .unwrap()
-                        .as_str()
-                        .parse::<i32>()
-                        .unwrap(),
+            effects.push(Effect::Buff(Buff {
+                remaining_duration: 1,
+                effect: BuffEffect::DamageTypeFlatDamageBuff {
+                    damage_type: DamageType::Electricity,
+                    damage,
+                },
+            }));
+            effects.push(Effect::Buff(Buff {
+                remaining_duration: 1,
+                effect: BuffEffect::DamageTypeFlatDamageBuff {
+                    damage_type: DamageType::Fire,
+                    damage,
                 },
             }));
         }
         effects
+    }
+
+    fn get_cap_string<'a>(caps: &'a regex::Captures, name: &str) -> &'a str {
+        caps
+            .name(name)
+            .unwrap()
+            .as_str()
+    }
+
+    fn get_cap_number(caps: &regex::Captures, name: &str) -> i32 {
+        caps
+            .name(name)
+            .unwrap()
+            .as_str()
+            .parse::<i32>()
+            .unwrap()
+    }
+
+    fn get_cap_damage_mod(caps: &regex::Captures, name: &str) -> f32 {
+        caps
+            .name(name)
+            .unwrap()
+            .as_str()
+            .parse::<f32>()
+            .unwrap()
+            / 100.0
     }
 
     fn calculate_attribute_effect_desc(&self, item_mods: &mut ItemMods, effect_desc: &str) {

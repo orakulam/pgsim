@@ -1150,7 +1150,7 @@ fn calculate_icon_id_effect_desc() {
         &parser,
         "<icon=3663><icon=3665>Whenever you take damage from an enemy, you gain Song of Discord Damage +3% and Song of Resurgence Healing +3 for 20 seconds. (Stacks up to 12x)",
         vec![3663, 3665],
-        vec![],
+        vec![Effect::DamageMod(0.03)],
         1,
     );
     test_icon_id_effect(
