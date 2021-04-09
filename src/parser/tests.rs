@@ -3135,8 +3135,8 @@ fn calculate_icon_id_effect_desc() {
         &parser,
         "<icon=2256>When you teleport via Shadow Feint, you recover 10 Health",
         vec![2256],
-        vec![],
-        1,
+        vec![Effect::RestoreHealth(10)],
+        0,
     );
     test_icon_id_effect(
         &parser,

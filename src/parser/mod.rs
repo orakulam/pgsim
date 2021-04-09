@@ -106,6 +106,7 @@ struct ParserRegex {
     keyword_kick_buff: Regex,
     keyword_core_attack_buff: Regex,
     keyword_nice_attack_buff: Regex,
+    keyword_epic_attack_buff: Regex,
     keyword_epic_attack_damage_mod_buff: Regex,
     keyword_melee_flat_damage_buff: Regex,
     keyword_signature_debuff_buff: Regex,
@@ -115,10 +116,12 @@ struct ParserRegex {
     fairy_fire_buff: Regex,
     skulk_buff: Regex,
     infinite_legs_buff: Regex,
+    admonish_buff: Regex,
     poisoners_cut_buff: Regex,
     poisoners_cut_item_buff: Regex,
     give_warmth_buff: Regex,
     fill_with_bile_buff: Regex,
+    fill_with_bile_item_buff: Regex,
     privacy_field: Regex,
 }
 
@@ -157,7 +160,7 @@ impl Parser {
             proc_flat_damage:  Regex::new(r"(?P<chance>[0-9]+)% chance to deal \+(?P<damage>[0-9]+) damage").unwrap(),
             range_flat_damage: Regex::new(r"between \+?(?P<min_damage>[0-9]+) and \+?(?P<max_damage>[0-9]+) extra damage").unwrap(),
             range_up_to_damage: Regex::new(r"up to \+?(?P<max_damage>[0-9]+) damage").unwrap(),
-            damage_mod: Regex::new(r"(?:deal|deals|[dD]amage) \+?(?P<damage_mod>[0-9]*[.]?[0-9]+)% ?(?:$|damage|direct damage|and|Crushing damage)").unwrap(),
+            damage_mod: Regex::new(r"(?:deal|deals|[dD]amage) \+?(?P<damage_mod>[0-9]*[.]?[0-9]+)% ?(?:$|damage|direct damage|and|Crushing damage|piercing damage)").unwrap(),
             proc_damage_mod:  Regex::new(r"(?P<chance>[0-9]+)% (?:chance to deal|chance it deals) \+(?P<damage_mod>[0-9]+)% damage").unwrap(),
             dot_damage:
                 Regex::new(r"(?:deal|deals|Deals|deals an additional|causes|dealing|target to take) \+?(?P<damage>[0-9]+).*(?:damage over|damage to melee attackers|Nature damage over|Trauma damage over|Poison damage to health over)")
@@ -179,6 +182,7 @@ impl Parser {
             keyword_kick_buff: Regex::new(r"all kicks \+?(?P<damage>[0-9]+) for (?P<duration>[0-9]+) seconds").unwrap(),
             keyword_core_attack_buff: Regex::new(r"Core Attack(?:s to deal| [dD]amage) \+?(?P<damage>[0-9]+) (?:for|damage for) (?P<duration>[0-9]+) seconds").unwrap(),
             keyword_nice_attack_buff: Regex::new(r"Nice Attack(?:s to deal| [dD]amage) \+?(?P<damage>[0-9]+) (?:for|damage for) (?P<duration>[0-9]+) seconds").unwrap(),
+            keyword_epic_attack_buff: Regex::new(r"Epic Attack(?:s to deal| [dD]amage) \+?(?P<damage>[0-9]+) .*for (?P<duration>[0-9]+) seconds").unwrap(),
             keyword_epic_attack_damage_mod_buff: Regex::new(r"boost your Epic Attack Damage \+(?P<damage_mod>[0-9]+)% for (?P<duration>[0-9]+) seconds").unwrap(),
             keyword_melee_flat_damage_buff: Regex::new(r"You and your allies' melee attacks deal \+?(?P<damage>[0-9]+) damage for (?P<duration>[0-9]+) seconds").unwrap(),
             keyword_signature_debuff_buff: Regex::new(r"Signature Debuff abilities to deal \+?(?P<damage>[0-9]+) damage for (?P<duration>[0-9]+) seconds").unwrap(),
@@ -188,10 +192,12 @@ impl Parser {
             fairy_fire_buff: Regex::new(r"Fairy Fire causes your next attack to deal \+?(?P<damage>[0-9]+) damage if it's a Psychic, Electricity, or Fire attack").unwrap(),
             skulk_buff: Regex::new(r"Skulk boosts the damage of your Core and Nice Attacks \+?(?P<damage>[0-9]+) for (?P<duration>[0-9]+) seconds").unwrap(),
             infinite_legs_buff: Regex::new(r"For (?P<duration>[0-9]+) seconds, additional Infinite Legs attacks deal \+?(?P<damage>[0-9]+) damage").unwrap(),
+            admonish_buff: Regex::new(r"Admonish boosts your Priest Damage \+?(?P<damage>[0-9]+) for (?P<duration>[0-9]+) seconds").unwrap(),
             poisoners_cut_buff: Regex::new(r"For (?P<duration>[0-9]+) seconds, you gain Direct Poison Damage \+?(?P<damage>[0-9]+) and Indirect Poison Damage \+?(?P<per_tick_damage>[0-9]+) per tick").unwrap(),
             poisoners_cut_item_buff: Regex::new(r"Poisoner's Cut boosts Indirect Poison Damage an additional \+?(?P<per_tick_damage>[0-9]+) per tick").unwrap(),
             give_warmth_buff: Regex::new(r"Give Warmth boosts the target's fire damage-over-time by \+?(?P<per_tick_damage>[0-9]+) per tick for (?P<duration>[0-9]+) seconds").unwrap(),
-            fill_with_bile_buff: Regex::new(r"Target's Poison attacks deal \+?(?P<damage>[0-9]+) damage, and Poison damage-over-time attacks deal \+?(?P<per_tick_damage>[0-9]+) per tick.").unwrap(),
+            fill_with_bile_buff: Regex::new(r"Fill With Bile increases target's direct Poison damage \+?(?P<damage>[0-9]+)").unwrap(),
+            fill_with_bile_item_buff: Regex::new(r"Target's Poison attacks deal \+?(?P<damage>[0-9]+) damage, and Poison damage-over-time attacks deal \+?(?P<per_tick_damage>[0-9]+) per tick.").unwrap(),
             privacy_field: Regex::new(r"Privacy Field also deals its damage when you are hit by burst attacks, and damage is \+?(?P<damage>[0-9]+)").unwrap(),
         }
     }
@@ -371,6 +377,7 @@ impl Parser {
             "knocked down",
             "Summoned Skeletons",
             "damage to targets that are covered in Fairy Fire",
+            "Future Pack Attacks to the same target deal",
             "near your Web Trap",
         ];
         for test in not_supported_tests {
@@ -470,6 +477,7 @@ impl Parser {
                 && !effect_desc.contains("<icon=2224>")
                 && !effect_desc.contains("<icon=3775>")
                 && !effect_desc.contains("<icon=2155>")
+                && !effect_desc.contains("Tell Me About Your Mother boosts your Epic Attack Damage")
                 && !effect_desc.contains("Apprehend causes your Nice Attacks to deal")
                 && !effect_desc.contains("Fire Breath and Super Fireball deal")
                 && !effect_desc.contains("melee attacks deal")
@@ -477,6 +485,7 @@ impl Parser {
                 && !effect_desc.contains("Target's Poison attacks deal")
                 && !effect_desc.contains("Spit Acid causes your Signature Debuff abilities to deal")
                 && !effect_desc.contains("additional Infinite Legs attacks")
+                && !effect_desc.contains("Fill With Bile increases target's direct Poison damage")
             {
                 // Specifically block this from applying to "next attack" buffs as well
                 if !effect_desc.contains("your next attack to") {
@@ -631,6 +640,15 @@ impl Parser {
                 },
             }));
         }
+        if let Some(caps) = self.regex.keyword_epic_attack_buff.captures(effect_desc) {
+            effects.push(Effect::Buff(Buff {
+                remaining_duration: Parser::get_cap_number(&caps, "duration"),
+                effect: BuffEffect::KeywordFlatDamageBuff {
+                    keyword: "EpicAttack".to_string(),
+                    damage: Parser::get_cap_number(&caps, "damage"),
+                },
+            }));
+        }
         if let Some(caps) = self
             .regex
             .keyword_epic_attack_damage_mod_buff
@@ -774,6 +792,15 @@ impl Parser {
                 },
             }));
         }
+        if let Some(caps) = self.regex.admonish_buff.captures(effect_desc) {
+            effects.push(Effect::Buff(Buff {
+                remaining_duration: Parser::get_cap_number(&caps, "duration"),
+                effect: BuffEffect::KeywordFlatDamageBuff {
+                    keyword: "Priest".to_string(),
+                    damage: Parser::get_cap_number(&caps, "damage"),
+                },
+            }));
+        }
         if let Some(caps) = self.regex.poisoners_cut_buff.captures(effect_desc) {
             let duration = Parser::get_cap_number(&caps, "duration");
             effects.push(Effect::Buff(Buff {
@@ -810,6 +837,15 @@ impl Parser {
             }));
         }
         if let Some(caps) = self.regex.fill_with_bile_buff.captures(effect_desc) {
+            effects.push(Effect::Buff(Buff {
+                remaining_duration: 60,
+                effect: BuffEffect::DamageTypeFlatDamageBuff {
+                    damage_type: DamageType::Poison,
+                    damage: Parser::get_cap_number(&caps, "damage"),
+                },
+            }));
+        }
+        if let Some(caps) = self.regex.fill_with_bile_item_buff.captures(effect_desc) {
             effects.push(Effect::Buff(Buff {
                 remaining_duration: 60,
                 effect: BuffEffect::DamageTypeFlatDamageBuff {
