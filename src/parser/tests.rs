@@ -20,7 +20,7 @@ fn calculate_item_mods_all_implemented() {
             total_things_parsed += item_mods.warnings.len();
             total_things_parsed += item_mods.not_implemented.len();
             assert_eq!(item_mods.not_implemented.len(), 0);
-            if total_things_parsed == 0 {
+            if total_things_parsed == 0 && tier.effect_descs.len() > 0 {
                 not_implemented.push(format!(
                     "Failed to parse anything from item mod: {:#?}, {:#?}",
                     tier.effect_descs, item_mods
@@ -4086,6 +4086,643 @@ fn calculate_icon_id_effect_desc() {
         "<icon=2184><icon=2178><icon=2171>All bomb attacks ignite the target, causing them to take 35 fire damage over 10 seconds",
         vec![2184, 2178, 2171],
         vec![Effect::DotDamage(35)],
+        0,
+    );
+    test_icon_id_effect(
+        &parser,
+        "<icon=2192>For 60 seconds after using Blocking Stance, First Aid heals you +74",
+        vec![],
+        vec![Effect::FlatDamage(50_000)],
+        0,
+    );
+    test_icon_id_effect(
+        &parser,
+        "<icon=2123>Tell Me About Your Mother causes target's attacks to deal -2 damage for 60 seconds",
+        vec![],
+        vec![Effect::FlatDamage(50_000)],
+        0,
+    );
+    test_icon_id_effect(
+        &parser,
+        "<icon=3555>Premeditated Doom boosts sprint speed +1.5 for 20 seconds",
+        vec![],
+        vec![Effect::FlatDamage(50_000)],
+        0,
+    );
+    test_icon_id_effect(
+        &parser,
+        "<icon=3747>Flesh to Fuel increases your Out of Combat Sprint speed +6 for 15 seconds",
+        vec![],
+        vec![Effect::FlatDamage(50_000)],
+        0,
+    );
+    test_icon_id_effect(
+        &parser,
+        "<icon=3070>System Shock boosts the damage of your Signature Debuffs by +74 for 6 seconds",
+        vec![],
+        vec![Effect::FlatDamage(50_000)],
+        0,
+    );
+    test_icon_id_effect(
+        &parser,
+        "<icon=2230>Pig Punt has a 35% chance to confuse the target about which enemy is which, permanently shuffling their hatred levels toward all enemies they know about",
+        vec![],
+        vec![Effect::FlatDamage(50_000)],
+        0,
+    );
+    test_icon_id_effect(
+        &parser,
+        "<icon=3776>Coordinated Assault causes all allies' Melee attacks to cost -10 Power for 30 seconds",
+        vec![],
+        vec![Effect::FlatDamage(50_000)],
+        0,
+    );
+    test_icon_id_effect(
+        &parser,
+        "<icon=2195>Using Raise Zombie on an existing zombie increases its damage +22% for 60 seconds",
+        vec![],
+        vec![Effect::FlatDamage(50_000)],
+        0,
+    );
+    test_icon_id_effect(
+        &parser,
+        "<icon=2124>Strike a Nerve Damage +65 (this treasure effect is retired and is using a placeholder buff)",
+        vec![],
+        vec![Effect::FlatDamage(50_000)],
+        0,
+    );
+    test_icon_id_effect(
+        &parser,
+        "<icon=3202><icon=3203>Psi Power Wave and Psi Armor Wave cause all targets' melee attacks to cost -4 Power for 20 seconds",
+        vec![],
+        vec![Effect::FlatDamage(50_000)],
+        0,
+    );
+    test_icon_id_effect(
+        &parser,
+        "<icon=3641>Elemental Ward boosts your direct and indirect Electricity damage +14 for 30 seconds",
+        vec![],
+        vec![Effect::FlatDamage(50_000)],
+        0,
+    );
+    test_icon_id_effect(
+        &parser,
+        "<icon=2160>Animal Handling pets absorb some direct damage based on their remaining Armor (absorbing 0% when armor is empty, up to 20% when armor is full)",
+        vec![],
+        vec![Effect::FlatDamage(50_000)],
+        0,
+    );
+    test_icon_id_effect(
+        &parser,
+        "<icon=3069>Calefaction deals 141 additional Fire damage after a 12 second delay",
+        vec![],
+        vec![Effect::FlatDamage(50_000)],
+        0,
+    );
+    test_icon_id_effect(
+        &parser,
+        "<icon=3301>Poison Arrow increases the damage target takes from Poison by 17% for 10 seconds",
+        vec![],
+        vec![Effect::FlatDamage(50_000)],
+        0,
+    );
+    test_icon_id_effect(
+        &parser,
+        "<icon=2153>For 10 seconds after using Doe Eyes, you mitigate +30 from all attacks, and a further +60 from Elite attacks",
+        vec![],
+        vec![Effect::FlatDamage(50_000)],
+        0,
+    );
+    test_icon_id_effect(
+        &parser,
+        "<icon=3676>Disharmony causes target to deal -8 damage with their next attack",
+        vec![],
+        vec![Effect::FlatDamage(50_000)],
+        0,
+    );
+    test_icon_id_effect(
+        &parser,
+        "<icon=2136>When you use Sic Em, your sprint speed increases by +4.5 for 10 seconds",
+        vec![],
+        vec![Effect::FlatDamage(50_000)],
+        0,
+    );
+    test_icon_id_effect(
+        &parser,
+        "<icon=2231>Squeal boosts sprint speed by 9.5 for 10 seconds",
+        vec![],
+        vec![Effect::FlatDamage(50_000)],
+        0,
+    );
+    test_icon_id_effect(
+        &parser,
+        "<icon=3407>Cow's Bash costs -39 Power",
+        vec![],
+        vec![Effect::FlatDamage(50_000)],
+        0,
+    );
+    test_icon_id_effect(
+        &parser,
+        "<icon=3458>Strategic Preparation causes your next attack to deal +58 damage if it is a Crushing, Slashing, or Piercing attack",
+        vec![],
+        vec![Effect::FlatDamage(50_000)],
+        0,
+    );
+    test_icon_id_effect(
+        &parser,
+        "<icon=3695>Rabbit's Foot grants you and nearby allies +4% Earned Combat XP for 20 seconds",
+        vec![],
+        vec![Effect::FlatDamage(50_000)],
+        0,
+    );
+    test_icon_id_effect(
+        &parser,
+        "<icon=2113>Many Cuts knocks back targets that have less than a third of their Armor, also dealing +35 damage",
+        vec![],
+        vec![Effect::FlatDamage(50_000)],
+        0,
+    );
+    test_icon_id_effect(
+        &parser,
+        "<icon=3202><icon=3746>Psi Health Wave and Psi Armor Wave instantly heal you for 35 health",
+        vec![],
+        vec![Effect::FlatDamage(50_000)],
+        0,
+    );
+    test_icon_id_effect(
+        &parser,
+        "<icon=2206><icon=2209>Room-Temperature Ball and Defensive Burst cause the target's attacks to deal -16 damage for 10 seconds",
+        vec![],
+        vec![Effect::FlatDamage(50_000)],
+        0,
+    );
+    test_icon_id_effect(
+        &parser,
+        "<icon=2160>Animal Handling pets have +57% Death Avoidance (ignores a fatal attack once; resets after 15 minutes)",
+        vec![],
+        vec![Effect::FlatDamage(50_000)],
+        0,
+    );
+    test_icon_id_effect(
+        &parser,
+        "<icon=3309>Fire Arrow suddenly deals an additional 40 indirect Fire damage after a 12 second delay",
+        vec![],
+        vec![Effect::FlatDamage(50_000)],
+        0,
+    );
+    test_icon_id_effect(
+        &parser,
+        "<icon=3422>Heed The Stick deals +16% Damage and Taunts +1140",
+        vec![],
+        vec![Effect::FlatDamage(50_000)],
+        0,
+    );
+    test_icon_id_effect(
+        &parser,
+        "<icon=3555>Premeditated Doom channeling time is -1 second and boosts your Indirect Poison damage +2 (per tick) for 20 seconds",
+        vec![],
+        vec![Effect::FlatDamage(50_000)],
+        0,
+    );
+    test_icon_id_effect(
+        &parser,
+        "<icon=3676>Disharmony causes target to deal -1 damage with their next attack",
+        vec![],
+        vec![Effect::FlatDamage(50_000)],
+        0,
+    );
+    test_icon_id_effect(
+        &parser,
+        "<icon=2197>Heart's Power has a 11% chance to not actually consume the heart(s)",
+        vec![],
+        vec![Effect::FlatDamage(50_000)],
+        0,
+    );
+    test_icon_id_effect(
+        &parser,
+        "<icon=3667><icon=3675>Entrancing Lullaby and Anthem of Avoidance cost -10 Power",
+        vec![],
+        vec![Effect::FlatDamage(50_000)],
+        0,
+    );
+    test_icon_id_effect(
+        &parser,
+        "<icon=3032>Terrifying Bite causes the target to take +16% damage from Poison attacks",
+        vec![],
+        vec![Effect::FlatDamage(50_000)],
+        0,
+    );
+    test_icon_id_effect(
+        &parser,
+        "<icon=2251>Summoned Deer have +38 health",
+        vec![],
+        vec![Effect::FlatDamage(50_000)],
+        0,
+    );
+    test_icon_id_effect(
+        &parser,
+        "<icon=2223>Inspire Confidence increases the damage of all targets' attacks +12 for 30 seconds",
+        vec![],
+        vec![Effect::FlatDamage(50_000)],
+        0,
+    );
+    test_icon_id_effect(
+        &parser,
+        "<icon=2175>Healing Mist heals +111 Armor",
+        vec![],
+        vec![Effect::FlatDamage(50_000)],
+        0,
+    );
+    test_icon_id_effect(
+        &parser,
+        "<icon=2128>Wind Strike causes your next attack to deal +51 damage",
+        vec![],
+        vec![Effect::FlatDamage(50_000)],
+        0,
+    );
+    test_icon_id_effect(
+        &parser,
+        "<icon=3451>While Bulwark Mode is enabled you recover 3 Power per second",
+        vec![],
+        vec![Effect::FlatDamage(50_000)],
+        0,
+    );
+    test_icon_id_effect(
+        &parser,
+        "<icon=3726>The maximum Power restored by Admonish increases +9",
+        vec![],
+        vec![Effect::FlatDamage(50_000)],
+        0,
+    );
+    test_icon_id_effect(
+        &parser,
+        "<icon=3549>Drink Blood deals +51 Piercing damage",
+        vec![],
+        vec![Effect::FlatDamage(50_000)],
+        0,
+    );
+    test_icon_id_effect(
+        &parser,
+        "<icon=3691><icon=3704><icon=3752>All Bun-Fu moves cost -14 Power",
+        vec![],
+        vec![Effect::FlatDamage(50_000)],
+        0,
+    );
+    test_icon_id_effect(
+        &parser,
+        "<icon=2232>Mudbath causes the target to take 7% less damage from all attacks for 10 seconds",
+        vec![],
+        vec![Effect::FlatDamage(50_000)],
+        0,
+    );
+    test_icon_id_effect(
+        &parser,
+        "<icon=2160>Animal Handling pets have +44 Enthusiasm (which boosts XP earned and critical-hit chance)",
+        vec![],
+        vec![Effect::FlatDamage(50_000)],
+        0,
+    );
+    test_icon_id_effect(
+        &parser,
+        "<icon=3670>Moment of Resolve dispels any Stun effects on allies and grants them immunity to Stuns for 8 seconds",
+        vec![],
+        vec![Effect::FlatDamage(50_000)],
+        0,
+    );
+    test_icon_id_effect(
+        &parser,
+        "<icon=2230>Pig Punt has a 65% chance to slow target's movement by 45%",
+        vec![],
+        vec![Effect::FlatDamage(50_000)],
+        0,
+    );
+    test_icon_id_effect(
+        &parser,
+        "<icon=2220>Ridicule boosts movement speed by 1.5 for 6 seconds",
+        vec![],
+        vec![Effect::FlatDamage(50_000)],
+        0,
+    );
+    test_icon_id_effect(
+        &parser,
+        "<icon=2210>For 30 seconds after you use Moo of Determination, any physical (Slashing/Piercing/Crushing) attacks that hit you are reduced by 8. This absorbed damage is added to your next Front Kick.",
+        vec![],
+        vec![Effect::FlatDamage(50_000)],
+        0,
+    );
+    test_icon_id_effect(
+        &parser,
+        "<icon=3525>Blizzard has a 80% chance to cause all sentient targets to flee in terror",
+        vec![],
+        vec![Effect::FlatDamage(50_000)],
+        0,
+    );
+    test_icon_id_effect(
+        &parser,
+        "<icon=3549>Drink Blood costs -17 Power",
+        vec![],
+        vec![Effect::FlatDamage(50_000)],
+        0,
+    );
+    test_icon_id_effect(
+        &parser,
+        "<icon=3631>Restorative Arrow heals YOU for 90 Health",
+        vec![],
+        vec![Effect::FlatDamage(50_000)],
+        0,
+    );
+    test_icon_id_effect(
+        &parser,
+        "<icon=2192>Blocking Stance boosts your Psychic Damage +4.25% for 30 seconds",
+        vec![],
+        vec![Effect::FlatDamage(50_000)],
+        0,
+    );
+    test_icon_id_effect(
+        &parser,
+        "<icon=2240><icon=2105>Cobra Strike and Mamba Strike boost your Nice Attack and Signature Debuff ability damage +31 for 7 seconds",
+        vec![],
+        vec![Effect::FlatDamage(50_000)],
+        0,
+    );
+    test_icon_id_effect(
+        &parser,
+        "<icon=3305>Long Shot boosts your Armor Regeneration (in-combat) +1 for 15 seconds",
+        vec![],
+        vec![Effect::FlatDamage(50_000)],
+        0,
+    );
+    test_icon_id_effect(
+        &parser,
+        "<icon=3464>Clobbering Hoof infects the target, causing 220 Nature damage over 10 seconds",
+        vec![],
+        vec![Effect::FlatDamage(50_000)],
+        0,
+    );
+    test_icon_id_effect(
+        &parser,
+        "<icon=2156>Graze boosts your out-of-combat sprint speed by 8.5 for 30 seconds",
+        vec![],
+        vec![Effect::FlatDamage(50_000)],
+        0,
+    );
+    test_icon_id_effect(
+        &parser,
+        "<icon=3627><icon=2203><icon=2119>While Unarmed skill is active: 28.5% of all Darkness and Psychic damage you take is mitigated and added to the damage done by your next Punch, Jab, or Infuriating Fist at a 380% rate",
+        vec![],
+        vec![Effect::FlatDamage(50_000)],
+        0,
+    );
+    test_icon_id_effect(
+        &parser,
+        "<icon=2160>Animal Handling pets' healing abilities, if any, restore +41% health",
+        vec![],
+        vec![Effect::FlatDamage(50_000)],
+        0,
+    );
+    test_icon_id_effect(
+        &parser,
+        "<icon=3586>Frostbite debuffs target so that 10.5% of their attacks miss and have no effect",
+        vec![],
+        vec![Effect::FlatDamage(50_000)],
+        0,
+    );
+    test_icon_id_effect(
+        &parser,
+        "<icon=2256>Shadow Feint raises your Lycanthropy Base Damage +43% until you trigger the teleport",
+        vec![],
+        vec![Effect::FlatDamage(50_000)],
+        0,
+    );
+    test_icon_id_effect(
+        &parser,
+        "<icon=2114>After using Pack Attack, your Lycanthropy Base Damage increases +25% for 7 seconds or until you are attacked",
+        vec![],
+        vec![Effect::FlatDamage(50_000)],
+        0,
+    );
+    test_icon_id_effect(
+        &parser,
+        "<icon=2201>Summoned Skeletal Swordsmen have +76 armor",
+        vec![],
+        vec![Effect::FlatDamage(50_000)],
+        0,
+    );
+    test_icon_id_effect(
+        &parser,
+        "<icon=3627><icon=2203><icon=2119>While Unarmed skill is active: 19% of all Slashing, Piercing, and Crushing damage you take is mitigated and added to the damage done by your next Punch, Jab, or Infuriating Fist at a 260% rate",
+        vec![],
+        vec![Effect::FlatDamage(50_000)],
+        0,
+    );
+    test_icon_id_effect(
+        &parser,
+        "<icon=3586>Frostbite causes target's attacks to deal -17 damage",
+        vec![],
+        vec![Effect::FlatDamage(50_000)],
+        0,
+    );
+    test_icon_id_effect(
+        &parser,
+        "<icon=3254>Grappling Web causes the target to take +12% damage from Poison (both direct and indirect)",
+        vec![],
+        vec![Effect::FlatDamage(50_000)],
+        0,
+    );
+    test_icon_id_effect(
+        &parser,
+        "<icon=3550>Wing Vortex causes targets' next attack to deal -74 damage",
+        vec![],
+        vec![Effect::FlatDamage(50_000)],
+        0,
+    );
+    test_icon_id_effect(
+        &parser,
+        "<icon=2154>Deer Bash has a 5% chance to summon a deer ally for 30 seconds",
+        vec![],
+        vec![Effect::FlatDamage(50_000)],
+        0,
+    );
+    test_icon_id_effect(
+        &parser,
+        "<icon=3473>Look At My Hammer reduces the damage you take from Slashing, Piercing, and Crushing attacks by 15 for 5 seconds",
+        vec![],
+        vec![Effect::FlatDamage(50_000)],
+        0,
+    );
+    test_icon_id_effect(
+        &parser,
+        "<icon=3442>Infinite Legs has a 20% chance to boost Spider Skill Base Damage +10% for 30 seconds",
+        vec![],
+        vec![Effect::FlatDamage(50_000)],
+        0,
+    );
+    test_icon_id_effect(
+        &parser,
+        "<icon=3670>Moment of Resolve boosts targets' Movement Speed +4 for 8 seconds",
+        vec![],
+        vec![Effect::FlatDamage(50_000)],
+        0,
+    );
+    test_icon_id_effect(
+        &parser,
+        "<icon=3795>Nip causes target's next attack to deal -14 damage",
+        vec![],
+        vec![Effect::FlatDamage(50_000)],
+        0,
+    );
+    test_icon_id_effect(
+        &parser,
+        "<icon=3592>Blur Cut grants a 10% chance to ignore stuns for 8 seconds",
+        vec![],
+        vec![Effect::FlatDamage(50_000)],
+        0,
+    );
+    test_icon_id_effect(
+        &parser,
+        "<icon=2251>Summoned Deer have +73 armor",
+        vec![],
+        vec![Effect::FlatDamage(50_000)],
+        0,
+    );
+    test_icon_id_effect(
+        &parser,
+        "<icon=3305>Long Shot boosts your Epic Attack Damage +20% for 15 seconds",
+        vec![],
+        vec![Effect::FlatDamage(50_000)],
+        0,
+    );
+    test_icon_id_effect(
+        &parser,
+        "<icon=3451>While Bulwark Mode is enabled you recover 7 Armor per second",
+        vec![],
+        vec![Effect::FlatDamage(50_000)],
+        0,
+    );
+    test_icon_id_effect(
+        &parser,
+        "<icon=3669><icon=3665><icon=3664><icon=3663>Your Bard Songs cost -20% Power. In addition, you can use the ability Hymn of Resurrection. (Equipping this item will teach you the ability if needed.)",
+        vec![],
+        vec![Effect::FlatDamage(50_000)],
+        0,
+    );
+    test_icon_id_effect(
+        &parser,
+        "<icon=3768>Apprehend costs -22 Power",
+        vec![],
+        vec![Effect::FlatDamage(50_000)],
+        0,
+    );
+    test_icon_id_effect(
+        &parser,
+        "<icon=3315><icon=3310>Basic Shot and Aimed Shot heal you for 8 health",
+        vec![],
+        vec![Effect::FlatDamage(50_000)],
+        0,
+    );
+    test_icon_id_effect(
+        &parser,
+        "<icon=3694>Play Dead boosts your Psychic attack damage +30 for 20 seconds",
+        vec![],
+        vec![Effect::FlatDamage(50_000)],
+        0,
+    );
+    test_icon_id_effect(
+        &parser,
+        "<icon=3032>Terrifying Bite boosts sprint speed +1 for 10 seconds",
+        vec![],
+        vec![Effect::FlatDamage(50_000)],
+        0,
+    );
+    test_icon_id_effect(
+        &parser,
+        "<icon=2192>Blocking Stance boosts your Cold Damage +6.25% for 30 seconds",
+        vec![],
+        vec![Effect::FlatDamage(50_000)],
+        0,
+    );
+    test_icon_id_effect(
+        &parser,
+        "<icon=2255>Porcine Alertness gives all targets +30% chance to ignore Stun effects for 20 seconds",
+        vec![],
+        vec![Effect::FlatDamage(50_000)],
+        0,
+    );
+    test_icon_id_effect(
+        &parser,
+        "<icon=2140>See Red increases the damage of your next attack by +47",
+        vec![],
+        vec![Effect::FlatDamage(50_000)],
+        0,
+    );
+    test_icon_id_effect(
+        &parser,
+        "<icon=3785>Fae Conduit also buffs targets' direct Cold, Fire, and Electricity damage +12 for 30 seconds (stacking up to 6 times)",
+        vec![],
+        vec![Effect::FlatDamage(50_000)],
+        0,
+    );
+    test_icon_id_effect(
+        &parser,
+        "<icon=2187>Your Stretchy Spine mutation randomly repairs broken bones twice as often",
+        vec![],
+        vec![Effect::FlatDamage(50_000)],
+        0,
+    );
+    test_icon_id_effect(
+        &parser,
+        "<icon=3632><icon=3480>Regrowth and Pulse of Life Healing +32%",
+        vec![],
+        vec![Effect::FlatDamage(50_000)],
+        0,
+    );
+    test_icon_id_effect(
+        &parser,
+        "<icon=3775>Privacy Field causes you to recover 13 Power when a melee attack deals damage to you",
+        vec![],
+        vec![Effect::FlatDamage(50_000)],
+        0,
+    );
+    test_icon_id_effect(
+        &parser,
+        "<icon=3775>Privacy Field deals +41 damage to all melee attackers, and the first melee attacker is knocked away",
+        vec![],
+        vec![Effect::FlatDamage(50_000)],
+        0,
+    );
+    test_icon_id_effect(
+        &parser,
+        "<icon=3321>Blitz Shot and Basic Shot boost your healing from Combat Refreshes +4 for 30 seconds",
+        vec![],
+        vec![Effect::FlatDamage(50_000)],
+        0,
+    );
+    test_icon_id_effect(
+        &parser,
+        "<icon=3751>Love Tap lowers target's aggro toward you by 450",
+        vec![],
+        vec![Effect::FlatDamage(50_000)],
+        0,
+    );
+    test_icon_id_effect(
+        &parser,
+        "<icon=3497>While in Cryogenic Freeze, you are 100% resistant to Poison damage",
+        vec![],
+        vec![Effect::FlatDamage(50_000)],
+        0,
+    );
+    test_icon_id_effect(
+        &parser,
+        "<icon=2160>For 13 seconds after using Clever Trick, pets' basic attacks have a 15% chance to deal double damage",
+        vec![],
+        vec![Effect::FlatDamage(50_000)],
+        0,
+    );
+    test_icon_id_effect(
+        &parser,
+        "<icon=3771>Conditioning Shock causes target's next ability to deal -6 damage",
+        vec![],
+        vec![Effect::FlatDamage(50_000)],
         0,
     );
 }
