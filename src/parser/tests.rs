@@ -1933,8 +1933,8 @@ fn calculate_icon_id_effect_desc() {
         &parser,
         "<icon=2174>Your golem minion's Taunting Punch deals +5 damage",
         vec![2174],
-        vec![Effect::FlatDamage(5)],
-        0,
+        vec![],
+        1,
     );
     test_icon_id_effect(
         &parser,
@@ -2081,8 +2081,8 @@ fn calculate_icon_id_effect_desc() {
         &parser,
         "<icon=2174>Your golem minion's Rage Mist and Self Sacrifice abilities heal +8 health",
         vec![2174],
-        vec![Effect::RestoreHealth(8)],
-        0,
+        vec![],
+        1,
     );
     test_icon_id_effect(
         &parser,
@@ -2186,8 +2186,8 @@ fn calculate_icon_id_effect_desc() {
         &parser,
         "<icon=2174>Your golem minion's Invigorating Mist heals 3 health",
         vec![2174],
-        vec![Effect::RestoreHealth(3)],
-        0,
+        vec![],
+        1,
     );
     test_icon_id_effect(
         &parser,
@@ -2244,7 +2244,7 @@ fn calculate_icon_id_effect_desc() {
             remaining_duration: 60,
             effect: BuffEffect::DamageTypePerTickDamageBuff {
                 damage_type: DamageType::Fire,
-                damage: 1,
+                damage: 3,
             },
         })],
         0,

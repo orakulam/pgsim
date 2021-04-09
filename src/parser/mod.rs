@@ -115,6 +115,8 @@ struct ParserRegex {
     skulk_buff: Regex,
     infinite_legs_buff: Regex,
     poisoners_cut_buff: Regex,
+    poisoners_cut_item_buff: Regex,
+    give_warmth_buff: Regex,
     fill_with_bile_buff: Regex,
     privacy_field: Regex,
 }
@@ -154,7 +156,7 @@ impl Parser {
             proc_flat_damage:  Regex::new(r"(?P<chance>[0-9]+)% chance to deal \+(?P<damage>[0-9]+) damage").unwrap(),
             range_flat_damage: Regex::new(r"between \+?(?P<min_damage>[0-9]+) and \+?(?P<max_damage>[0-9]+) extra damage").unwrap(),
             range_up_to_damage: Regex::new(r"up to \+?(?P<max_damage>[0-9]+) damage").unwrap(),
-            damage_mod: Regex::new(r"(?:deal|deals|[dD]amage) \+?(?P<damage_mod>[+-]?[0-9]*[.]?[0-9]+)% ?(?:$|damage|and|Crushing damage)").unwrap(),
+            damage_mod: Regex::new(r"(?:deal|deals|[dD]amage) \+?(?P<damage_mod>[0-9]*[.]?[0-9]+)% ?(?:$|damage|direct damage|and|Crushing damage)").unwrap(),
             proc_damage_mod:  Regex::new(r"(?P<chance>[0-9]+)% (?:chance to deal|chance it deals) \+(?P<damage_mod>[0-9]+)% damage").unwrap(),
             dot_damage:
                 Regex::new(r"(?:deal|deals|Deals|deals an additional|causes|dealing) \+?(?P<damage>[0-9]+).*(?:damage over|damage to melee attackers|Nature damage over)")
@@ -168,7 +170,7 @@ impl Parser {
                 Regex::new(r"(?:restore|restores|regain) \+?(?P<restore>[0-9]+) [pP]ower").unwrap(),
             damage_type: Regex::new(r"(?:becomes|deals|changed to) (?P<damage_type>Trauma|Fire|Darkness|Electricity)").unwrap(),
             racials: Regex::new(r"(?:Humans|Orcs|Elves|Dwarves|Rakshasa) gain \+?(?:[0-9]+) Max (?:Health|Hydration|Metabolism|Power|Armor|Bodyheat)").unwrap(),
-            damage_type_damage_mod_buff: Regex::new(r"(?P<damage_type>Slashing|Electricity) damage \+(?P<damage_mod>[0-9]+)% for (?P<duration>[0-9]+) seconds").unwrap(),
+            damage_type_damage_mod_buff: Regex::new(r"(?P<damage_type>Slashing|Electricity|Cold) [dD]amage \+(?P<damage_mod>[0-9]+)% for (?P<duration>[0-9]+) seconds").unwrap(),
             damage_type_damage_mod_buff2: Regex::new(r"\+(?P<damage_mod>[0-9]+)% ?(?:|damage from) (?P<damage_type>Piercing|Electricity|Trauma) (?:for|damage from future attacks for|damage for) (?P<duration>[0-9]+) seconds").unwrap(),
             damage_type_damage_mod_buff3: Regex::new(r"For (?P<duration>[0-9]+) seconds, all targets deal \+(?P<damage_mod>[0-9]+)% (?P<damage_type>Crushing) damage").unwrap(),
             damage_type_next_attack_buff: Regex::new(r"next attack(?:| to deal) \+?(?P<damage>[0-9]+)(?:| damage) if it is a (?P<damage_type>Crushing|Darkness) (?:ability|attack)").unwrap(),
@@ -185,6 +187,8 @@ impl Parser {
             skulk_buff: Regex::new(r"Skulk boosts the damage of your Core and Nice Attacks \+?(?P<damage>[0-9]+) for (?P<duration>[0-9]+) seconds").unwrap(),
             infinite_legs_buff: Regex::new(r"For (?P<duration>[0-9]+) seconds, additional Infinite Legs attacks deal \+?(?P<damage>[0-9]+) damage").unwrap(),
             poisoners_cut_buff: Regex::new(r"For (?P<duration>[0-9]+) seconds, you gain Direct Poison Damage \+?(?P<damage>[0-9]+) and Indirect Poison Damage \+?(?P<per_tick_damage>[0-9]+) per tick").unwrap(),
+            poisoners_cut_item_buff: Regex::new(r"Poisoner's Cut boosts Indirect Poison Damage an additional \+?(?P<per_tick_damage>[0-9]+) per tick").unwrap(),
+            give_warmth_buff: Regex::new(r"Give Warmth boosts the target's fire damage-over-time by \+?(?P<per_tick_damage>[0-9]+) per tick for (?P<duration>[0-9]+) seconds").unwrap(),
             fill_with_bile_buff: Regex::new(r"Target's Poison attacks deal \+?(?P<damage>[0-9]+) damage, and Poison damage-over-time attacks deal \+?(?P<per_tick_damage>[0-9]+) per tick.").unwrap(),
             privacy_field: Regex::new(r"Privacy Field also deals its damage when you are hit by burst attacks, and damage is \+?(?P<damage>[0-9]+)").unwrap(),
         }
@@ -333,6 +337,7 @@ impl Parser {
             || effect_desc.contains("every 5 seconds")
             || effect_desc.contains("every five seconds")
             || effect_desc.contains("boosts your movement speed")
+            || effect_desc.contains("Sprint Speed")
             || effect_desc.contains("Combo: ")
             || effect_desc.contains("Provoke Undead")
             || effect_desc
@@ -357,6 +362,9 @@ impl Parser {
             || effect_desc.contains("After using Wild Endurance, your next")
             || effect_desc.contains("Nimble Limbs heals your pet")
             || effect_desc.contains("more XP")
+            || effect_desc.contains("causes the next attack that hits you to deal")
+            || effect_desc.contains("golem minion")
+            || effect_desc.contains("your pet's")
         {
             warnings.push(format!("Not supported: {}", effect_desc));
             return vec![];
@@ -373,7 +381,6 @@ impl Parser {
             || effect_desc.contains("When Skulk is used, you recover")
             || effect_desc.contains("Your Knee Spikes mutation causes kicks to deal an additional")
             || effect_desc.contains("Coordinated Assault grants all allies")
-            || effect_desc.contains("Blocking Stance boosts your Direct Cold Damage")
             || effect_desc.contains("Squeal uniformly diminishes all targets' entire aggro lists")
             || effect_desc.contains("Psi Health Wave grants all targets")
             || effect_desc.contains("If Screech, Sonic Burst, or Deathscream deal Trauma damage")
@@ -392,6 +399,7 @@ impl Parser {
             || effect_desc.contains("rage")
             || effect_desc.contains("total damage against Demons")
             || effect_desc.contains("within 5 meters")
+            || effect_desc.contains("within 6 meters")
             || effect_desc.contains("deal -1 damage for")
             || effect_desc.contains("8-second delay")
             || effect_desc.contains("doesn't cause the target to yell for help")
@@ -412,6 +420,7 @@ impl Parser {
             || effect_desc.contains("that hit a single target")
             || effect_desc.contains("damage to Aberrations")
             || effect_desc.contains("resistance")
+            || effect_desc.contains("stuns the target if they are not focused on you")
         {
             warnings.push(format!("Not fully supported: {}", effect_desc));
         }
@@ -708,6 +717,24 @@ impl Parser {
                 remaining_duration: duration,
                 effect: BuffEffect::DamageTypePerTickDamageBuff {
                     damage_type: DamageType::Poison,
+                    damage: Parser::get_cap_number(&caps, "per_tick_damage"),
+                },
+            }));
+        }
+        if let Some(caps) = self.regex.poisoners_cut_item_buff.captures(effect_desc) {
+            effects.push(Effect::Buff(Buff {
+                remaining_duration: 5,
+                effect: BuffEffect::DamageTypePerTickDamageBuff {
+                    damage_type: DamageType::Poison,
+                    damage: Parser::get_cap_number(&caps, "per_tick_damage"),
+                },
+            }));
+        }
+        if let Some(caps) = self.regex.give_warmth_buff.captures(effect_desc) {
+            effects.push(Effect::Buff(Buff {
+                remaining_duration: Parser::get_cap_number(&caps, "duration"),
+                effect: BuffEffect::DamageTypePerTickDamageBuff {
+                    damage_type: DamageType::Fire,
                     damage: Parser::get_cap_number(&caps, "per_tick_damage"),
                 },
             }));
