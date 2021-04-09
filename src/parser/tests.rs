@@ -1353,7 +1353,7 @@ fn calculate_icon_id_effect_desc() {
         &parser,
         "<icon=3046>Debilitating Blow deals +10 damage and causes your Core Attacks to deal +7 damage for 7 seconds",
         vec![3046],
-        vec![Effect::Buff(Buff {
+        vec![Effect::FlatDamage(10), Effect::Buff(Buff {
             remaining_duration: 7,
             effect: BuffEffect::KeywordFlatDamageBuff {
                 keyword: "CoreAttack".to_string(),
@@ -1381,7 +1381,7 @@ fn calculate_icon_id_effect_desc() {
         "<icon=2115>Parry hits all enemies within 5 meters, dealing an additional +3 damage",
         vec![2115],
         vec![Effect::FlatDamage(3)],
-        0,
+        1,
     );
     test_icon_id_effect(
         &parser,
@@ -1389,7 +1389,6 @@ fn calculate_icon_id_effect_desc() {
         vec![2196],
         vec![
             Effect::RestoreHealth(7),
-            Effect::RestoreArmor(7),
             Effect::Buff(Buff {
                 remaining_duration: 1,
                 effect: BuffEffect::DamageTypeFlatDamageBuff {
@@ -1432,9 +1431,9 @@ fn calculate_icon_id_effect_desc() {
         &parser,
         "<icon=2241>Bruising Blow deals Trauma damage instead of Crushing, and targets suffer +5% damage from other Trauma attacks for 20 seconds",
         vec![2241],
-        vec![Effect::DamageType(DamageType::Trauma), Effect::Buff(Buff {
+        vec![Effect::DamageType(DamageType::Trauma), Effect::Debuff(Debuff {
             remaining_duration: 20,
-            effect: BuffEffect::DamageTypeDamageModBuff {
+            effect: DebuffEffect::VulnerabilityDamageModDebuff {
                 damage_type: DamageType::Trauma,
                 damage_mod: 0.05,
             },
@@ -1517,9 +1516,9 @@ fn calculate_icon_id_effect_desc() {
         &parser,
         "<icon=3427>Death's Hold causes target to take +5% damage from Darkness for 15 seconds",
         vec![3427],
-        vec![Effect::Buff(Buff {
+        vec![Effect::Debuff(Debuff {
             remaining_duration: 15,
-            effect: BuffEffect::DamageTypeDamageModBuff {
+            effect: DebuffEffect::VulnerabilityDamageModDebuff {
                 damage_type: DamageType::Darkness,
                 damage_mod: 0.05,
             },
@@ -1615,7 +1614,7 @@ fn calculate_icon_id_effect_desc() {
         "<icon=3775>Privacy Field also deals its damage when you are hit by burst attacks, and damage is +10",
         vec![3775],
         vec![Effect::DotDamage(10)],
-        1,
+        0,
     );
     test_icon_id_effect(
         &parser,
@@ -1667,9 +1666,9 @@ fn calculate_icon_id_effect_desc() {
         &parser,
         "<icon=3447>Disrupting Bash causes the target to take +3% damage from Crushing attacks for 8 seconds",
         vec![3447],
-        vec![Effect::Buff(Buff {
+        vec![Effect::Debuff(Debuff {
             remaining_duration: 8,
-            effect: BuffEffect::DamageTypeDamageModBuff {
+            effect: DebuffEffect::VulnerabilityDamageModDebuff {
                 damage_type: DamageType::Crushing,
                 damage_mod: 0.03,
             },
@@ -1798,9 +1797,9 @@ fn calculate_icon_id_effect_desc() {
         &parser,
         "<icon=3017>Sanguine Fangs causes the target to take +5% damage from Slashing attacks for 15 seconds",
         vec![3017],
-        vec![Effect::Buff(Buff {
+        vec![Effect::Debuff(Debuff {
             remaining_duration: 15,
-            effect: BuffEffect::DamageTypeDamageModBuff {
+            effect: DebuffEffect::VulnerabilityDamageModDebuff {
                 damage_type: DamageType::Slashing,
                 damage_mod: 0.05,
             },
@@ -1900,7 +1899,7 @@ fn calculate_icon_id_effect_desc() {
         &parser,
         "<icon=2129>Werewolf Bite deals +4% damage and boosts your Nice Attack Damage +5 for 10 seconds",
         vec![2129],
-        vec![Effect::Buff(Buff {
+        vec![Effect::DamageMod(0.04), Effect::Buff(Buff {
             remaining_duration: 10,
             effect: BuffEffect::KeywordFlatDamageBuff {
                 keyword: "NiceAttack".to_string(),
