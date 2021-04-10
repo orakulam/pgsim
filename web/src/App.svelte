@@ -203,19 +203,17 @@
 
 <style>
 	main {
-		padding: 1em;
-		max-width: 240px;
 		margin: 0 auto;
 	}
 
 	.report {
 		width: 100%;
-		min-height: 400px;
+		height: 400px;
 	}
 
 	@media (min-width: 640px) {
 		main {
-			max-width: none;
+			padding: 1em;
 		}
 	}
 </style>
