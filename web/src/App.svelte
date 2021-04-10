@@ -125,7 +125,8 @@
 
 <main>
 	<h1>pgsim</h1>
-	<p>This is an open source project: <a href="https://github.com/orakulam/pgsim" target="_blank">https://github.com/orakulam/pgsim</a></p>
+	<p>This is an open source project! For more information on how it works, or to log a bug, or to help with development, head over to the GitHub repo: <a href="https://github.com/orakulam/pgsim" target="_blank">https://github.com/orakulam/pgsim</a></p>
+	<p><strong>pgsim is in early alpha!</strong> There are many known limitations (doesn't sim pets, skips some item mods, etc.), and likely many unknown bugs. Please help by testing and logging any issues you find on GitHub.</p>
 	<div>
 		<h3>Skill 1</h3>
 		<select bind:value={state.skill1} on:change={() =>{ skillChanged(); updateHash() }}>
