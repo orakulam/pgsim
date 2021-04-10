@@ -205,20 +205,20 @@ fn use_ability(
                     BuffEffect::DamageTypeDamageModBuff {
                         damage_mod,
                         damage_type: _,
-                    } => (damage_mod * 100.0) as i32,
+                    } => (damage_mod * 1000.0) as i32 * buff.remaining_duration,
                     BuffEffect::DamageTypeFlatDamageBuff {
                         damage_type: _,
                         damage,
-                    } => damage,
+                    } => damage * buff.remaining_duration,
                     BuffEffect::DamageTypePerTickDamageBuff {
                         damage_type: _,
                         damage,
-                    } => damage * 10,
+                    } => damage * 10 * buff.remaining_duration,
                     BuffEffect::KeywordFlatDamageBuff { keyword: _, damage } => damage,
                     BuffEffect::KeywordDamageModBuff {
                         keyword: _,
                         damage_mod,
-                    } => (damage_mod * 100.0) as i32,
+                    } => (damage_mod * 100.0) as i32 * buff.remaining_duration,
                 }
             });
             let debuff_power = calculated_debuffs.iter().fold(0, |acc, debuff| {
@@ -232,11 +232,11 @@ fn use_ability(
                     DebuffEffect::VulnerabilityDamageModDebuff {
                         damage_mod,
                         damage_type: _,
-                    } => (damage_mod * 100.0) as i32,
+                    } => (damage_mod * 1000.0) as i32 * debuff.remaining_duration,
                     DebuffEffect::VulnerabilityFlatDamageDebuff {
                         damage,
                         damage_type: _,
-                    } => damage,
+                    } => damage * debuff.remaining_duration,
                 }
             });
             let potential_power = calculated_damage + buff_power + debuff_power;
@@ -319,7 +319,7 @@ fn calculate_ability(
 ) -> (i32, DamageType, Vec<Buff>, Vec<Debuff>) {
     // Add item mods to damage calc
     let mut calculated_damage_type = player_ability.damage_type;
-    let mut calculated_buffs = vec![];
+    let mut calculated_buffs = player_ability.buffs.clone();
     let mut calculated_debuffs = player_ability.debuffs.clone();
     let mut dot_flat_damage = 0;
     let mut flat_damage = 0;

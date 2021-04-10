@@ -114,7 +114,6 @@ pub struct Item {
 }
 
 pub struct Data {
-    skills: HashMap<String, Skill>,
     pub abilities: HashMap<String, Ability>,
     pub item_mods: HashMap<String, ItemMod>,
     pub items: HashMap<String, Item>,
@@ -122,10 +121,6 @@ pub struct Data {
 
 impl Data {
     pub fn load() -> Data {
-        let skills: HashMap<String, Skill> = serde_json::from_str(
-            &fs::read_to_string("./data/skills.json").expect("Unable to read skills.json"),
-        )
-        .unwrap();
         let abilities: HashMap<String, Ability> = serde_json::from_str(
             &fs::read_to_string("./data/abilities.json").expect("Unable to read abilities.json"),
         )
@@ -141,7 +136,6 @@ impl Data {
         .unwrap();
 
         Data {
-            skills,
             abilities,
             item_mods,
             items,
@@ -156,10 +150,8 @@ mod tests {
     #[test]
     fn read_data_files() {
         let data = Data::load();
-        assert!(data.skills.len() > 150);
         assert!(data.abilities.len() > 3300);
         assert!(data.item_mods.len() > 1500);
-        assert!(data.skills["Sword"].combat == true);
         assert!(data.abilities["ability_5911"].name == "Sword Slash 7");
         assert!(data.abilities["ability_5911"].pve.damage == Some(133));
         assert!(data.item_mods["power_1004"].skill == "Sword");

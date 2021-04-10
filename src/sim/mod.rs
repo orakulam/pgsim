@@ -266,7 +266,7 @@ impl Sim {
                                 .damage_type
                                 .expect("Tried to sim ability with no damage type"),
                             reset_time: ability.reset_time,
-                            buffs: vec![],
+                            buffs,
                             debuffs,
                             keywords,
                             cooldown: 0.0,
@@ -392,6 +392,38 @@ mod tests {
         assert_eq!(report.activity[0].damage_type, DamageType::Nature);
         assert_eq!(report.activity[1].damage, 47);
         assert_eq!(report.activity[1].damage_type, DamageType::Trauma);
+    }
+
+    #[test]
+    fn way_of_the_hammer_sim() {
+        let parser = Parser::new();
+        let mut world = World::default();
+        let item_mods = parser.calculate_item_mods(
+            &vec![],
+            &vec![],
+        );
+        world.push((
+            Player,
+            PlayerAbilities {
+                abilities: vec![Sim::get_player_ability(&parser, &mut vec![], "WayOfTheHammer4").unwrap()],
+            },
+            Buffs(HashMap::new()),
+        ));
+        let enemy: Entity =
+            world.push((Enemy, Report { activity: vec![] }, Debuffs(HashMap::new())));
+
+        let mut resources = Resources::default();
+        resources.insert(item_mods);
+
+        let mut schedule = systems::build_schedule();
+
+        schedule.execute(&mut world, &mut resources);
+
+        let entry = world.entry(enemy).unwrap();
+        let report = entry.get_component::<Report>().unwrap();
+
+        assert_eq!(report.activity.len(), 1);
+        assert_eq!(report.activity[0].ability_name, "Way of the Hammer 4");
     }
 
     #[test]
@@ -554,12 +586,9 @@ mod tests {
         let entry = world.entry(enemy).unwrap();
         let report = entry.get_component::<Report>().unwrap();
 
-        // First SwordSlash7 does normal base damage
-        assert_eq!(report.activity[0].damage, 133);
-        assert_eq!(report.activity[0].damage_type, DamageType::Slashing);
-        // Second SwordSlash7 does buffed damage from the Slashing damage buff from AdrenalineWave5
-        assert_eq!(report.activity[2].damage, 136);
-        assert_eq!(report.activity[2].damage_type, DamageType::Slashing);
+        // SwordSlash7 does buffed damage from the Slashing damage buff from AdrenalineWave5
+        assert_eq!(report.activity[1].damage, 136);
+        assert_eq!(report.activity[1].damage_type, DamageType::Slashing);
     }
 
     #[test]
