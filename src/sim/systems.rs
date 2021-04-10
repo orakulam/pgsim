@@ -4,7 +4,7 @@ use std::collections::HashMap;
 
 use super::{
     Activity, ActivitySource, Buff, BuffEffect, Buffs, Debuff, DebuffEffect, Debuffs, Enemy,
-    Player, PlayerAbilities, PlayerAbility, Report, TICK_LENGTH_IN_SECONDS,
+    Player, PlayerAbilities, PlayerAbility, Report, Time, TICK_LENGTH_IN_SECONDS,
 };
 use crate::parser::{data::DamageType, Effect, ItemMods};
 
@@ -16,6 +16,7 @@ pub fn build_schedule() -> Schedule {
         .add_system(cooldown_system())
         .add_system(expire_buffs_system())
         .add_system(expire_debuffs_system())
+        .add_system(progress_time_system())
         .build()
 }
 
@@ -30,7 +31,7 @@ fn tick_buffs(buffs: &mut Buffs) {
 }
 
 #[system(for_each)]
-fn tick_debuffs(report: &mut Report, debuffs: &mut Debuffs) {
+fn tick_debuffs(report: &mut Report, debuffs: &mut Debuffs, #[resource] time: &Time) {
     for (ability_name, debuffs) in &mut debuffs.0 {
         for debuff in debuffs {
             // Reduce remaining duration on the debuff
@@ -45,6 +46,7 @@ fn tick_debuffs(report: &mut Report, debuffs: &mut Debuffs) {
                     // It's time to deal dot damage
                     if debuff.remaining_duration % tick_per == 0 {
                         report.activity.push(Activity {
+                            time: time.0,
                             ability_name: ability_name.clone(),
                             damage: damage_per_tick,
                             damage_type: damage_type,
@@ -68,6 +70,7 @@ fn use_ability(
     player_abilities: &mut PlayerAbilities,
     buffs: &mut Buffs,
     #[resource] item_mods: &ItemMods,
+    #[resource] time: &Time,
 ) {
     // Query enemy components
     let mut enemy_query = <(&Enemy, &mut Report, &mut Debuffs)>::query();
@@ -269,6 +272,7 @@ fn use_ability(
         }
         // Add to report
         report.activity.push(Activity {
+            time: time.0,
             ability_name: player_ability.name.clone(),
             damage: max_calculated_damage.expect("selected ability value was None"),
             damage_type: max_calculated_damage_type.expect("selected ability value was None"),
@@ -306,6 +310,11 @@ fn expire_debuffs(debuffs: &mut Debuffs) {
         debuffs.retain(|debuff| debuff.remaining_duration != 0);
         debuffs.len() != 0
     });
+}
+
+#[system]
+fn progress_time(#[resource] time: &mut Time) {
+    time.0 += 1;
 }
 
 fn calculate_ability(

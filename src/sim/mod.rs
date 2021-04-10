@@ -47,6 +47,7 @@ struct Debuffs(HashMap<String, Vec<Debuff>>);
 
 #[derive(Debug)]
 struct Activity {
+    time: i32,
     ability_name: String,
     damage: i32,
     damage_type: DamageType,
@@ -58,6 +59,9 @@ enum ActivitySource {
     Direct,
     DoT,
 }
+
+#[derive(Debug)]
+struct Time(i32);
 
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
@@ -93,6 +97,7 @@ impl Sim {
 
         let mut resources = Resources::default();
         resources.insert(item_mods);
+        resources.insert(Time(1));
 
         let mut schedule = systems::build_schedule();
 
@@ -121,8 +126,8 @@ impl Sim {
                 (*damage_by_type.entry(&activity.damage_type).or_insert(0)) += activity.damage;
                 // Print this sim step
                 report_text.push(format!(
-                    "{:?}: {} for {}",
-                    activity.source, activity.ability_name, activity.damage
+                    "{} - {:?}: {} for {} {:?}",
+                    activity.time, activity.source, activity.ability_name, activity.damage, activity.damage_type
                 ));
             }
             report_text.push(format!("---- END SIM -----"));
@@ -321,6 +326,7 @@ mod tests {
 
         let mut resources = Resources::default();
         resources.insert(item_mods);
+        resources.insert(Time(1));
 
         let mut schedule = systems::build_schedule();
 
@@ -399,6 +405,7 @@ mod tests {
 
         let mut resources = Resources::default();
         resources.insert(item_mods);
+        resources.insert(Time(1));
 
         let mut schedule = systems::build_schedule();
 
@@ -436,6 +443,7 @@ mod tests {
 
         let mut resources = Resources::default();
         resources.insert(item_mods);
+        resources.insert(Time(1));
 
         let mut schedule = systems::build_schedule();
 
@@ -474,6 +482,7 @@ mod tests {
 
             let mut resources = Resources::default();
             resources.insert(item_mods);
+            resources.insert(Time(1));
 
             let mut schedule = systems::build_schedule();
 
@@ -520,6 +529,7 @@ mod tests {
 
         let mut resources = Resources::default();
         resources.insert(item_mods);
+        resources.insert(Time(1));
 
         let mut schedule = systems::build_schedule();
 
@@ -563,6 +573,7 @@ mod tests {
 
         let mut resources = Resources::default();
         resources.insert(item_mods);
+        resources.insert(Time(1));
 
         let mut schedule = systems::build_schedule();
 
@@ -599,6 +610,7 @@ mod tests {
 
         let mut resources = Resources::default();
         resources.insert(item_mods);
+        resources.insert(Time(1));
 
         let mut schedule = systems::build_schedule();
 
@@ -636,6 +648,7 @@ mod tests {
 
         let mut resources = Resources::default();
         resources.insert(item_mods);
+        resources.insert(Time(1));
 
         let mut schedule = systems::build_schedule();
 
@@ -688,6 +701,7 @@ mod tests {
 
         let mut resources = Resources::default();
         resources.insert(item_mods);
+        resources.insert(Time(1));
 
         let mut schedule = systems::build_schedule();
 
@@ -743,6 +757,7 @@ mod tests {
 
         let mut resources = Resources::default();
         resources.insert(item_mods);
+        resources.insert(Time(1));
 
         let mut schedule = systems::build_schedule();
 
@@ -786,6 +801,7 @@ mod tests {
 
         let mut resources = Resources::default();
         resources.insert(item_mods);
+        resources.insert(Time(1));
 
         let mut schedule = systems::build_schedule();
 
