@@ -93,6 +93,20 @@ fn test_important_special_infos() {
     );
     let effects = parser.get_effects_from_special_info(
         &mut vec![],
+        "Target takes 15% more damage from Crushing for 20 seconds",
+    );
+    assert_eq!(
+        effects.unwrap()[0],
+        Effect::Debuff(Debuff {
+            remaining_duration: 20,
+            effect: DebuffEffect::VulnerabilityDamageModDebuff {
+                damage_type: DamageType::Crushing,
+                damage_mod: 0.15,
+            }
+        })
+    );
+    let effects = parser.get_effects_from_special_info(
+        &mut vec![],
         "You and nearby allies deal +22% Trauma damage for 10 seconds",
     );
     assert_eq!(

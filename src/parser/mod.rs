@@ -196,7 +196,7 @@ impl Parser {
             keyword_epic_attack_damage_mod_buff: Regex::new(r"your Epic Attack Damage \+?(?P<damage_mod>[0-9]*[.]?[0-9]+)% for (?P<duration>[0-9]+) seconds").unwrap(),
             keyword_melee_flat_damage_buff: Regex::new(r"You and your allies' melee attacks deal \+?(?P<damage>[0-9]+) damage for (?P<duration>[0-9]+) seconds").unwrap(),
             keyword_signature_debuff_buff: Regex::new(r"Signature Debuff(?:s by| abilities to deal) \+?(?P<damage>[0-9]+) (?:for|damage for) (?P<duration>[0-9]+) seconds").unwrap(),
-            vulnerability_damage_mod_debuff: Regex::new(&format!(r"(?P<damage_mod>[0-9]+)% (?:more vulnerable to|damage from other|damage from) {} ?(?:|damage|attacks) for (?P<duration>[0-9]+) seconds", damage_type)).unwrap(),
+            vulnerability_damage_mod_debuff: Regex::new(&format!(r"(?P<damage_mod>[0-9]+)% (?:more vulnerable to|damage from other|damage from|more damage from) {} ?(?:|damage|attacks) for (?P<duration>[0-9]+) seconds", damage_type)).unwrap(),
             vulnerability_damage_mod_debuff2: Regex::new(&format!(r"target takes from {} by (?P<damage_mod>[0-9]+)% for (?P<duration>[0-9]+) seconds", damage_type)).unwrap(),
             vulnerability_flat_damage_debuff: Regex::new(&format!(r"(?:suffer|take) \+?(?P<damage>[0-9]+) damage from(?:| direct) {} attacks for (?P<duration>[0-9]+) seconds", damage_type)).unwrap(),
             nip_buff: Regex::new(r"Nip boosts the damage of Basic, Core, and Nice attacks \+?(?P<damage>[0-9]+) for (?P<duration>[0-9]+) seconds").unwrap(),

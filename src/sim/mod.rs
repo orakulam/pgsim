@@ -175,16 +175,18 @@ impl Sim {
                                 },
                             },
                         };
-                        // Collect buffs
+                        // Collect buffs and debuffs
                         let mut buffs = vec![];
+                        let mut debuffs = vec![];
                         if let Some(special_info) = &ability.special_info {
                             if let Some(effects) =
                                 parser.get_effects_from_special_info(warnings, special_info)
                             {
                                 for effect in effects {
-                                    // TODO: This is very rudimentary (some of these special infos are debuffs or other effects)
+                                    // TODO: This is very rudimentary (some of these special infos other effects)
                                     match effect {
                                         Effect::Buff(buff) => buffs.push(buff.clone()),
+                                        Effect::Debuff(debuff) => debuffs.push(debuff.clone()),
                                         _ => (),
                                     }
                                 }
@@ -195,8 +197,7 @@ impl Sim {
                                 ));
                             }
                         }
-                        // Collect debuffs
-                        let mut debuffs = vec![];
+                        // Collect dots
                         if let Some(ability_dots) = &ability.pve.dots {
                             for dot in ability_dots {
                                 let mut duration = dot.duration;
@@ -355,6 +356,27 @@ mod tests {
         assert_eq!(report.activity[3].damage_type, DamageType::Slashing);
         assert_eq!(report.activity[4].damage, 30);
         assert_eq!(report.activity[4].damage_type, DamageType::Trauma);
+    }
+
+    #[test]
+    fn buffs_and_debuffs_on_base_abilities() {
+        let parser = Parser::new();
+        let way_of_the_hammer = Sim::get_player_ability(&parser, &mut vec![], "WayOfTheHammer4").unwrap();
+        assert_eq!(way_of_the_hammer.buffs[0], Buff {
+            remaining_duration: 10,
+            effect: BuffEffect::DamageTypeDamageModBuff {
+                damage_type: DamageType::Crushing,
+                damage_mod: 0.45,
+            }
+        });
+        let bruising_blow = Sim::get_player_ability(&parser, &mut vec![], "BruisingBlow6").unwrap();
+        assert_eq!(bruising_blow.debuffs[0], Debuff {
+            remaining_duration: 20,
+            effect: DebuffEffect::VulnerabilityDamageModDebuff {
+                damage_type: DamageType::Crushing,
+                damage_mod: 0.15,
+            }
+        });
     }
 
     #[test]
