@@ -47,12 +47,17 @@ for (const [id, item] of Object.entries(items)) {
 }
 
 for (const [name, skill] of Object.entries(skills)) {
-    if (skill.Combat && !name.includes("Performance_")) {
-        data.skills.push({
-            name,
-        });
+    if ((skill.Combat && !name.includes('Performance_') && name !== 'Axe') || name === 'FairyMagic') {
         // Add to internal array for use in item mod logic
         validSkills.push(name);
+        // Add to list of skills for frontend
+        let webName = name;
+        if (name === 'FairyMagic') {
+            webName = 'Mentalism/FairyMagic'
+        }
+        data.skills.push({
+            name: webName,
+        });
     }
 }
 
