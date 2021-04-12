@@ -70,8 +70,12 @@
 		window.location.hash = btoa(JSON.stringify(state));
 	}
 
-	function skillChanged() {
+	function skill1Changed() {
 		state.skill1Abilities = [];
+		state.itemMods = [];
+	}
+
+	function skill2Changed() {
 		state.skill2Abilities = [];
 		state.itemMods = [];
 	}
@@ -135,7 +139,7 @@
 	<p><strong>pgsim is in early alpha!</strong> There are many known limitations (doesn't sim pets, skips some item mods, etc.), and likely many unknown bugs. Please help by testing and logging any issues you find on GitHub.</p>
 	<div>
 		<h3>Skill 1</h3>
-		<select bind:value={state.skill1} on:change={() =>{ skillChanged(); updateHash() }}>
+		<select bind:value={state.skill1} on:change={() =>{ skill1Changed(); updateHash() }}>
 			<option>None</option>
 			{#each data.skills as skill}
 				<option value={skill.name}>
@@ -156,7 +160,7 @@
 	</div>
 	<div>
 		<h3>Skill 2</h3>
-		<select bind:value={state.skill2} on:change={() =>{ skillChanged(); updateHash() }}>
+		<select bind:value={state.skill2} on:change={() =>{ skill2Changed(); updateHash() }}>
 			<option>None</option>
 			{#each data.skills as skill}
 				<option value={skill.name}>
