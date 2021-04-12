@@ -71,7 +71,13 @@
 	}
 
 	function skillChanged() {
+		state.skill1Abilities = [];
+		state.skill2Abilities = [];
 		state.itemMods = [];
+	}
+
+	function skillMatches(skillName, matchTo) {
+		return skillName.split('/').includes(matchTo);
 	}
 
 	async function run() {
@@ -139,7 +145,7 @@
 		</select>
 		{#if state.skill1}
 			{#each data.abilities as ability}
-				{#if ability.skill === state.skill1}
+				{#if skillMatches(state.skill1, ability.skill)}
 					<label>
 						<input type=checkbox bind:group={state.skill1Abilities} value={ability.internalName} on:change={updateHash}>
 						{ability.name}
@@ -160,7 +166,7 @@
 		</select>
 		{#if state.skill2}
 			{#each data.abilities as ability}
-				{#if ability.skill === state.skill2}
+				{#if skillMatches(state.skill2, ability.skill)}
 					<label>
 						<input type=checkbox bind:group={state.skill2Abilities} value={ability.internalName} on:change={updateHash}>
 						{ability.name}
@@ -183,7 +189,7 @@
 					{/each}
 				</select>
 				{#each data.itemMods as mod}
-					{#if mod.skill === state.skill1 || mod.skill === state.skill2}
+					{#if skillMatches(state.skill1, mod.skill) || skillMatches(state.skill2, mod.skill)}
 						{#if mod.slots.includes(slot.name)}
 							<label>
 								<input type=checkbox bind:group={state.itemMods} value={slot.name + '|' + mod.id + '|' + mod.tierId} on:change={updateHash}>
