@@ -454,6 +454,16 @@ fn calculate_ability(
             _ => (),
         };
     }
+    // Filter out dots that do 0 damage
+    calculated_debuffs = calculated_debuffs
+        .into_iter()
+        .filter(|debuff| {
+            match debuff.effect {
+                DebuffEffect::Dot { damage_per_tick, damage_type: _, tick_per: _ } => damage_per_tick > 0,
+                _ => true,
+            }
+        })
+        .collect();
     // Calculate damage
     let calculated_damage = (((player_ability.damage
         + current_buff_damage
@@ -487,18 +497,7 @@ mod tests {
         let (calculated_damage, _, _, calculated_debuffs) =
             calculate_ability(&player_ability, &item_mods, 0.0, 0, 0, 0.0, 0);
         assert_eq!(calculated_damage, 189);
-        match calculated_debuffs[0].effect {
-            DebuffEffect::Dot {
-                damage_per_tick,
-                damage_type,
-                tick_per,
-            } => {
-                assert_eq!(damage_per_tick, 0);
-                assert_eq!(damage_type, DamageType::Poison);
-                assert_eq!(tick_per, 2);
-            }
-            _ => (),
-        };
+        assert_eq!(calculated_debuffs.len(), 0);
 
         let item_mods = parser.calculate_item_mods(
             &vec![

@@ -424,6 +424,44 @@ mod tests {
     }
 
     #[test]
+    fn screech_sim() {
+        let parser = Parser::new();
+        let mut world = World::default();
+        let item_mods = parser.calculate_item_mods(
+            &vec![],
+            &vec![("power_24305".to_string(), "id_16".to_string())],
+        );
+        world.push((
+            Player,
+            PlayerAbilities {
+                abilities: vec![Sim::get_player_ability(&parser, &mut vec![], "Screech8").unwrap()],
+            },
+            Buffs(HashMap::new()),
+        ));
+        let enemy: Entity =
+            world.push((Enemy, Report { activity: vec![] }, Debuffs(HashMap::new())));
+
+        let mut resources = Resources::default();
+        resources.insert(item_mods);
+        resources.insert(Time(1));
+
+        let mut schedule = systems::build_schedule();
+
+        for _ in 0..3 {
+            schedule.execute(&mut world, &mut resources);
+        }
+
+        let entry = world.entry(enemy).unwrap();
+        let report = entry.get_component::<Report>().unwrap();
+
+        assert_eq!(report.activity.len(), 2);
+        assert_eq!(report.activity[0].damage, 401);
+        assert_eq!(report.activity[0].damage_type, DamageType::Nature);
+        assert_eq!(report.activity[1].damage, 64);
+        assert_eq!(report.activity[1].damage_type, DamageType::Nature);
+    }
+
+    #[test]
     fn way_of_the_hammer_sim() {
         let parser = Parser::new();
         let mut world = World::default();
@@ -815,7 +853,7 @@ mod tests {
         assert_eq!(report.activity[0].damage, 246);
         assert_eq!(report.activity[0].damage_type, DamageType::Electricity);
         // Second SparkOfDeath7 does buffed damage from the vulnerability applied by SparkOfDeath7
-        assert_eq!(report.activity[5].damage, 271);
-        assert_eq!(report.activity[5].damage_type, DamageType::Electricity);
+        assert_eq!(report.activity[1].damage, 271);
+        assert_eq!(report.activity[1].damage_type, DamageType::Electricity);
     }
 }
