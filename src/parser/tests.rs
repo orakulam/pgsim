@@ -348,7 +348,11 @@ fn calculate_icon_id_effect_desc() {
         &parser,
         "<icon=2198>Life Steal deals 50 Psychic damage over 10 seconds",
         vec![2198],
-        vec![Effect::DotDamage(50)],
+        vec![Effect::DotDamage {
+            damage: 50,
+            damage_type: DamageType::Psychic,
+            duration: 10,
+        }],
         0,
     );
     test_icon_id_effect(
@@ -377,7 +381,11 @@ fn calculate_icon_id_effect_desc() {
         vec![3783],
         vec![
             Effect::DamageType(DamageType::Fire),
-            Effect::DotDamage(15),
+            Effect::DotDamage {
+                damage: 15,
+                damage_type: DamageType::Fire,
+                duration: 10,
+            },
         ],
         0,
     );
@@ -525,7 +533,11 @@ fn calculate_icon_id_effect_desc() {
         &parser,
         "<icon=3454>Fire Shield deals +12 Fire damage to melee attackers",
         vec![3454],
-        vec![Effect::DotDamage(12)],
+        vec![Effect::DotDamage {
+            damage: 12,
+            damage_type: DamageType::Fire,
+            duration: 0,
+        }],
         0,
     );
     test_icon_id_effect(
@@ -644,7 +656,11 @@ fn calculate_icon_id_effect_desc() {
         &parser,
         "<icon=3774>Lethal Force deals 40 additional Fire damage over 8 seconds",
         vec![3774],
-        vec![Effect::DotDamage(40)],
+        vec![Effect::DotDamage {
+            damage: 40,
+            damage_type: DamageType::Fire,
+            duration: 8,
+        }],
         0,
     );
     test_icon_id_effect(
@@ -734,7 +750,11 @@ fn calculate_icon_id_effect_desc() {
         &parser,
         "<icon=3601>Surge Cut deals 35 Trauma damage over 10 seconds",
         vec![3601],
-        vec![Effect::DotDamage(35)],
+        vec![Effect::DotDamage {
+            damage: 35,
+            damage_type: DamageType::Trauma,
+            duration: 10,
+        }],
         0,
     );
     test_icon_id_effect(
@@ -768,7 +788,11 @@ fn calculate_icon_id_effect_desc() {
         &parser,
         "<icon=3046><icon=3024>Hacking Blade and Debilitating Blow deal 48 Trauma damage over 12 seconds",
         vec![3046, 3024],
-        vec![Effect::DotDamage(48)],
+        vec![Effect::DotDamage {
+            damage: 48,
+            damage_type: DamageType::Trauma,
+            duration: 12,
+        }],
         0,
     );
     test_icon_id_effect(
@@ -820,7 +844,6 @@ fn calculate_icon_id_effect_desc() {
         vec![2209],
         vec![
             Effect::DamageType(DamageType::Darkness),
-            Effect::DotDamage(24),
         ],
         0,
     );
@@ -876,7 +899,11 @@ fn calculate_icon_id_effect_desc() {
         &parser,
         "<icon=3754>Deadly Emission Deals +30 Nature damage over 10 seconds and Taunts +25",
         vec![3754],
-        vec![Effect::DotDamage(30)],
+        vec![Effect::DotDamage {
+            damage: 30,
+            damage_type: DamageType::Nature,
+            duration: 10,
+        }],
         1,
     );
     test_icon_id_effect(
@@ -1014,7 +1041,11 @@ fn calculate_icon_id_effect_desc() {
         &parser,
         "<icon=3407>Cow's Bash inflicts bugs on the target, dealing 20 Nature damage over 10 seconds",
         vec![3407],
-        vec![Effect::DotDamage(20)],
+        vec![Effect::DotDamage {
+            damage: 20,
+            damage_type: DamageType::Nature,
+            duration: 10,
+        }],
         0,
     );
     test_icon_id_effect(
@@ -1056,7 +1087,11 @@ fn calculate_icon_id_effect_desc() {
         &parser,
         "<icon=3481>Heart Thorn coats the target in stinging insects that deal 36 Nature damage over 12 seconds",
         vec![3481],
-        vec![Effect::DotDamage(36)],
+        vec![Effect::DotDamage {
+            damage: 36,
+            damage_type: DamageType::Nature,
+            duration: 12,
+        }],
         0,
     );
     test_icon_id_effect(
@@ -1310,7 +1345,11 @@ fn calculate_icon_id_effect_desc() {
         &parser,
         "<icon=2188>Redirect causes target to bleed, dealing 40 Trauma damage over 8 seconds",
         vec![2188],
-        vec![Effect::DotDamage(40)],
+        vec![Effect::DotDamage {
+            damage: 40,
+            damage_type: DamageType::Trauma,
+            duration: 8,
+        }],
         0,
     );
     test_icon_id_effect(
@@ -1444,7 +1483,11 @@ fn calculate_icon_id_effect_desc() {
         &parser,
         "<icon=3782>Astral Strike's damage type becomes Fire, and it deals an additional 25 damage over 10 seconds",
         vec![3782],
-        vec![Effect::DamageType(DamageType::Fire), Effect::DotDamage(25)],
+        vec![Effect::DamageType(DamageType::Fire), Effect::DotDamage {
+            damage: 25,
+            damage_type: DamageType::Fire,
+            duration: 10,
+        }],
         0,
     );
     test_icon_id_effect(
@@ -1556,7 +1599,11 @@ fn calculate_icon_id_effect_desc() {
         &parser,
         "<icon=3626>Agonize deals +36 Psychic damage over 12 seconds",
         vec![3626],
-        vec![Effect::DotDamage(36)],
+        vec![Effect::DotDamage {
+            damage: 36,
+            damage_type: DamageType::Psychic,
+            duration: 12,
+        }],
         0,
     );
     test_icon_id_effect(
@@ -1752,7 +1799,11 @@ fn calculate_icon_id_effect_desc() {
         &parser,
         "<icon=3775>Privacy Field also deals its damage when you are hit by burst attacks, and damage is +10",
         vec![3775],
-        vec![Effect::DotDamage(10)],
+        vec![Effect::DotDamage {
+            damage: 10,
+            damage_type: DamageType::Electricity,
+            duration: 0,
+        }],
         0,
     );
     test_icon_id_effect(
@@ -1912,7 +1963,11 @@ fn calculate_icon_id_effect_desc() {
         &parser,
         "<icon=3483>Brambleskin deals +6 Nature damage to melee attackers",
         vec![3483],
-        vec![Effect::DotDamage(6)],
+        vec![Effect::DotDamage {
+            damage: 6,
+            damage_type: DamageType::Nature,
+            duration: 0,
+        }],
         0,
     );
     test_icon_id_effect(
@@ -1990,7 +2045,11 @@ fn calculate_icon_id_effect_desc() {
         &parser,
         "<icon=3544>Screech deals 36 Trauma damage over 12 seconds",
         vec![3544],
-        vec![Effect::DotDamage(36)],
+        vec![Effect::DotDamage {
+            damage: 36,
+            damage_type: DamageType::Trauma,
+            duration: 12,
+        }],
         0,
     );
     test_icon_id_effect(
@@ -2159,7 +2218,11 @@ fn calculate_icon_id_effect_desc() {
         &parser,
         "<icon=3024>Hacking Blade deals +12 Trauma damage over 12 seconds",
         vec![3024],
-        vec![Effect::DotDamage(12)],
+        vec![Effect::DotDamage {
+            damage: 12,
+            damage_type: DamageType::Trauma,
+            duration: 12,
+        }],
         0,
     );
     test_icon_id_effect(
@@ -2243,7 +2306,11 @@ fn calculate_icon_id_effect_desc() {
         &parser,
         "<icon=3733>Righteous Flame deals +55 Fire damage over 10 seconds",
         vec![3733],
-        vec![Effect::DotDamage(55)],
+        vec![Effect::DotDamage {
+            damage: 55,
+            damage_type: DamageType::Fire,
+            duration: 10,
+        }],
         0,
     );
     test_icon_id_effect(
@@ -2277,7 +2344,11 @@ fn calculate_icon_id_effect_desc() {
         &parser,
         "<icon=2227>Pig Rend deals +60 Trauma damage over 12 seconds",
         vec![2227],
-        vec![Effect::DotDamage(60)],
+        vec![Effect::DotDamage {
+            damage: 60,
+            damage_type: DamageType::Trauma,
+            duration: 12,
+        }],
         0,
     );
     test_icon_id_effect(
@@ -2442,7 +2513,11 @@ fn calculate_icon_id_effect_desc() {
         &parser,
         "<icon=2107><icon=3434>Fire Breath and Super Fireball deal +45 damage over 10 seconds",
         vec![2107, 3434],
-        vec![Effect::DotDamage(45)],
+        vec![Effect::DotDamage {
+            damage: 45,
+            damage_type: DamageType::Fire,
+            duration: 10,
+        }],
         0,
     );
     test_icon_id_effect(
@@ -2496,7 +2571,11 @@ fn calculate_icon_id_effect_desc() {
         &parser,
         "<icon=3454>Fire Shield causes melee attackers to ignite, dealing 30 Fire damage over 10 seconds",
         vec![3454],
-        vec![Effect::DotDamage(30)],
+        vec![Effect::DotDamage {
+            damage: 30,
+            damage_type: DamageType::Fire,
+            duration: 10,
+        }],
         0,
     );
     test_icon_id_effect(
@@ -2701,7 +2780,11 @@ fn calculate_icon_id_effect_desc() {
         &parser,
         "<icon=3403>Toxinball deals +36 Poison damage to health over 12 seconds",
         vec![3403],
-        vec![Effect::DotDamage(36)],
+        vec![Effect::DotDamage {
+            damage: 36,
+            damage_type: DamageType::Poison,
+            duration: 12,
+        }],
         0,
     );
     test_icon_id_effect(
@@ -2867,7 +2950,11 @@ fn calculate_icon_id_effect_desc() {
         &parser,
         "<icon=3446>Stunning Bash causes the target to take 30 Trauma damage over 12 seconds",
         vec![3446],
-        vec![Effect::DotDamage(30)],
+        vec![Effect::DotDamage {
+            damage: 30,
+            damage_type: DamageType::Trauma,
+            duration: 12,
+        }],
         0,
     );
     test_icon_id_effect(
@@ -3184,7 +3271,11 @@ fn calculate_icon_id_effect_desc() {
         &parser,
         "<icon=3597>Gut deals an additional 10 Trauma damage over 10 seconds if the target is not focused on you",
         vec![3597],
-        vec![Effect::DotDamage(10)],
+        vec![Effect::DotDamage {
+            damage: 10,
+            damage_type: DamageType::Trauma,
+            duration: 10,
+        }],
         1,
     );
     test_icon_id_effect(
@@ -3287,7 +3378,11 @@ fn calculate_icon_id_effect_desc() {
         &parser,
         "<icon=3482>Rotskin deals 24 Trauma damage to health over 12 seconds",
         vec![3482],
-        vec![Effect::DotDamage(24)],
+        vec![Effect::DotDamage {
+            damage: 24,
+            damage_type: DamageType::Trauma,
+            duration: 12,
+        }],
         0,
     );
     test_icon_id_effect(
@@ -3535,7 +3630,11 @@ fn calculate_icon_id_effect_desc() {
         &parser,
         "<icon=3596>Venomstrike deals an additional 24 Poison damage over 12 seconds",
         vec![3596],
-        vec![Effect::DotDamage(24)],
+        vec![Effect::DotDamage {
+            damage: 24,
+            damage_type: DamageType::Poison,
+            duration: 12,
+        }],
         0,
     );
     test_icon_id_effect(
@@ -3596,7 +3695,11 @@ fn calculate_icon_id_effect_desc() {
         &parser,
         "<icon=3802>Dimensional Snare deals Fire damage (instead of Darkness) and ignites the target, dealing 24 Fire damage over 12 seconds",
         vec![3802],
-        vec![Effect::DamageType(DamageType::Fire), Effect::DotDamage(24)],
+        vec![Effect::DamageType(DamageType::Fire), Effect::DotDamage {
+            damage: 24,
+            damage_type: DamageType::Fire,
+            duration: 12,
+        }],
         0,
     );
     test_icon_id_effect(
@@ -3610,7 +3713,11 @@ fn calculate_icon_id_effect_desc() {
         &parser,
         "<icon=3548>Virulent Bite deals 12 Trauma damage over 12 seconds and also has a 25% chance to deal +16% immediate Piercing damage",
         vec![3548],
-        vec![Effect::DotDamage(12), Effect::ProcDamageMod {
+        vec![Effect::DotDamage {
+            damage: 12,
+            damage_type: DamageType::Trauma,
+            duration: 12,
+        }, Effect::ProcDamageMod {
             damage_mod: 0.16,
             chance: 0.25,
         }],
@@ -3746,7 +3853,11 @@ fn calculate_icon_id_effect_desc() {
         &parser,
         "<icon=2190>Double Hit ignites the target, dealing 18 Fire damage over 12 seconds",
         vec![2190],
-        vec![Effect::DotDamage(18)],
+        vec![Effect::DotDamage {
+            damage: 18,
+            damage_type: DamageType::Fire,
+            duration: 12,
+        }],
         0,
     );
     test_icon_id_effect(
@@ -3848,7 +3959,11 @@ fn calculate_icon_id_effect_desc() {
         &parser,
         "<icon=3254>Grappling Web deals 48 Poison damage over 12 seconds",
         vec![3254],
-        vec![Effect::DotDamage(48)],
+        vec![Effect::DotDamage {
+            damage: 48,
+            damage_type: DamageType::Poison,
+            duration: 12,
+        }],
         0,
     );
     test_icon_id_effect(
@@ -4099,7 +4214,11 @@ fn calculate_icon_id_effect_desc() {
         &parser,
         "<icon=2184><icon=2178><icon=2171>All bomb attacks ignite the target, causing them to take 35 fire damage over 10 seconds",
         vec![2184, 2178, 2171],
-        vec![Effect::DotDamage(35)],
+        vec![Effect::DotDamage {
+            damage: 35,
+            damage_type: DamageType::Fire,
+            duration: 10,
+        }],
         0,
     );
     test_icon_id_effect(
@@ -4139,7 +4258,7 @@ fn calculate_icon_id_effect_desc() {
             effect: BuffEffect::KeywordFlatDamageBuff {
                 keyword: "SignatureDebuff".to_string(),
                 damage: 74,
-            }
+            },
         })],
         0,
     );
@@ -4495,7 +4614,7 @@ fn calculate_icon_id_effect_desc() {
             effect: BuffEffect::DamageTypeDamageModBuff {
                 damage_type: DamageType::Psychic,
                 damage_mod: 0.0425,
-            }
+            },
         })],
         0,
     );
@@ -4532,7 +4651,11 @@ fn calculate_icon_id_effect_desc() {
         &parser,
         "<icon=3464>Clobbering Hoof infects the target, causing 220 Nature damage over 10 seconds",
         vec![3464],
-        vec![Effect::DotDamage(220)],
+        vec![Effect::DotDamage {
+            damage: 220,
+            damage_type: DamageType::Nature,
+            duration: 10,
+        }],
         0,
     );
     test_icon_id_effect(
@@ -4670,7 +4793,7 @@ fn calculate_icon_id_effect_desc() {
             effect: BuffEffect::KeywordDamageModBuff {
                 keyword: "EpicAttack".to_string(),
                 damage_mod: 0.2,
-            }
+            },
         })],
         0,
     );
@@ -4781,7 +4904,11 @@ fn calculate_icon_id_effect_desc() {
         &parser,
         "<icon=3775>Privacy Field deals +41 damage to all melee attackers, and the first melee attacker is knocked away",
         vec![3775],
-        vec![Effect::DotDamage(41)],
+        vec![Effect::DotDamage {
+            damage: 41,
+            damage_type: DamageType::Electricity,
+            duration: 0,
+        }],
         1,
     );
     test_icon_id_effect(

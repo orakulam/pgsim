@@ -127,7 +127,11 @@ impl Sim {
                 // Print this sim step
                 report_text.push(format!(
                     "{} - {:?}: {} for {} {:?}",
-                    activity.time, activity.source, activity.ability_name, activity.damage, activity.damage_type
+                    activity.time,
+                    activity.source,
+                    activity.ability_name,
+                    activity.damage,
+                    activity.damage_type
                 ));
             }
             report_text.push(format!("---- END SIM -----"));
@@ -367,22 +371,29 @@ mod tests {
     #[test]
     fn buffs_and_debuffs_on_base_abilities() {
         let parser = Parser::new();
-        let way_of_the_hammer = Sim::get_player_ability(&parser, &mut vec![], "WayOfTheHammer4").unwrap();
-        assert_eq!(way_of_the_hammer.buffs[0], Buff {
-            remaining_duration: 10,
-            effect: BuffEffect::DamageTypeDamageModBuff {
-                damage_type: DamageType::Crushing,
-                damage_mod: 0.45,
+        let way_of_the_hammer =
+            Sim::get_player_ability(&parser, &mut vec![], "WayOfTheHammer4").unwrap();
+        assert_eq!(
+            way_of_the_hammer.buffs[0],
+            Buff {
+                remaining_duration: 10,
+                effect: BuffEffect::DamageTypeDamageModBuff {
+                    damage_type: DamageType::Crushing,
+                    damage_mod: 0.45,
+                }
             }
-        });
+        );
         let bruising_blow = Sim::get_player_ability(&parser, &mut vec![], "BruisingBlow6").unwrap();
-        assert_eq!(bruising_blow.debuffs[0], Debuff {
-            remaining_duration: 20,
-            effect: DebuffEffect::VulnerabilityDamageModDebuff {
-                damage_type: DamageType::Crushing,
-                damage_mod: 0.15,
+        assert_eq!(
+            bruising_blow.debuffs[0],
+            Debuff {
+                remaining_duration: 20,
+                effect: DebuffEffect::VulnerabilityDamageModDebuff {
+                    damage_type: DamageType::Crushing,
+                    damage_mod: 0.15,
+                }
             }
-        });
+        );
     }
 
     #[test]
@@ -465,14 +476,13 @@ mod tests {
     fn way_of_the_hammer_sim() {
         let parser = Parser::new();
         let mut world = World::default();
-        let item_mods = parser.calculate_item_mods(
-            &vec![],
-            &vec![],
-        );
+        let item_mods = parser.calculate_item_mods(&vec![], &vec![]);
         world.push((
             Player,
             PlayerAbilities {
-                abilities: vec![Sim::get_player_ability(&parser, &mut vec![], "WayOfTheHammer4").unwrap()],
+                abilities: vec![
+                    Sim::get_player_ability(&parser, &mut vec![], "WayOfTheHammer4").unwrap(),
+                ],
             },
             Buffs(HashMap::new()),
         ));
