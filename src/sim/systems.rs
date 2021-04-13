@@ -345,7 +345,10 @@ fn calculate_ability(
                     damage_type,
                     duration,
                 } => {
-                    dot_flat_damage_map.insert((damage_type, duration), damage);
+                    let map_damage = dot_flat_damage_map
+                        .entry((damage_type, duration))
+                        .or_insert(0);
+                    *map_damage += damage;
                 }
                 Effect::DamageType(damage_type) => calculated_damage_type = *damage_type,
                 Effect::RestoreHealth(_) => (),
@@ -451,7 +454,7 @@ fn calculate_ability(
                 // Find dot flat damage bonus for this specific dot, if any
                 let dot_flat_damage =
                     match dot_flat_damage_map.get(&(&damage_type, &debuff.remaining_duration)) {
-                        Some(damage) => **damage,
+                        Some(damage) => *damage,
                         None => 0,
                     };
                 *damage_per_tick = ((*damage_per_tick as f32
