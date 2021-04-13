@@ -143,6 +143,7 @@ struct ParserRegex {
     fill_with_bile_item_buff: Regex,
     privacy_field: Regex,
     privacy_field2: Regex,
+    privacy_field3: Regex,
     fire_breath_super_fireball_dot: Regex,
     bomb_dot: Regex,
     sanguine_fangs_dot: Regex,
@@ -192,7 +193,7 @@ impl Parser {
             damage_mod: Regex::new(r"(?:deal|deals|[dD]amage|damage is) \+?(?P<damage_mod>[0-9]*[.]?[0-9]+)% ?(?:$|[dD]amage|direct damage|and|Crushing damage|piercing damage)").unwrap(),
             proc_damage_mod:  Regex::new(r"(?P<chance>[0-9]+)% (?:chance to deal|chance it deals) \+?(?P<damage_mod>[0-9]*[.]?[0-9]+)% (?:damage|immediate Piercing damage)").unwrap(),
             dot_damage:
-                Regex::new(&format!(r"(?:deal|deals|Deals|deals an additional|causes|dealing|target to take|causing|damage plus) \+?(?P<damage>[0-9]+)(?:| additional) {} (?:damage over|damage over|damage to health over|health damage over) (?P<duration>[0-9]+) seconds", damage_type))
+                Regex::new(&format!(r"(?:deal|deals|Deals|deals an additional|causes|dealing|target to take|causing|causing them to take|damage plus) \+?(?P<damage>[0-9]+) ?(?:|additional|indirect) {} (?:damage over|damage over|damage to health over|health damage over) (?P<duration>[0-9]+) seconds", damage_type))
                     .unwrap(),
             dot_damage2:
                 Regex::new(&format!(r"becomes {}, and it deals an additional \+?(?P<damage>[0-9]+) damage over (?P<duration>[0-9]+) seconds", damage_type))
@@ -239,6 +240,7 @@ impl Parser {
             fill_with_bile_item_buff: Regex::new(r"Target's Poison attacks deal \+?(?P<damage>[0-9]+) damage, and Poison damage-over-time attacks deal \+?(?P<per_tick_damage>[0-9]+) per tick.").unwrap(),
             privacy_field: Regex::new(r"Privacy Field also deals its damage when you are hit by burst attacks, and damage is \+?(?P<damage>[0-9]+)").unwrap(),
             privacy_field2: Regex::new(r"Privacy Field deals \+?(?P<damage>[0-9]+) damage to all melee attackers, and the first melee attacker is knocked away").unwrap(),
+            privacy_field3: Regex::new(r"When Privacy Field deals damage, it also ignites the suspect, dealing \+?(?P<damage>[0-9]+) damage over (?P<duration>[0-9]+) seconds").unwrap(),
             fire_breath_super_fireball_dot: Regex::new(r"deal \+?(?P<damage>[0-9]+) damage over (?P<duration>[0-9]+) seconds").unwrap(),
             bomb_dot: Regex::new(r"All bomb attacks ignite the target, causing them to take \+?(?P<damage>[0-9]+) fire damage over (?P<duration>[0-9]+) seconds").unwrap(),
             sanguine_fangs_dot: Regex::new(r"Sanguine Fangs deals \+?(?P<damage>[0-9]+) trauma damage over (?P<duration>[0-9]+) seconds").unwrap(),
@@ -505,6 +507,7 @@ impl Parser {
             "Poison Arrow makes target's attacks deal",
             "Tundra Spikes stuns all targets after",
             "Fan of Blades knocks all targets backwards",
+            "additional health damage over",
         ];
         for test in not_supported_tests {
             if effect_desc.contains(test) {
@@ -1097,6 +1100,13 @@ impl Parser {
                 damage: Parser::get_cap_number(&caps, "damage"),
                 damage_type: DamageType::Electricity,
                 duration: 0,
+            });
+        }
+        if let Some(caps) = self.regex.privacy_field3.captures(effect_desc) {
+            effects.push(Effect::DotDamage {
+                damage: Parser::get_cap_number(&caps, "damage"),
+                damage_type: DamageType::Fire,
+                duration: Parser::get_cap_number(&caps, "duration"),
             });
         }
         if let Some(caps) = self.regex.fire_breath_super_fireball_dot.captures(effect_desc) {

@@ -4960,4 +4960,15 @@ fn calculate_icon_id_effect_desc() {
         vec![],
         1,
     );
+    test_icon_id_effect(
+        &parser,
+        "<icon=3773>Controlled Burn deals 102 indirect Fire damage over 12 seconds",
+        vec![3773],
+        vec![Effect::DotDamage {
+            damage: 102,
+            damage_type: DamageType::Fire,
+            duration: 12,
+        }],
+        0,
+    );
 }
