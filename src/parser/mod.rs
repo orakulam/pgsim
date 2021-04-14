@@ -9,11 +9,24 @@ use data::Data;
 #[derive(Debug, PartialEq, PartialOrd, Clone)]
 pub enum Effect {
     FlatDamage(i32),
-    ProcFlatDamage { damage: i32, chance: f32 },
-    RangeFlatDamage { min_damage: i32, max_damage: i32 },
+    ProcFlatDamage {
+        damage: i32,
+        chance: f32,
+    },
+    RangeFlatDamage {
+        min_damage: i32,
+        max_damage: i32,
+    },
     DamageMod(f32),
-    ProcDamageMod { damage_mod: f32, chance: f32 },
-    DotDamage(i32),
+    ProcDamageMod {
+        damage_mod: f32,
+        chance: f32,
+    },
+    DotDamage {
+        damage: i32,
+        damage_type: DamageType,
+        duration: i32,
+    },
     RestoreHealth(i32),
     RestoreArmor(i32),
     RestorePower(i32),
@@ -93,6 +106,8 @@ struct ParserRegex {
     damage_mod: Regex,
     proc_damage_mod: Regex,
     dot_damage: Regex,
+    dot_damage2: Regex,
+    dot_damage_thorns: Regex,
     restore_health: Regex,
     restore_armor: Regex,
     restore_power: Regex,
@@ -127,6 +142,11 @@ struct ParserRegex {
     fill_with_bile_buff: Regex,
     fill_with_bile_item_buff: Regex,
     privacy_field: Regex,
+    privacy_field2: Regex,
+    privacy_field3: Regex,
+    fire_breath_super_fireball_dot: Regex,
+    bomb_dot: Regex,
+    sanguine_fangs_dot: Regex,
     drink_blood_buff: Regex,
     psi_wave_buff: Regex,
     strategic_preparation_buff: Regex,
@@ -173,7 +193,13 @@ impl Parser {
             damage_mod: Regex::new(r"(?:deal|deals|[dD]amage|damage is) \+?(?P<damage_mod>[0-9]*[.]?[0-9]+)% ?(?:$|[dD]amage|direct damage|and|Crushing damage|piercing damage)").unwrap(),
             proc_damage_mod:  Regex::new(r"(?P<chance>[0-9]+)% (?:chance to deal|chance it deals) \+?(?P<damage_mod>[0-9]*[.]?[0-9]+)% (?:damage|immediate Piercing damage)").unwrap(),
             dot_damage:
-                Regex::new(r"(?:deal|deals|Deals|deals an additional|causes|dealing|target to take|causing|causing them to take) \+?(?P<damage>[0-9]+).*(?:damage over|damage to melee attackers|Nature damage over|Trauma damage over|Trauma damage to health over|Poison damage to health over|fire damage over|damage to all melee attackers)")
+                Regex::new(&format!(r"(?:deal|deals|Deals|deals an additional|causes|dealing|target to take|causing|causing them to take|damage plus) \+?(?P<damage>[0-9]+) ?(?:|additional|indirect) {} (?:damage over|damage over|damage to health over|health damage over) (?P<duration>[0-9]+) seconds", damage_type))
+                    .unwrap(),
+            dot_damage2:
+                Regex::new(&format!(r"becomes {}, and it deals an additional \+?(?P<damage>[0-9]+) damage over (?P<duration>[0-9]+) seconds", damage_type))
+                    .unwrap(),
+            dot_damage_thorns:
+                Regex::new(&format!(r"deals \+?(?P<damage>[0-9]+) {} damage to melee attackers", damage_type))
                     .unwrap(),
             restore_health:
                 Regex::new(r"(?:restore|[rR]estores|regain|heals|heals you for|heal you for|recover|heal all targets for) \+?(?P<restore>[0-9]+) [hH]ealth")
@@ -213,6 +239,11 @@ impl Parser {
             fill_with_bile_buff: Regex::new(r"Fill With Bile increases target's direct Poison damage \+?(?P<damage>[0-9]+)").unwrap(),
             fill_with_bile_item_buff: Regex::new(r"Target's Poison attacks deal \+?(?P<damage>[0-9]+) damage, and Poison damage-over-time attacks deal \+?(?P<per_tick_damage>[0-9]+) per tick.").unwrap(),
             privacy_field: Regex::new(r"Privacy Field also deals its damage when you are hit by burst attacks, and damage is \+?(?P<damage>[0-9]+)").unwrap(),
+            privacy_field2: Regex::new(r"Privacy Field deals \+?(?P<damage>[0-9]+) damage to all melee attackers, and the first melee attacker is knocked away").unwrap(),
+            privacy_field3: Regex::new(r"When Privacy Field deals damage, it also ignites the suspect, dealing \+?(?P<damage>[0-9]+) damage over (?P<duration>[0-9]+) seconds").unwrap(),
+            fire_breath_super_fireball_dot: Regex::new(r"deal \+?(?P<damage>[0-9]+) damage over (?P<duration>[0-9]+) seconds").unwrap(),
+            bomb_dot: Regex::new(r"All bomb attacks ignite the target, causing them to take \+?(?P<damage>[0-9]+) fire damage over (?P<duration>[0-9]+) seconds").unwrap(),
+            sanguine_fangs_dot: Regex::new(r"Sanguine Fangs deals \+?(?P<damage>[0-9]+) trauma damage over (?P<duration>[0-9]+) seconds").unwrap(),
             drink_blood_buff: Regex::new(&format!(r"For (?P<duration>[0-9]+) seconds after using Drink Blood, all {} attacks deal \+(?P<damage>[0-9]+) damage", damage_type)).unwrap(),
             psi_wave_buff: Regex::new(&format!(r"Psi Health Wave, Armor Wave, and Power Wave grant all targets \+(?P<damage>[0-9]+) {} Damage for (?P<duration>[0-9]+) seconds", damage_type)).unwrap(),
             strategic_preparation_buff: Regex::new(r"Strategic Preparation causes your next attack to deal \+(?P<damage>[0-9]+) damage if it is a Crushing, Slashing, or Piercing attack").unwrap(),
@@ -476,6 +507,7 @@ impl Parser {
             "Poison Arrow makes target's attacks deal",
             "Tundra Spikes stuns all targets after",
             "Fan of Blades knocks all targets backwards",
+            "additional health damage over",
         ];
         for test in not_supported_tests {
             if effect_desc.contains(test) {
@@ -618,7 +650,28 @@ impl Parser {
             }
         }
         if let Some(caps) = self.regex.dot_damage.captures(effect_desc) {
-            effects.push(Effect::DotDamage(Parser::get_cap_number(&caps, "damage")));
+            effects.push(Effect::DotDamage {
+                damage: Parser::get_cap_number(&caps, "damage"),
+                damage_type: DamageType::from_str(Parser::get_cap_string(&caps, "damage_type"))
+                    .expect("Failed to parse damage type string as enum"),
+                duration: Parser::get_cap_number(&caps, "duration"),
+            });
+        }
+        if let Some(caps) = self.regex.dot_damage2.captures(effect_desc) {
+            effects.push(Effect::DotDamage {
+                damage: Parser::get_cap_number(&caps, "damage"),
+                damage_type: DamageType::from_str(Parser::get_cap_string(&caps, "damage_type"))
+                    .expect("Failed to parse damage type string as enum"),
+                duration: Parser::get_cap_number(&caps, "duration"),
+            });
+        }
+        if let Some(caps) = self.regex.dot_damage_thorns.captures(effect_desc) {
+            effects.push(Effect::DotDamage {
+                damage: Parser::get_cap_number(&caps, "damage"),
+                damage_type: DamageType::from_str(Parser::get_cap_string(&caps, "damage_type"))
+                    .expect("Failed to parse damage type string as enum"),
+                duration: 0,
+            });
         }
         if let Some(caps) = self.regex.restore_health.captures(effect_desc) {
             effects.push(Effect::RestoreHealth(Parser::get_cap_number(
@@ -752,7 +805,9 @@ impl Parser {
         }
         if let Some(caps) = self.regex.keyword_epic_attack_buff.captures(effect_desc) {
             // Specific exclusions
-            if !effect_desc.contains("Restorative Arrow boosts target's Nice Attack and Epic Attack Damage") {
+            if !effect_desc
+                .contains("Restorative Arrow boosts target's Nice Attack and Epic Attack Damage")
+            {
                 effects.push(Effect::Buff(Buff {
                     remaining_duration: Parser::get_cap_number(&caps, "duration"),
                     effect: BuffEffect::KeywordFlatDamageBuff {
@@ -1034,7 +1089,46 @@ impl Parser {
             }));
         }
         if let Some(caps) = self.regex.privacy_field.captures(effect_desc) {
-            effects.push(Effect::DotDamage(Parser::get_cap_number(&caps, "damage")));
+            effects.push(Effect::DotDamage {
+                damage: Parser::get_cap_number(&caps, "damage"),
+                damage_type: DamageType::Electricity,
+                duration: 0,
+            });
+        }
+        if let Some(caps) = self.regex.privacy_field2.captures(effect_desc) {
+            effects.push(Effect::DotDamage {
+                damage: Parser::get_cap_number(&caps, "damage"),
+                damage_type: DamageType::Electricity,
+                duration: 0,
+            });
+        }
+        if let Some(caps) = self.regex.privacy_field3.captures(effect_desc) {
+            effects.push(Effect::DotDamage {
+                damage: Parser::get_cap_number(&caps, "damage"),
+                damage_type: DamageType::Fire,
+                duration: Parser::get_cap_number(&caps, "duration"),
+            });
+        }
+        if let Some(caps) = self.regex.fire_breath_super_fireball_dot.captures(effect_desc) {
+            effects.push(Effect::DotDamage {
+                damage: Parser::get_cap_number(&caps, "damage"),
+                damage_type: DamageType::Fire,
+                duration: Parser::get_cap_number(&caps, "duration"),
+            });
+        }
+        if let Some(caps) = self.regex.bomb_dot.captures(effect_desc) {
+            effects.push(Effect::DotDamage {
+                damage: Parser::get_cap_number(&caps, "damage"),
+                damage_type: DamageType::Fire,
+                duration: Parser::get_cap_number(&caps, "duration"),
+            });
+        }
+        if let Some(caps) = self.regex.sanguine_fangs_dot.captures(effect_desc) {
+            effects.push(Effect::DotDamage {
+                damage: Parser::get_cap_number(&caps, "damage"),
+                damage_type: DamageType::Trauma,
+                duration: Parser::get_cap_number(&caps, "duration"),
+            });
         }
         if let Some(caps) = self.regex.drink_blood_buff.captures(effect_desc) {
             effects.push(Effect::Buff(Buff {
@@ -1080,7 +1174,11 @@ impl Parser {
                 },
             }));
         }
-        if let Some(caps) = self.regex.cobra_strike_mamba_strike_buff.captures(effect_desc) {
+        if let Some(caps) = self
+            .regex
+            .cobra_strike_mamba_strike_buff
+            .captures(effect_desc)
+        {
             let duration = Parser::get_cap_number(&caps, "duration");
             let damage = Parser::get_cap_number(&caps, "damage");
             effects.push(Effect::Buff(Buff {
