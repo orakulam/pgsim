@@ -43,14 +43,29 @@ fn tick_debuffs(report: &mut Report, debuffs: &mut Debuffs, #[resource] time: &T
                     damage_type,
                     tick_per,
                 } => {
-                    // It's time to deal dot damage
                     if debuff.remaining_duration % tick_per == 0 {
+                        // It's time to deal dot damage
                         report.activity.push(Activity {
                             time: time.0,
                             ability_name: ability_name.clone(),
                             damage: damage_per_tick,
                             damage_type: damage_type,
                             source: ActivitySource::DoT,
+                        });
+                    }
+                }
+                DebuffEffect::DelayedDamage {
+                    damage,
+                    damage_type,
+                } => {
+                    if debuff.remaining_duration == 0 {
+                        // It's time to deal delayed damage
+                        report.activity.push(Activity {
+                            time: time.0,
+                            ability_name: ability_name.clone(),
+                            damage,
+                            damage_type: damage_type,
+                            source: ActivitySource::Delayed,
                         });
                     }
                 }
@@ -231,6 +246,10 @@ fn use_ability(
                         damage_type: _,
                         tick_per,
                     } => damage_per_tick * (debuff.remaining_duration / tick_per),
+                    DebuffEffect::DelayedDamage {
+                        damage,
+                        damage_type: _,
+                    } => damage,
                     // Very basic attempt at calculating the power of these kind of debuffs
                     DebuffEffect::VulnerabilityDamageModDebuff {
                         damage_mod,
@@ -349,6 +368,19 @@ fn calculate_ability(
                         .entry((damage_type, duration))
                         .or_insert(0);
                     *map_damage += damage;
+                }
+                Effect::DelayedDamage {
+                    damage,
+                    damage_type,
+                    delay,
+                } => {
+                    calculated_debuffs.push(Debuff {
+                        remaining_duration: *delay,
+                        effect: DebuffEffect::DelayedDamage {
+                            damage: *damage,
+                            damage_type: *damage_type,
+                        },
+                    });
                 }
                 Effect::DamageType(damage_type) => calculated_damage_type = *damage_type,
                 Effect::RestoreHealth(_) => (),
