@@ -688,8 +688,12 @@ fn calculate_icon_id_effect_desc() {
         &parser,
         "<icon=3017>Sanguine Fangs suddenly deals 35 Trauma damage after an 8-second delay",
         vec![3017],
-        vec![],
-        1,
+        vec![Effect::DelayedDamage {
+            damage: 35,
+            damage_type: DamageType::Trauma,
+            delay: 8,
+        }],
+        0,
     );
     test_icon_id_effect(
         &parser,
@@ -2236,8 +2240,12 @@ fn calculate_icon_id_effect_desc() {
         &parser,
         "<icon=3694>Play Dead causes all affected enemies to take 30 Psychic damage after a 10-second delay",
         vec![3694],
-        vec![],
-        1,
+        vec![Effect::DelayedDamage {
+            damage: 30,
+            damage_type: DamageType::Psychic,
+            delay: 10,
+        }],
+        0,
     );
     test_icon_id_effect(
         &parser,
@@ -3537,8 +3545,12 @@ fn calculate_icon_id_effect_desc() {
         &parser,
         "<icon=3675>Entrancing Lullaby deals 35 Trauma damage after a 20 second delay",
         vec![3675],
-        vec![],
-        1,
+        vec![Effect::DelayedDamage {
+            damage: 35,
+            damage_type: DamageType::Trauma,
+            delay: 20,
+        }],
+        0,
     );
     test_icon_id_effect(
         &parser,
@@ -4315,8 +4327,12 @@ fn calculate_icon_id_effect_desc() {
         &parser,
         "<icon=3069>Calefaction deals 141 additional Fire damage after a 12 second delay",
         vec![3069],
-        vec![],
-        1,
+        vec![Effect::DelayedDamage {
+            damage: 141,
+            damage_type: DamageType::Fire,
+            delay: 12,
+        }],
+        0,
     );
     test_icon_id_effect(
         &parser,
@@ -4435,8 +4451,12 @@ fn calculate_icon_id_effect_desc() {
         &parser,
         "<icon=3309>Fire Arrow suddenly deals an additional 40 indirect Fire damage after a 12 second delay",
         vec![3309],
-        vec![],
-        1,
+        vec![Effect::DelayedDamage {
+            damage: 40,
+            damage_type: DamageType::Fire,
+            delay: 12,
+        }],
+        0,
     );
     test_icon_id_effect(
         &parser,

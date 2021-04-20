@@ -27,6 +27,11 @@ pub enum Effect {
         damage_type: DamageType,
         duration: i32,
     },
+    DelayedDamage {
+        damage: i32,
+        damage_type: DamageType,
+        delay: i32,
+    },
     RestoreHealth(i32),
     RestoreArmor(i32),
     RestorePower(i32),
@@ -78,6 +83,10 @@ pub enum DebuffEffect {
         damage_type: DamageType,
         tick_per: i32,
     },
+    DelayedDamage {
+        damage: i32,
+        damage_type: DamageType,
+    },
     VulnerabilityDamageModDebuff {
         damage_type: DamageType,
         damage_mod: f32,
@@ -108,6 +117,7 @@ struct ParserRegex {
     dot_damage: Regex,
     dot_damage2: Regex,
     dot_damage_thorns: Regex,
+    delayed_damage: Regex,
     restore_health: Regex,
     restore_armor: Regex,
     restore_power: Regex,
@@ -200,6 +210,9 @@ impl Parser {
                     .unwrap(),
             dot_damage_thorns:
                 Regex::new(&format!(r"deals \+?(?P<damage>[0-9]+) {} damage to melee attackers", damage_type))
+                    .unwrap(),
+            delayed_damage:
+                Regex::new(&format!(r"\+?(?P<damage>[0-9]+) ?(?:|additional|indirect) {} damage after (?:a|an) (?P<delay>[0-9]+)[ -]second delay", damage_type))
                     .unwrap(),
             restore_health:
                 Regex::new(r"(?:restore|[rR]estores|regain|heals|heals you for|heal you for|recover|heal all targets for) \+?(?P<restore>[0-9]+) [hH]ealth")
@@ -383,13 +396,6 @@ impl Parser {
             "Power every",
             "Health every",
             "Health over",
-            "after a 5 second delay",
-            "after a 6-second delay",
-            "after a 10-second delay",
-            "after a 12 second delay",
-            "after a 15 second delay",
-            "after a 20 second delay",
-            "after a 25 second delay",
             "every 2 seconds",
             "every other seconds",
             "every few seconds",
@@ -518,6 +524,22 @@ impl Parser {
                 return vec![];
             }
         }
+        if effect_desc.contains("after a 5 second delay")
+            || effect_desc.contains("after a 6-second delay")
+            || effect_desc.contains("after a 10-second delay")
+            || effect_desc.contains("after a 12 second delay")
+            || effect_desc.contains("after a 15 second delay")
+            || effect_desc.contains("after a 20 second delay")
+            || effect_desc.contains("after a 25 second delay") {
+            if effect_desc.contains("restore")
+                || effect_desc.contains("heals") {
+                warnings.push(format!(
+                    "Not supported, non-damage delayed effect: {}",
+                    effect_desc
+                ));
+                return vec![];
+            }
+        }
         // Add warnings
         let partially_supported_tests = vec![
             "taunt",
@@ -551,7 +573,7 @@ impl Parser {
             "total damage against Demons",
             "within 5 meters",
             "within 6 meters",
-            "8-second delay",
+            "the target takes a second full blast of delayed Electricity damage",
             "doesn't cause the target to yell for help",
             "takes +1 second to channel",
             "Evasion",
@@ -671,6 +693,14 @@ impl Parser {
                 damage_type: DamageType::from_str(Parser::get_cap_string(&caps, "damage_type"))
                     .expect("Failed to parse damage type string as enum"),
                 duration: 0,
+            });
+        }
+        if let Some(caps) = self.regex.delayed_damage.captures(effect_desc) {
+            effects.push(Effect::DelayedDamage {
+                damage: Parser::get_cap_number(&caps, "damage"),
+                damage_type: DamageType::from_str(Parser::get_cap_string(&caps, "damage_type"))
+                    .expect("Failed to parse damage type string as enum"),
+                delay: Parser::get_cap_number(&caps, "delay"),
             });
         }
         if let Some(caps) = self.regex.restore_health.captures(effect_desc) {
